@@ -1,0 +1,166 @@
+/* 스누코치 정적 사이트 — oopy(Notion) 룩 재현 */
+*, *::before, *::after { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  font-family: 'Nanum Gothic', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+  color: #37352F;
+  background: #fff;
+  line-height: 1.5;
+  font-size: 16px;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+  -webkit-font-smoothing: antialiased;
+}
+img { max-width: 100%; height: auto; }
+a { color: inherit; }
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+}
+
+/* ── 상단 내비게이션 (oopy topNavigator 재현) ── */
+.topnav {
+  position: sticky; top: 0; z-index: 100;
+  background: #fff; border-bottom: 1px solid rgba(55,53,47,0.09);
+}
+.topnav-inner {
+  height: 48px;
+  display: flex; align-items: center; padding: 0 12px;
+}
+.nav-logo { display: flex; align-items: center; flex-shrink: 0; }
+.nav-logo img { height: 32px; width: auto; }
+.nav-tabs {
+  flex: 1; display: flex; align-items: center;
+  justify-content: space-around;
+  overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch;
+}
+.nav-tabs::-webkit-scrollbar { display: none; }
+.nav-item { position: relative; flex-shrink: 0; }
+.nav-item > a, .nav-item > button {
+  display: flex; align-items: center; gap: 2px;
+  font: inherit; font-size: 14px; color: #37352F;
+  background: none; border: 0; cursor: pointer;
+  padding: 6px 8px; text-decoration: none;
+  white-space: nowrap; transition: color .12s ease;
+}
+.nav-item > a:hover, .nav-item > button:hover { color: #669DFD; }
+.nav-share {
+  flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+  width: 32px; height: 32px; border: 0; background: none; cursor: pointer;
+  color: #37352F; border-radius: 6px;
+}
+.nav-share:hover { background: rgba(55,53,47,0.06); }
+
+/* 스크롤 진행바 — 내비 하단 2px 라인 */
+.scroll-progress {
+  position: absolute; left: 0; bottom: -2px; height: 2px; width: 0;
+  background: #669DFD;
+}
+.nav-dropdown .chev { opacity: .6; }
+.dropdown-menu {
+  position: absolute; top: 100%; left: 0; min-width: 140px;
+  background: #fff; border: 1px solid rgba(55,53,47,0.12); border-radius: 8px;
+  box-shadow: 0 6px 20px rgba(15,15,15,0.12); padding: 6px;
+  display: none; z-index: 110;
+}
+.nav-dropdown:hover .dropdown-menu,
+.nav-dropdown:focus-within .dropdown-menu,
+.nav-dropdown.open .dropdown-menu { display: block; }
+.dropdown-menu a {
+  display: block; padding: 7px 10px; border-radius: 6px;
+  font-size: 14px; text-decoration: none; color: #37352F;
+}
+.dropdown-menu a:hover { background: rgba(55,53,47,0.06); }
+
+/* ── 본문 (원본 콘텐츠 폭 708px) ───────── */
+.page {
+  max-width: 736px; margin: 0 auto;
+  padding: 24px 14px 140px;
+}
+.nb-text { padding: 3px 2px; margin: 1px 0; min-height: 1em; }
+.nb-empty { min-height: 1em; }
+.nb-underline { text-decoration: underline; }
+.nb-h { margin: 1.2em 0 0.4em; padding: 3px 2px; }
+.nb-divider {
+  border: 0; border-top: 1px solid rgba(55,53,47,0.16);
+  margin: 13px 2px; width: 100%;
+}
+.nb-quote {
+  border-left: 3px solid #37352F; margin: 4px 0; padding: 3px 2px 3px 14px;
+}
+.nb-list { margin: 2px 0; padding-left: 1.6em; }
+
+/* 이미지 — 원본 커스텀 CSS와 동일하게 간격 0 */
+.nb-image { margin: 0; padding: 0; line-height: 0; font-size: 0; text-align: left; }
+.nb-image .nb-img { display: block; margin: 0 auto; padding: 0; max-width: 100%; height: auto; }
+
+/* 페이지 링크 (인라인 멘션) — 회색 말풍선 아이콘 + 밑줄 제목 */
+.nb-page-link {
+  display: inline-flex; align-items: center; gap: 6px;
+  text-decoration: none; color: inherit;
+}
+.nb-page-link .nb-page-title { text-decoration: underline; text-underline-offset: 3px; }
+.nb-page-link:hover { background: rgba(55,53,47,0.06); }
+.nb-page-icon { flex-shrink: 0; vertical-align: -3px; }
+.nb-page-block {
+  display: block; padding: 8px 10px; margin: 4px 0; border-radius: 6px;
+  font-weight: 600; text-decoration: none; border: 1px solid rgba(55,53,47,0.12);
+}
+.nb-page-block:hover { background: rgba(55,53,47,0.04); }
+
+/* 컬럼 */
+.nb-column-list { display: flex; gap: 16px; margin: 4px 0; }
+.nb-column { flex: var(--ratio, 1) 1 0; min-width: 0; }
+@media (max-width: 640px) {
+  .nb-column-list { flex-direction: column; gap: 8px; }
+  .nb-column { flex: none; width: 100%; }
+}
+
+/* 콜아웃 */
+.nb-callout {
+  display: flex; gap: 10px; align-items: flex-start;
+  border: 1px solid rgba(55,53,47,0.16); border-radius: 16px;
+  padding: 16px 16px 16px 14px; margin: 6px 0;
+}
+.nb-callout-body { flex: 1; min-width: 0; }
+.nb-callout-body .nb-text:first-child { margin-top: 0; }
+
+/* ── 플로팅 요소 (원본 측정값 반영) ─────── */
+.cta-button {
+  position: fixed; bottom: 33px; left: 50%; transform: translateX(-50%);
+  width: min(708px, calc(100% - 28px)); height: 48px;
+  display: flex; align-items: center; justify-content: center;
+  background: rgb(0,92,255); color: #fff; text-decoration: none;
+  font-weight: 700; font-size: 16px;
+  border-radius: 8px; white-space: nowrap;
+  box-shadow: 0 0 4px 2px rgba(55,53,47,0.4);
+  z-index: 90; transition: filter .15s ease;
+}
+.cta-button:hover { filter: brightness(1.08); }
+
+.kakao-float {
+  position: fixed; right: 24px; bottom: 93px; z-index: 90;
+  display: block; width: 48px; height: 48px; border-radius: 50%;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.25); overflow: hidden;
+}
+.kakao-float img { display: block; width: 48px; height: 48px; }
+
+/* TOP 버튼 — 콘텐츠 컬럼 좌측 정렬, 원형 흰색 ▲ TOP */
+.goto-top {
+  position: fixed; left: max(16px, calc(50% - 354px)); bottom: 100px; z-index: 90;
+  width: 44px; height: 44px; border-radius: 50%;
+  background: #fff; color: #37352F; border: 1px solid rgba(55,53,47,0.16);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12); cursor: pointer;
+  display: none; flex-direction: column; align-items: center; justify-content: center;
+  gap: 1px; font-size: 9px; font-weight: 700; letter-spacing: .02em;
+  font-family: inherit;
+}
+.goto-top.visible { display: flex; }
+.goto-top:hover { background: #f5f5f4; }
+.goto-top svg { display: block; }
+
+@media (max-width: 640px) {
+  .kakao-float { right: 14px; }
+  .goto-top { left: 14px; }
+}
