@@ -58,11 +58,16 @@ a { color: inherit; }
   background: #669DFD;
 }
 .nav-dropdown .chev { opacity: .6; }
+/* 드롭다운: nav-tabs의 overflow 클리핑을 피하기 위해 fixed 포지션 (left는 JS가 계산) */
 .dropdown-menu {
-  position: absolute; top: 100%; left: 0; min-width: 140px;
+  position: fixed; top: 48px; left: 0; min-width: 150px;
   background: #fff; border: 1px solid rgba(55,53,47,0.12); border-radius: 8px;
   box-shadow: 0 6px 20px rgba(15,15,15,0.12); padding: 6px;
   display: none; z-index: 110;
+}
+/* 버튼과 메뉴 사이 호버 브리지 (마우스 이동 중 닫힘 방지) */
+.dropdown-menu::before {
+  content: ''; position: absolute; top: -14px; left: 0; right: 0; height: 14px;
 }
 .nav-dropdown:hover .dropdown-menu,
 .nav-dropdown:focus-within .dropdown-menu,

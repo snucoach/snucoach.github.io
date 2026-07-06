@@ -13,11 +13,20 @@
   top.addEventListener('click', function () {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   });
-  // 터치 기기: 드롭다운 탭 토글
-  document.querySelectorAll('.nav-dropdown > button').forEach(function (btn) {
+  // 드롭다운 위치 계산 (fixed 포지션이라 버튼 위치 기준 left 지정)
+  document.querySelectorAll('.nav-dropdown').forEach(function (dd) {
+    var btn = dd.querySelector('button');
+    var menu = dd.querySelector('.dropdown-menu');
+    function place() {
+      var r = btn.getBoundingClientRect();
+      var left = Math.max(8, Math.min(r.left, window.innerWidth - 170));
+      menu.style.left = left + 'px';
+    }
+    dd.addEventListener('mouseenter', place);
     btn.addEventListener('click', function (e) {
       e.stopPropagation();
-      btn.parentElement.classList.toggle('open');
+      place();
+      dd.classList.toggle('open');
     });
   });
   document.addEventListener('click', function () {

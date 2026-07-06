@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://030202jw-dotcom.github.io/snucoach/sitemap.xml
+Sitemap: https://snucoach.github.io/sitemap.xml
