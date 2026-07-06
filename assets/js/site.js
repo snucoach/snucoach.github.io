@@ -124,6 +124,22 @@
     });
   }
 
+  // ── 후기: 카테고리 칩 필터 ──
+  var rvChips = document.getElementById('rvChips');
+  if (rvChips) {
+    var cards = Array.prototype.slice.call(document.querySelectorAll('.rv-card'));
+    rvChips.addEventListener('click', function (e) {
+      var chip = e.target.closest('.chip');
+      if (!chip) return;
+      rvChips.querySelectorAll('.chip').forEach(function (c) { c.classList.remove('on'); });
+      chip.classList.add('on');
+      var cat = chip.dataset.cat;
+      cards.forEach(function (card) {
+        card.classList.toggle('is-hidden', cat !== 'all' && card.dataset.cat !== cat);
+      });
+    });
+  }
+
   // ── 자료&칼럼: 필터 + 검색 ──
   var chipRow = document.getElementById('chipRow');
   if (chipRow) {
