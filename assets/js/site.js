@@ -64,23 +64,64 @@
     document.querySelectorAll('[data-rv]').forEach(function (el) { el.classList.add('rv-in'); });
   }
 
-  // ── 후기 라이트박스 ──
+  // ── 후기 라이트박스 (이전/다음 정주행) ──
   var lb = document.getElementById('lightbox');
   if (lb) {
     var lbImg = lb.querySelector('img');
-    document.querySelectorAll('.page-reviews .nb-img').forEach(function (img) {
+    var gallery = Array.prototype.slice.call(document.querySelectorAll('.page-reviews .nb-img'));
+    var cur = 0;
+    function showAt(i) {
+      cur = (i + gallery.length) % gallery.length;
+      var el = gallery[cur];
+      lbImg.src = el.dataset.full || el.src;
+    }
+    gallery.forEach(function (img, i) {
       img.addEventListener('click', function () {
-        lbImg.src = img.src;
+        showAt(i);
         lb.showModal();
       });
     });
     lb.addEventListener('click', function (e) {
+      if (e.target.closest('.lb-nav') || e.target.closest('.lb-close')) return;
       var r = lbImg.getBoundingClientRect();
       var inside = e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom;
       if (!inside) lb.close();
     });
-    var lbClose = lb.querySelector('.lb-close');
-    if (lbClose) lbClose.addEventListener('click', function () { lb.close(); });
+    lb.querySelector('.lb-close').addEventListener('click', function () { lb.close(); });
+    var prev = lb.querySelector('.lb-prev'), next = lb.querySelector('.lb-next');
+    if (prev) prev.addEventListener('click', function () { showAt(cur - 1); });
+    if (next) next.addEventListener('click', function () { showAt(cur + 1); });
+    lb.addEventListener('keydown', function (e) {
+      if (e.key === 'ArrowLeft') { e.preventDefault(); showAt(cur - 1); }
+      if (e.key === 'ArrowRight') { e.preventDefault(); showAt(cur + 1); }
+    });
+  }
+
+  // ── 숫자 카운트업 ──
+  var counters = document.querySelectorAll('[data-count]');
+  if (counters.length && !reduce && 'IntersectionObserver' in window) {
+    var cio = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (!en.isIntersecting) return;
+        cio.unobserve(en.target);
+        var el = en.target, target = parseInt(el.dataset.count, 10);
+        var suffix = el.dataset.suffix || '';
+        var t0 = null;
+        function tick(ts) {
+          if (!t0) t0 = ts;
+          var p = Math.min((ts - t0) / 1200, 1);
+          var v = Math.round(target * (1 - Math.pow(2, -10 * p)));
+          el.textContent = v.toLocaleString('ko-KR') + suffix;
+          if (p < 1) requestAnimationFrame(tick);
+        }
+        requestAnimationFrame(tick);
+      });
+    }, { threshold: 0.6 });
+    counters.forEach(function (el) { cio.observe(el); });
+  } else {
+    counters.forEach(function (el) {
+      el.textContent = parseInt(el.dataset.count, 10).toLocaleString('ko-KR') + (el.dataset.suffix || '');
+    });
   }
 
   // ── 자료&칼럼: 필터 + 검색 ──
@@ -98,8 +139,14 @@
           (activeCat === 'free' ? li.dataset.free === '1' : li.dataset.cat === activeCat);
         var okQ = !q || li.dataset.title.indexOf(q) !== -1;
         var ok = okCat && okQ;
-        li.style.display = ok ? '' : 'none';
-        shown += ok ? 1 : 0;
+        if (ok) {
+          li.style.display = '';
+          requestAnimationFrame(function () { li.classList.remove('is-hidden'); });
+          shown += 1;
+        } else {
+          li.classList.add('is-hidden');
+          setTimeout(function () { if (li.classList.contains('is-hidden')) li.style.display = 'none'; }, 260);
+        }
       });
       if (empty) empty.style.display = shown ? 'none' : '';
     }

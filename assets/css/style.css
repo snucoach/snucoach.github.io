@@ -60,6 +60,7 @@ a { color: inherit; }
 }
 [data-rv].rv-in { opacity: 1; transform: none; }
 [data-rv="fade"] { transform: none; }
+html:not(.js) [data-rv] { opacity: 1 !important; transform: none !important; }
 @media (prefers-reduced-motion: reduce) {
   [data-rv] { opacity: 1 !important; transform: none !important; transition: none !important; }
   html { scroll-behavior: auto; }
@@ -227,6 +228,7 @@ a { color: inherit; }
 .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(0,88,248,.42); }
 .btn-primary:hover::after { left: 130%; }
 .btn-primary:active { transform: translateY(0) scale(.98); }
+.btn:active, .cta-button:active, .chip:active, .post-card:active { transform: scale(.975); transition-duration: .08s; }
 .btn-ghost {
   color: #fff; background: rgba(255,255,255,.06);
   border: 1px solid rgba(255,255,255,.22);
@@ -243,6 +245,9 @@ a { color: inherit; }
   background: rgba(255,255,255,.055); border: 1px solid rgba(255,255,255,.12);
 }
 .hero-chip .dot { width: 5px; height: 5px; border-radius: 50%; background: var(--blue-soft); }
+.hero-chip [data-count] { font-variant-numeric: tabular-nums; font-weight: 800; }
+.hero-reviews .hero-chip { color: rgba(240,236,224,.85); background: rgba(227,192,107,.08); border-color: rgba(227,192,107,.25); }
+.hero-reviews .hero-chip .dot { background: var(--gold); }
 
 /* 후기: 네이비+골드 프레스티지 히어로 (명예의 전당 모티프) */
 .hero-reviews { background: linear-gradient(180deg, var(--navy) 0%, var(--navy-2) 100%); }
@@ -362,7 +367,10 @@ a { color: inherit; }
   .nb-column-list { flex-direction: column; gap: 10px; }
   .nb-column { flex: none; width: 100%; }
 }
-.page-reviews .nb-image { margin: 0 0 14px; }
+.page-reviews .nb-image {
+  margin: 0 0 14px;
+  content-visibility: auto; contain-intrinsic-size: 280px 420px;
+}
 .page-reviews .nb-img {
   border-radius: 14px; box-shadow: var(--shadow-s);
   cursor: zoom-in;
@@ -374,6 +382,11 @@ a { color: inherit; }
 .lightbox {
   border: 0; padding: 0; background: transparent;
   max-width: min(92vw, 900px); max-height: 92vh;
+  opacity: 1; transform: none;
+  transition: opacity .3s ease, transform .3s var(--ease-out);
+}
+@starting-style {
+  .lightbox[open] { opacity: 0; transform: scale(.94); }
 }
 .lightbox::backdrop { background: rgba(8, 12, 22, .82); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
 .lightbox img { display: block; max-width: min(92vw, 900px); max-height: 88vh; width: auto; height: auto; border-radius: 14px; margin: 0 auto; }
@@ -383,6 +396,17 @@ a { color: inherit; }
   background: rgba(255,255,255,.14); color: #fff; font-size: 19px;
 }
 .lightbox .lb-close:hover { background: rgba(255,255,255,.26); }
+.lightbox .lb-nav {
+  position: fixed; top: 50%; transform: translateY(-50%);
+  width: 44px; height: 44px; border-radius: 50%; border: 0; cursor: pointer;
+  background: rgba(255,255,255,.14); color: #fff; font-size: 20px;
+  display: flex; align-items: center; justify-content: center;
+  transition: background .2s ease;
+}
+.lightbox .lb-nav:hover { background: rgba(255,255,255,.28); }
+.lightbox .lb-prev { left: 16px; }
+.lightbox .lb-next { right: 16px; }
+@media (max-width: 640px) { .lightbox .lb-nav { width: 38px; height: 38px; top: auto; bottom: 24px; } }
 
 /* 콜아웃 */
 .nb-callout {
@@ -470,7 +494,10 @@ a { color: inherit; }
   transition: color .18s ease;
 }
 .post-card:hover .post-title { color: var(--blue); }
-.post-date { font-size: 12.5px; color: var(--text-faint); margin-top: 5px; font-weight: 500; }
+.post-date { font-size: 12.5px; color: var(--text-faint); margin-top: 5px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.chip .cnt { font-variant-numeric: tabular-nums; }
+.post-item { transition: opacity .25s ease, transform .25s ease; }
+.post-item.is-hidden { opacity: 0; transform: scale(.97); pointer-events: none; }
 .post-arr {
   flex-shrink: 0; width: 34px; height: 34px; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
