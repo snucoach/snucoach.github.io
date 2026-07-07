@@ -794,9 +794,9 @@ body.drawer-open { overflow: hidden; }
   background: linear-gradient(180deg, #FFFFFF 0%, #A9BEDC 45%, #0A1526 78%, var(--ink) 100%);
   text-align: center; padding: clamp(64px, 13vw, 120px) 20px clamp(28px, 6vw, 44px);
 }
-/* 카톡 '압축' 안내 배너 (스누코치 채널 CTA) + 슬림 다크 전환 */
-.kakao-tip-sec { background: #fff; }
-.kakao-tip-sec .sec-inner { text-align: center; padding-top: clamp(30px, 6vw, 48px); padding-bottom: clamp(28px, 5vw, 44px); }
+/* 카톡 '압축' 안내 배너 (스누코치 채널 CTA) — 섹션 배경이 상세페이지 검정으로 자연 페이드 */
+.kakao-tip-sec { background: linear-gradient(180deg, #FFFFFF 0%, #FFFFFF 54%, #05070E 84%, var(--ink) 100%); }
+.kakao-tip-sec .sec-inner { text-align: center; padding-top: clamp(30px, 6vw, 48px); padding-bottom: clamp(96px, 17vw, 148px); }
 .kakao-tip-card {
   display: inline-flex; flex-direction: column; align-items: center; gap: 15px;
   max-width: 484px; text-decoration: none; cursor: pointer;
@@ -824,7 +824,6 @@ body.drawer-open { overflow: hidden; }
 .ktc-arr { margin-left: 1px; font-weight: 800; transition: transform .25s var(--ease-out); }
 .kakao-tip-card:hover .ktc-arr { transform: translateX(4px); }
 .ktc-hint { font-size: 12.5px; font-weight: 500; color: #93A0B2; letter-spacing: -.005em; }
-.to-dark-slim { padding: 0; height: clamp(60px, 10vw, 92px); }
 .bridge-lead {
   font-size: clamp(16px, 4.2vw, 19px); font-weight: 750; color: rgba(240,244,252,.92);
   letter-spacing: -0.02em; margin: 0 0 18px;
