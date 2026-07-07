@@ -52,6 +52,60 @@
     document.addEventListener('click', function () { dd.classList.remove('open'); hide(); });
   });
 
+  // ── 모바일 드로어 (햄버거 → 우측 슬라이드 메뉴) ──
+  var navToggle = document.getElementById('navToggle');
+  var navDrawer = document.getElementById('navDrawer');
+  var navScrim = document.getElementById('navScrim');
+  var drawerClose = document.getElementById('drawerClose');
+  if (navToggle && navDrawer && navScrim) {
+    var lastFocus = null;
+    function openDrawer() {
+      lastFocus = document.activeElement;
+      navScrim.hidden = false;
+      void navScrim.offsetWidth;
+      navDrawer.classList.add('open');
+      navScrim.classList.add('show');
+      navToggle.setAttribute('aria-expanded', 'true');
+      navToggle.setAttribute('aria-label', '메뉴 닫기');
+      navDrawer.setAttribute('aria-hidden', 'false');
+      document.body.classList.add('drawer-open');
+      if (drawerClose) drawerClose.focus();
+      document.addEventListener('keydown', onDrawerKey);
+    }
+    function closeDrawer() {
+      navDrawer.classList.remove('open');
+      navScrim.classList.remove('show');
+      navToggle.setAttribute('aria-expanded', 'false');
+      navToggle.setAttribute('aria-label', '메뉴 열기');
+      navDrawer.setAttribute('aria-hidden', 'true');
+      document.body.classList.remove('drawer-open');
+      document.removeEventListener('keydown', onDrawerKey);
+      setTimeout(function () { if (!navDrawer.classList.contains('open')) navScrim.hidden = true; }, 360);
+      if (lastFocus && lastFocus.focus) lastFocus.focus();
+    }
+    function onDrawerKey(e) {
+      if (e.key === 'Escape') { closeDrawer(); return; }
+      if (e.key === 'Tab') {
+        var f = navDrawer.querySelectorAll('a[href], button');
+        if (!f.length) return;
+        var first = f[0], last = f[f.length - 1];
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+      }
+    }
+    navToggle.addEventListener('click', function () {
+      navDrawer.classList.contains('open') ? closeDrawer() : openDrawer();
+    });
+    if (drawerClose) drawerClose.addEventListener('click', closeDrawer);
+    navScrim.addEventListener('click', closeDrawer);
+    navDrawer.querySelectorAll('.drawer-links a, .drawer-cta, .drawer-kakao').forEach(function (a) {
+      a.addEventListener('click', closeDrawer);
+    });
+    window.addEventListener('resize', function () {
+      if (window.innerWidth > 640 && navDrawer.classList.contains('open')) closeDrawer();
+    });
+  }
+
   // ── 공유 버튼 (폴백 + 스크린리더 안내) ──
   var share = document.getElementById('navShare');
   if (share) share.addEventListener('click', function () {
