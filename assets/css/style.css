@@ -60,6 +60,13 @@ a { color: inherit; }
 }
 [data-rv].rv-in { opacity: 1; transform: none; }
 [data-rv="fade"] { transform: none; }
+[data-rv="left"] { transform: translateX(-30px); }
+[data-rv="right"] { transform: translateX(30px); }
+[data-rv="pop"] {
+  transform: translateY(16px) scale(.9);
+  transition: opacity .6s var(--ease-out), transform .65s var(--ease-spring);
+  transition-delay: var(--rv-delay, 0s);
+}
 html:not(.js) [data-rv] { opacity: 1 !important; transform: none !important; }
 
 /* 히어로 진입 코레오그래피 — JS 도착과 무관하게 CSS만으로 등장 */
@@ -84,6 +91,45 @@ html:not(.js) [data-rv] { opacity: 1 !important; transform: none !important; }
   [data-rv] { opacity: 1 !important; transform: none !important; transition: none !important; }
   html { scroll-behavior: auto; }
   * { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+}
+
+/* ── 스크롤 구동 애니메이션 (핀셋식 진행감) ── */
+@supports (animation-timeline: view()) {
+  .img-flow .nb-image {
+    animation: img-scrollin linear both;
+    animation-timeline: view();
+    animation-range: entry 0% entry 45%;
+  }
+  @keyframes img-scrollin { from { opacity: .22; } to { opacity: 1; } }
+  .rv-masonry .rv-card {
+    animation: card-scrollin linear both;
+    animation-timeline: view();
+    animation-range: entry 0% entry 38%;
+  }
+  @keyframes card-scrollin { from { opacity: 0; } to { opacity: 1; } }
+}
+
+/* 패럴랙스 글로우 오브 */
+.orb {
+  position: absolute; width: 360px; height: 360px; border-radius: 50%;
+  filter: blur(85px); opacity: .4; pointer-events: none; z-index: 0;
+}
+.orb-blue { background: radial-gradient(circle, rgba(0,88,248,.55), transparent 70%); }
+.orb-soft { background: radial-gradient(circle, rgba(127,168,255,.3), transparent 70%); }
+.philosophy .orb { top: 4%; right: -140px; }
+.paradigm .orb { bottom: -6%; left: -150px; }
+@supports (animation-timeline: view()) {
+  .sec-dark .orb {
+    animation: orb-drift linear both;
+    animation-timeline: view();
+  }
+  @keyframes orb-drift {
+    from { transform: translateY(90px); }
+    to { transform: translateY(-90px); }
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .img-flow .nb-image, .rv-masonry .rv-card, .sec-dark .orb { animation: none !important; }
 }
 
 /* ── 상단 내비게이션 ─────────────────────── */

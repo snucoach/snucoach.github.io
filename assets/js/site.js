@@ -52,6 +52,12 @@
     }
   });
 
+  // ── 스태거 컨테이너: 자식 리빌에 자동 지연 부여 ──
+  document.querySelectorAll('[data-rv-stagger]').forEach(function (c) {
+    var kids = c.querySelectorAll(':scope > [data-rv]');
+    kids.forEach(function (el, i) { el.style.transitionDelay = (i * 0.1) + 's'; });
+  });
+
   // ── 스크롤 리빌 ──
   if (!reduce && 'IntersectionObserver' in window) {
     var io = new IntersectionObserver(function (entries) {
