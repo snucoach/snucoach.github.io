@@ -652,9 +652,44 @@ html:not(.js) [data-rv] { opacity: 1 !important; transform: none !important; }
 .compare-card li .ico { flex-shrink: 0; font-size: 13px; line-height: 1.75; }
 
 .sec-illust {
-  display: block; margin: 36px auto 0;
-  width: min(340px, 74vw); height: auto;
+  display: block; margin: 30px auto 4px;
+  width: min(260px, 60vw); height: auto;
+  filter: drop-shadow(0 18px 30px rgba(8,42,110,.16));
 }
+
+/* 히어로 일러스트 */
+.hero-illust {
+  display: block; margin: 30px auto 0;
+  width: min(300px, 66vw); height: auto;
+  filter: drop-shadow(0 20px 34px rgba(8,42,110,.18));
+  animation: hero-bob 5s ease-in-out infinite alternate;
+}
+.hero-illust-sm { width: min(160px, 40vw); margin: 0 auto 18px; filter: drop-shadow(0 14px 26px rgba(0,0,0,.28)); }
+@keyframes hero-bob { from { transform: translateY(0); } to { transform: translateY(-10px); } }
+@media (prefers-reduced-motion: reduce) { .hero-illust { animation: none; } }
+
+/* 특징 4종 아이콘 섹션 */
+.features .sec-inner { text-align: center; }
+.feat-title {
+  margin: 0 0 40px; font-weight: 800; letter-spacing: -0.03em;
+  font-size: clamp(24px, 5.8vw, 36px); line-height: 1.35; color: #0B1220;
+}
+.feat-title .grad2 {
+  background: linear-gradient(105deg, #005CFF 10%, #4D8DFF 90%);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.feat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+@media (min-width: 760px) { .feat-grid { grid-template-columns: repeat(4, 1fr); } }
+.feat-card {
+  background: var(--paper); border: 1px solid rgba(8,42,110,.06);
+  border-radius: 22px; box-shadow: var(--shadow-card);
+  padding: 26px 16px 22px; text-align: center;
+  transition: transform .3s var(--ease-spring), box-shadow .3s ease;
+}
+.feat-card:hover { transform: translateY(-4px); box-shadow: 0 6px 16px rgba(8,42,110,.08), 0 22px 50px rgba(8,42,110,.14); }
+.feat-card img { width: 88px; height: 88px; display: block; margin: 0 auto 12px; filter: drop-shadow(0 10px 18px rgba(8,42,110,.14)); }
+.feat-card h3 { margin: 0 0 5px; font-size: 16px; font-weight: 800; letter-spacing: -0.02em; color: var(--navy); }
+.feat-card p { margin: 0; font-size: 13px; line-height: 1.55; color: var(--text-sub); word-break: keep-all; }
 
 /* 브리지 스트립 (라이트) + 다크 전환 그라데이션 */
 .bridge { background: #fff; }
