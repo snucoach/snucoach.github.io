@@ -1310,6 +1310,16 @@ html:not(.js) .rv-card { max-width: 320px; margin: 0 auto 14px; }
 @media (prefers-reduced-motion: reduce) { .an-jump { animation: none; } }
 html { scroll-padding-top: 72px; }
 
+/* 404 페이지 */
+.hero-404 { background: linear-gradient(180deg, var(--sec-bg), #fff); text-align: center; }
+.hero-404 .hero-inner { align-items: center; }
+.e404-code {
+  display: inline-block; margin-bottom: 6px;
+  font-size: clamp(66px, 17vw, 112px); font-weight: 900; line-height: 1; letter-spacing: -.05em;
+  background: linear-gradient(120deg, #005CFF 20%, #8FB4FF); -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.e404-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 30px; }
+
 /* ── 대표 신뢰 섹션 ── */
 .rep .sec-inner { text-align: center; }
 .rep-card {
