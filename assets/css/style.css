@@ -1293,13 +1293,19 @@ html:not(.js) .rv-card { max-width: 320px; margin: 0 auto 14px; }
 .hero-coaching .hero-title { color: var(--navy); }
 .hero-coaching .grad { background: linear-gradient(105deg, #005CFF 10%, #4D8DFF 90%); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .hero-coaching .hero-sub { color: #43506B; }
-.anchor-nav { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 30px; }
+.anchor-lead { margin: 30px 0 0; font-size: 13px; font-weight: 650; color: var(--text-sub); letter-spacing: -.01em; }
+.anchor-nav { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 12px; }
 .anchor-nav a {
+  display: inline-flex; align-items: center; gap: 4px;
   font-size: 13.5px; font-weight: 650; color: var(--navy); text-decoration: none;
   background: rgba(255,255,255,.8); border: 1px solid rgba(8,42,110,.1);
   padding: 8px 15px; border-radius: 999px; transition: all .2s var(--ease-out);
 }
 .anchor-nav a:hover { background: var(--blue); color: #fff; border-color: var(--blue); transform: translateY(-1px); }
+.an-jump { color: var(--blue); font-weight: 800; font-size: 12px; animation: an-bob 1.7s ease-in-out infinite; }
+.anchor-nav a:hover .an-jump { color: #fff; animation: none; transform: translateY(1px); }
+@keyframes an-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(2.5px); } }
+@media (prefers-reduced-motion: reduce) { .an-jump { animation: none; } }
 html { scroll-padding-top: 72px; }
 
 /* ── 대표 신뢰 섹션 ── */
