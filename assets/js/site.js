@@ -19,7 +19,14 @@
     window.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' });
   });
 
-  // ── 드롭다운 ──
+  // 스크린리더 안내용 aria-live 영역
+  var srLive = document.createElement('div');
+  srLive.setAttribute('aria-live', 'polite');
+  srLive.className = 'sr-only';
+  document.body.appendChild(srLive);
+  function announce(msg) { srLive.textContent = ''; setTimeout(function () { srLive.textContent = msg; }, 30); }
+
+  // ── 드롭다운 (aria-expanded 동기화 + ESC 닫기) ──
   document.querySelectorAll('.nav-dropdown').forEach(function (dd) {
     var btn = dd.querySelector('button');
     var menu = dd.querySelector('.dropdown-menu');
@@ -27,8 +34,8 @@
       var r = btn.getBoundingClientRect();
       menu.style.left = Math.max(8, Math.min(r.left, window.innerWidth - 190)) + 'px';
     }
-    function show() { place(); menu.classList.add('show'); }
-    function hide() { menu.classList.remove('show'); }
+    function show() { place(); menu.classList.add('show'); btn.setAttribute('aria-expanded', 'true'); }
+    function hide() { menu.classList.remove('show'); btn.setAttribute('aria-expanded', 'false'); }
     dd.addEventListener('mouseenter', show);
     dd.addEventListener('mouseleave', function () { if (!dd.classList.contains('open')) hide(); });
     btn.addEventListener('click', function (e) {
@@ -36,10 +43,16 @@
       dd.classList.toggle('open');
       dd.classList.contains('open') ? show() : hide();
     });
+    btn.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') { dd.classList.remove('open'); hide(); btn.focus(); }
+    });
+    menu.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') { dd.classList.remove('open'); hide(); btn.focus(); }
+    });
     document.addEventListener('click', function () { dd.classList.remove('open'); hide(); });
   });
 
-  // ── 공유 버튼 ──
+  // ── 공유 버튼 (폴백 + 스크린리더 안내) ──
   var share = document.getElementById('navShare');
   if (share) share.addEventListener('click', function () {
     if (navigator.share) {
@@ -47,8 +60,11 @@
     } else if (navigator.clipboard) {
       navigator.clipboard.writeText(location.href).then(function () {
         share.classList.add('copied');
+        announce('페이지 주소가 복사되었습니다.');
         setTimeout(function () { share.classList.remove('copied'); }, 1200);
-      });
+      }).catch(function () { window.prompt('페이지 주소를 복사하세요', location.href); });
+    } else {
+      window.prompt('페이지 주소를 복사하세요', location.href);
     }
   });
 
@@ -70,23 +86,47 @@
     document.querySelectorAll('[data-rv]').forEach(function (el) { el.classList.add('rv-in'); });
   }
 
-  // ── 후기 라이트박스 (이전/다음 정주행) ──
+  // ── 후기 라이트박스 (현재 보이는 카드만 순회) ──
   var lb = document.getElementById('lightbox');
   if (lb) {
     var lbImg = lb.querySelector('img');
-    var gallery = Array.prototype.slice.call(document.querySelectorAll('.page-reviews .nb-img'));
+    var view = [];   // 열 때 만들어지는 '현재 보이는' 이미지 목록
     var cur = 0;
-    function showAt(i) {
-      cur = (i + gallery.length) % gallery.length;
-      var el = gallery[cur];
-      lbImg.src = el.dataset.full || el.src;
+    function buildView() {
+      // 메이슨리 컬럼 내, 숨겨지지 않은 카드의 이미지만 (DOM=시각 순서)
+      view = Array.prototype.slice.call(
+        document.querySelectorAll('.rv-card:not(.is-hidden) .nb-img')
+      );
     }
-    gallery.forEach(function (img, i) {
-      img.addEventListener('click', function () {
-        showAt(i);
-        lb.showModal();
+    function render() {
+      var el = view[cur];
+      if (el) lbImg.src = el.dataset.full || el.src;
+    }
+    function go(delta) {
+      if (!view.length) return;
+      cur = (cur + delta + view.length) % view.length;
+      render();
+    }
+    function openFrom(img) {
+      buildView();
+      cur = view.indexOf(img);
+      if (cur < 0) cur = 0;
+      render();
+      lb.showModal();
+    }
+    var page = document.querySelector('.page-reviews');
+    if (page) {
+      page.addEventListener('click', function (e) {
+        var img = e.target.closest('.nb-img');
+        if (img) openFrom(img);
       });
-    });
+      // 키보드 접근: 이미지(role=button)에서 Enter/Space로 열기
+      page.addEventListener('keydown', function (e) {
+        if (e.key !== 'Enter' && e.key !== ' ' && e.key !== 'Spacebar') return;
+        var img = e.target.closest('.nb-img');
+        if (img) { e.preventDefault(); openFrom(img); }
+      });
+    }
     lb.addEventListener('click', function (e) {
       if (e.target.closest('.lb-nav') || e.target.closest('.lb-close')) return;
       var r = lbImg.getBoundingClientRect();
@@ -95,38 +135,11 @@
     });
     lb.querySelector('.lb-close').addEventListener('click', function () { lb.close(); });
     var prev = lb.querySelector('.lb-prev'), next = lb.querySelector('.lb-next');
-    if (prev) prev.addEventListener('click', function () { showAt(cur - 1); });
-    if (next) next.addEventListener('click', function () { showAt(cur + 1); });
+    if (prev) prev.addEventListener('click', function () { go(-1); });
+    if (next) next.addEventListener('click', function () { go(1); });
     lb.addEventListener('keydown', function (e) {
-      if (e.key === 'ArrowLeft') { e.preventDefault(); showAt(cur - 1); }
-      if (e.key === 'ArrowRight') { e.preventDefault(); showAt(cur + 1); }
-    });
-  }
-
-  // ── 숫자 카운트업 ──
-  var counters = document.querySelectorAll('[data-count]');
-  if (counters.length && !reduce && 'IntersectionObserver' in window) {
-    var cio = new IntersectionObserver(function (entries) {
-      entries.forEach(function (en) {
-        if (!en.isIntersecting) return;
-        cio.unobserve(en.target);
-        var el = en.target, target = parseInt(el.dataset.count, 10);
-        var suffix = el.dataset.suffix || '';
-        var t0 = null;
-        function tick(ts) {
-          if (!t0) t0 = ts;
-          var p = Math.min((ts - t0) / 1200, 1);
-          var v = Math.round(target * (1 - Math.pow(2, -10 * p)));
-          el.textContent = v.toLocaleString('ko-KR') + suffix;
-          if (p < 1) requestAnimationFrame(tick);
-        }
-        requestAnimationFrame(tick);
-      });
-    }, { threshold: 0.6 });
-    counters.forEach(function (el) { cio.observe(el); });
-  } else {
-    counters.forEach(function (el) {
-      el.textContent = parseInt(el.dataset.count, 10).toLocaleString('ko-KR') + (el.dataset.suffix || '');
+      if (e.key === 'ArrowLeft') { e.preventDefault(); go(-1); }
+      if (e.key === 'ArrowRight') { e.preventDefault(); go(1); }
     });
   }
 
