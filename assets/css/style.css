@@ -794,6 +794,14 @@ body.drawer-open { overflow: hidden; }
   background: linear-gradient(180deg, #FFFFFF 0%, #A9BEDC 45%, #0A1526 78%, var(--ink) 100%);
   text-align: center; padding: clamp(64px, 13vw, 120px) 20px clamp(28px, 6vw, 44px);
 }
+/* 카톡 '압축' 안내 배너 + 슬림 다크 전환 */
+.kakao-tip-sec { background: #fff; }
+.kakao-tip-sec .sec-inner { text-align: center; padding-top: clamp(30px, 6vw, 48px); padding-bottom: clamp(28px, 5vw, 44px); }
+.bridge-tip-link { text-decoration: none; cursor: pointer; transition: transform .3s var(--ease-spring), box-shadow .3s ease, border-color .2s ease; }
+.bridge-tip-link:hover { transform: translateY(-3px); box-shadow: 0 12px 30px rgba(8,24,48,.13); border-color: rgba(0,88,248,.28); }
+.bridge-tip-link:focus-visible { outline: 2px solid var(--blue); outline-offset: 3px; }
+.bridge-tip .kt-arr { color: var(--blue); font-weight: 800; }
+.to-dark-slim { padding: 0; height: clamp(60px, 10vw, 92px); }
 .bridge-lead {
   font-size: clamp(16px, 4.2vw, 19px); font-weight: 750; color: rgba(240,244,252,.92);
   letter-spacing: -0.02em; margin: 0 0 18px;
