@@ -3,8 +3,8 @@
    상세페이지 이미지와 동일한 팔레트/문법으로 설계
    ============================================================ */
 :root {
-  --ink: #0B0C10;
-  --ink-2: #14161C;
+  --ink: #00040A;
+  --ink-2: #0A0F1A;
   --navy: #081830;
   --navy-2: #0B2148;
   --blue: #0058F8;
@@ -105,7 +105,7 @@ html:not(.js) [data-rv] { opacity: 1 !important; transform: none !important; }
   max-width: 1200px; margin: 0 auto;
 }
 .nav-logo { display: flex; align-items: center; flex-shrink: 0; }
-.nav-logo img { height: 30px; width: auto; transition: transform .3s var(--ease-spring); }
+.nav-logo img { height: 21px; width: auto; transition: transform .3s var(--ease-spring); }
 .nav-logo:hover img { transform: scale(1.04); }
 .nav-tabs {
   flex: 1; display: flex; align-items: center;
@@ -191,7 +191,7 @@ html:not(.js) [data-rv] { opacity: 1 !important; transform: none !important; }
 .hero h1, .hero .hero-title {
   margin: 0 0 18px;
   font-size: clamp(30px, 5.4vw, 46px);
-  font-weight: 800; line-height: 1.28; letter-spacing: -0.032em;
+  font-weight: 800; line-height: 1.3; letter-spacing: -0.03em;
 }
 .hero-sub {
   margin: 0 auto; max-width: 560px;
@@ -221,10 +221,10 @@ html:not(.js) [data-rv] { opacity: 1 !important; transform: none !important; }
 }
 .hero-home .hero-title { color: #fff; }
 .hero-home .grad {
-  background: linear-gradient(105deg, #A8C4FF 0%, #5E8FFF 45%, #2F6BFF 100%);
+  background: linear-gradient(249deg, #005CFF 3%, #D4E3FF 100%);
   -webkit-background-clip: text; background-clip: text; color: transparent;
 }
-.hero-home .hero-sub { color: rgba(235,240,250,.72); }
+.hero-home .hero-sub { color: rgba(255,255,255,.55); }
 .hero-cta-row {
   display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;
   margin-top: 30px;
@@ -405,10 +405,14 @@ html:not(.js) [data-rv] { opacity: 1 !important; transform: none !important; }
 .flow-t { font-size: 13.5px; font-weight: 700; color: rgba(235,240,250,.82); letter-spacing: -0.01em; }
 .flow-step.warn .flow-t { color: #F3B8B8; }
 .flow-arr { align-self: center; color: rgba(235,240,250,.35); font-size: 17px; font-weight: 700; }
-.flow-cap { margin: 14px 0 0; font-size: 13px; color: rgba(230,236,248,.42); letter-spacing: .01em; }
+.flow-cap { margin: 14px 0 0; font-size: 13.5px; line-height: 1.44; color: rgba(255,255,255,.5); letter-spacing: -0.01em; }
 
 /* 키워드 대비: 취소선 vs 하이라이트 */
-.kw-vs { margin-top: 44px; }
+.kw-vs { margin-top: 46px; }
+.kw-kicker {
+  margin: 0 0 20px; font-size: 14.5px; font-weight: 750; letter-spacing: .01em;
+  color: var(--blue-soft);
+}
 .kw-x {
   display: inline-block; margin: 0 0 16px;
   font-size: clamp(17px, 4.4vw, 22px); font-weight: 750; letter-spacing: -0.02em;
@@ -423,7 +427,7 @@ html:not(.js) [data-rv] { opacity: 1 !important; transform: none !important; }
   letter-spacing: -0.025em; color: #fff;
 }
 .phil-statement .grad {
-  background: linear-gradient(105deg, #A8C4FF 0%, #5E8FFF 45%, #2F6BFF 100%);
+  background: linear-gradient(249deg, #005CFF 3%, #D4E3FF 100%);
   -webkit-background-clip: text; background-clip: text; color: transparent;
 }
 .phil-statement .hl-white {
@@ -783,6 +787,8 @@ html:not(.js) [data-rv] { opacity: 1 !important; transform: none !important; }
   .flow-arr { transform: rotate(90deg); font-size: 15px; }
 }
 @media (max-width: 640px) {
+  .nav-logo img { height: 17px; }
+  .topnav-inner { padding: 0 14px; }
   .cta-button { padding: 14px 0; width: calc(100% - 28px); justify-content: center; border-radius: 14px; bottom: 14px; }
   .kakao-float { right: 14px; bottom: 84px; }
   .goto-top { left: 14px; bottom: 84px; }
