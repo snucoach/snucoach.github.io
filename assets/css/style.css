@@ -12,6 +12,9 @@
   --blue-soft: #7FA8FF;
   --sky: #DCE4F5;
   --sky-2: #EDF2FB;
+  --sec-bg: #F0F9FF;          /* 피그마 상세페이지 섹션 배경(블루 틴트) */
+  --banner: #005CFE;          /* 블루 라벨 배너 */
+  --badge-bg: #D4E4FE;        /* 넘버/라벨 뱃지 배경 */
   --off: #F0F1F4;
   --paper: #FFFFFF;
   --gold: #E3C06B;
@@ -23,6 +26,7 @@
   --line: rgba(11, 12, 16, 0.08);
   --shadow-s: 0 1px 2px rgba(11,12,16,.05), 0 4px 12px rgba(11,12,16,.06);
   --shadow-m: 0 2px 6px rgba(11,12,16,.06), 0 12px 32px rgba(11,12,16,.10);
+  --shadow-card: 0 2px 8px rgba(8,42,110,.05), 0 16px 40px rgba(8,42,110,.09);
   --shadow-blue: 0 6px 24px rgba(0,88,248,.32);
   --ease-out: cubic-bezier(.22, 1, .36, 1);
   --ease-spring: cubic-bezier(.34, 1.56, .64, 1);
@@ -427,7 +431,7 @@ html:not(.js) [data-rv] { opacity: 1 !important; transform: none !important; }
 .hero-reviews .hero-sub { color: rgba(230,236,248,.72); }
 
 /* 자료·칼럼: 소프트 스카이 히어로 */
-.hero-columns { background: linear-gradient(180deg, var(--sky) 0%, var(--sky-2) 88%, var(--paper) 100%); }
+.hero-columns { background: linear-gradient(180deg, var(--sky) 0%, #E4EEFB 70%, var(--sec-bg) 100%); }
 .hero-columns::before {
   content: ''; position: absolute; inset: 0;
   background: radial-gradient(40% 55% at 50% 0%, rgba(255,255,255,.75), transparent 72%);
@@ -485,22 +489,38 @@ html:not(.js) [data-rv] { opacity: 1 !important; transform: none !important; }
 .nb-image .nb-img { display: block; margin: 0 auto; padding: 0; max-width: 100%; height: auto; }
 
 /* ── 홈 스토리 섹션 (잉크 캔버스 연속) ────── */
+/* 섹션 배경 — 피그마: 블루 틴트 위에 흰 카드가 뜨는 구조 */
 .sec-dark { background: var(--ink); color: #fff; position: relative; overflow: hidden; }
-.sec-light { background: #fff; color: var(--text); position: relative; overflow: hidden; }
-.sec-sky { background: linear-gradient(180deg, #F3F8FE 0%, #E9F1FC 100%); color: var(--text); position: relative; overflow: hidden; }
-.sec-light .sec-eyebrow, .sec-sky .sec-eyebrow {
-  color: var(--blue); background: rgba(255,255,255,.9);
-  border: 1px solid rgba(0,88,248,.15);
-  box-shadow: 0 2px 8px rgba(8,24,48,.05);
-}
-.sec-light .sec-eyebrow { background: var(--sky-2); }
-.sec-inner { max-width: 720px; margin: 0 auto; padding: clamp(56px, 11vw, 104px) 22px; position: relative; z-index: 1; }
+.sec-light { background: var(--sec-bg); color: var(--text); position: relative; overflow: hidden; }
+.sec-sky { background: var(--sec-bg); color: var(--text); position: relative; overflow: hidden; }
+.sec-inner { max-width: 720px; margin: 0 auto; padding: clamp(64px, 12vw, 116px) 22px; position: relative; z-index: 1; }
+
+/* 넘버/라벨 뱃지 — 피그마 '혜택 0N' 스타일 */
 .sec-eyebrow {
   display: inline-flex; align-items: center; gap: 7px;
-  font-size: 13px; font-weight: 700; letter-spacing: .03em;
-  color: var(--blue-soft); background: rgba(0,88,248,.10);
-  border: 1px solid rgba(127,168,255,.28);
-  padding: 7px 14px; border-radius: 999px; margin-bottom: 26px;
+  font-size: 14px; font-weight: 800; letter-spacing: .01em;
+  color: var(--blue); background: var(--badge-bg);
+  border: 0; padding: 9px 18px; border-radius: 999px; margin-bottom: 24px;
+}
+.sec-dark .sec-eyebrow {
+  color: var(--blue-soft); background: rgba(0,88,248,.14);
+  border: 1px solid rgba(127,168,255,.25);
+}
+
+/* 블루 라벨 배너 — 피그마 '파란 박스 + 흰 볼드 텍스트' */
+.blue-banner {
+  display: inline-block; margin: 0 auto 22px;
+  font-size: clamp(17px, 4.4vw, 22px); font-weight: 800; letter-spacing: -0.02em;
+  color: #fff; background: var(--banner);
+  padding: 11px 26px; border-radius: 13px;
+  box-shadow: 0 8px 22px rgba(0,88,248,.26);
+}
+
+/* 흰 카드 — 블루 틴트 위에 부양 */
+.card-white {
+  background: var(--paper); border: 1px solid rgba(8,42,110,.06);
+  border-radius: 26px; box-shadow: var(--shadow-card);
+  padding: clamp(26px, 6vw, 40px) clamp(20px, 5vw, 34px);
 }
 
 /* 대표 인사 — 라인 마스크 리빌 */
@@ -531,17 +551,19 @@ html:not(.js) [data-rv] { opacity: 1 !important; transform: none !important; }
   gap: 10px; flex-wrap: wrap; margin: 6px auto 0;
 }
 .flow-step {
-  display: flex; flex-direction: column; align-items: center; gap: 7px;
-  min-width: 108px; padding: 16px 14px 14px;
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  min-width: 120px; padding: 20px 16px 17px;
   background: #fff;
-  border: 1px solid rgba(11,27,61,.1);
-  border-radius: 16px;
-  box-shadow: 0 4px 16px rgba(8,24,48,.06);
+  border: 1px solid rgba(8,42,110,.07);
+  border-radius: 18px;
+  box-shadow: var(--shadow-card);
 }
 .flow-step.warn {
-  background: #FFF4F4; border-color: rgba(224,85,85,.3);
+  background: linear-gradient(160deg, #FFF6F6, #FFEDED);
+  border-color: rgba(224,85,85,.28);
+  box-shadow: 0 2px 8px rgba(196,66,66,.06), 0 16px 40px rgba(196,66,66,.1);
 }
-.flow-emo { font-size: 24px; line-height: 1; }
+.flow-emo { font-size: 27px; line-height: 1; }
 .flow-t { font-size: 13.5px; font-weight: 700; color: #2A3550; letter-spacing: -0.01em; }
 .flow-step.warn .flow-t { color: #C44242; }
 .flow-arr { align-self: center; color: rgba(11,27,61,.3); font-size: 17px; font-weight: 700; }
@@ -571,12 +593,20 @@ html:not(.js) [data-rv] { opacity: 1 !important; transform: none !important; }
   -webkit-background-clip: text; background-clip: text; color: transparent;
 }
 .phil-statement .hl-white {
-  /* 상세페이지 문법 반전: 블루 박스 + 화이트 텍스트 */
+  /* 피그마 블루 라벨 배너: 파란 박스 + 흰 텍스트 */
   display: inline-block; color: #fff;
-  background: linear-gradient(135deg, #2F6BFF, var(--blue));
-  padding: 3px 16px; border-radius: 11px; margin-top: 10px;
-  box-shadow: 0 6px 22px rgba(0,88,248,.3);
+  background: var(--banner);
+  padding: 5px 18px; border-radius: 12px; margin-top: 12px;
+  box-shadow: 0 8px 22px rgba(0,88,248,.26);
 }
+/* 철학·패러다임 콘텐츠를 흰 카드로 부양 */
+.phil-card, .paradigm-card {
+  background: var(--paper); border: 1px solid rgba(8,42,110,.06);
+  border-radius: 26px; box-shadow: var(--shadow-card);
+  padding: clamp(28px, 6vw, 44px) clamp(20px, 5vw, 36px);
+  margin-top: 4px;
+}
+.paradigm-card { margin-top: 34px; }
 
 /* 패러다임 비교 카드 */
 .paradigm::before {
@@ -586,26 +616,26 @@ html:not(.js) [data-rv] { opacity: 1 !important; transform: none !important; }
 }
 .paradigm .sec-inner { text-align: center; }
 .paradigm-title {
-  margin: 0 0 14px; font-weight: 800; letter-spacing: -0.03em;
-  font-size: clamp(23px, 5.6vw, 34px); line-height: 1.4; color: #0B1220;
+  margin: 0 0 16px; font-weight: 800; letter-spacing: -0.03em;
+  font-size: clamp(24px, 5.8vw, 36px); line-height: 1.35; color: #0B1220;
 }
 .paradigm-title .dim { color: rgba(27,42,74,.6); }
 .paradigm-sub {
-  margin: 0 auto 40px; max-width: 460px;
+  margin: 0 auto 34px; max-width: 460px;
   font-size: clamp(14.5px, 3.8vw, 16.5px); line-height: 1.75; color: #4A5568;
 }
 .compare { display: grid; grid-template-columns: 1fr; gap: 14px; text-align: left; }
 @media (min-width: 700px) { .compare { grid-template-columns: 1fr 1fr; } }
 .compare-card {
-  border-radius: 20px; padding: 26px 24px;
-  border: 1px solid rgba(11,27,61,.1);
+  border-radius: 20px; padding: 28px 26px;
+  border: 1px solid rgba(8,42,110,.07);
   background: #fff;
-  box-shadow: 0 4px 18px rgba(8,24,48,.05);
+  box-shadow: var(--shadow-card);
 }
 .compare-card.win {
-  background: linear-gradient(160deg, #EEF4FF, #FDFEFF);
-  border-color: rgba(0,88,248,.3);
-  box-shadow: 0 8px 26px rgba(0,88,248,.1);
+  background: linear-gradient(165deg, #EAF1FF, #FBFCFF);
+  border-color: rgba(0,88,248,.28);
+  box-shadow: 0 2px 8px rgba(0,88,248,.06), 0 18px 44px rgba(0,88,248,.14);
 }
 .compare-card h3 {
   margin: 0 0 16px; font-size: 16.5px; font-weight: 800; letter-spacing: -0.01em;
@@ -729,6 +759,8 @@ html:not(.js) [data-rv] { opacity: 1 !important; transform: none !important; }
   margin: 0 0 20px; padding: 13px 0 11px;
   border-bottom: 1px solid var(--line);
 }
+/* 후기·자료칼럼 페이지: 블루 틴트 배경 위 흰 카드 (피그마 문법) */
+body.p-reviews, body.p-columns { background: var(--sec-bg); }
 .page-reviews { max-width: 1040px; }
 .rv-masonry { display: flex; align-items: flex-start; gap: 14px; }
 .rv-col { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 14px; }
@@ -736,12 +768,12 @@ html:not(.js) [data-rv] { opacity: 1 !important; transform: none !important; }
 html:not(.js) .rv-masonry { display: block; }
 html:not(.js) .rv-card { max-width: 320px; margin: 0 auto 14px; }
 .rv-card {
-  border: 1px solid var(--line); border-radius: 16px;
+  border: 1px solid rgba(8,42,110,.06); border-radius: 16px;
   background: var(--paper); overflow: hidden;
-  box-shadow: var(--shadow-s);
+  box-shadow: 0 1px 3px rgba(8,42,110,.04), 0 8px 20px rgba(8,42,110,.06);
   transition: transform .3s var(--ease-spring), box-shadow .3s ease, opacity .25s ease;
 }
-.rv-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-m); }
+.rv-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-card); }
 .rv-card.is-hidden { display: none; }
 .rv-card img { display: block; width: 100%; height: auto; cursor: zoom-in; }
 .rv-star {
@@ -872,16 +904,17 @@ html:not(.js) .rv-card { max-width: 320px; margin: 0 auto 14px; }
 .post-item { margin: 0 0 10px; }
 .post-card {
   display: flex; align-items: center; gap: 16px;
-  padding: 17px 19px; border-radius: 17px;
-  border: 1px solid var(--line); background: var(--paper);
+  padding: 18px 20px; border-radius: 18px;
+  border: 1px solid rgba(8,42,110,.06); background: var(--paper);
   text-decoration: none;
+  box-shadow: 0 1px 3px rgba(8,42,110,.04), 0 8px 22px rgba(8,42,110,.06);
   transition: transform .3s var(--ease-spring), box-shadow .3s ease,
               border-color .2s ease, background .2s ease;
 }
 .post-card:hover {
   transform: translateY(-3px);
-  box-shadow: var(--shadow-m);
-  border-color: rgba(0,88,248,.25);
+  box-shadow: var(--shadow-card);
+  border-color: rgba(0,88,248,.22);
 }
 .post-main { flex: 1; min-width: 0; }
 .post-meta { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; flex-wrap: wrap; }
