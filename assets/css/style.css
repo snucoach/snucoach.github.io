@@ -1217,6 +1217,7 @@ html { scroll-padding-top: 72px; }
 .rep-cred span { font-size: 12.5px; font-weight: 700; color: var(--blue); background: var(--sky-2); border-radius: 7px; padding: 5px 10px; }
 .rep-quote { margin: 6px 0 0; font-size: clamp(16px, 4vw, 18px); font-weight: 700; line-height: 1.6; letter-spacing: -0.015em; color: var(--navy); }
 .rep-desc { margin: 0; font-size: 14.5px; line-height: 1.7; color: var(--text-sub); }
+.rep-slogan { display: inline-block; margin-top: 10px; font-size: 13.5px; font-weight: 800; font-style: italic; letter-spacing: 0.04em; color: var(--blue); }
 
 /* ── 프로세스 5단계 ── */
 .process .sec-inner { text-align: center; }
