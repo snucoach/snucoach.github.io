@@ -583,6 +583,16 @@ body.drawer-open { overflow: hidden; }
 .sec-dark { background: var(--ink); color: #fff; position: relative; overflow: hidden; }
 .sec-light { background: var(--sec-bg); color: var(--text); position: relative; overflow: hidden; }
 .sec-sky { background: var(--sec-bg); color: var(--text); position: relative; overflow: hidden; }
+
+/* 홈 섹션 리듬 — 평면 단조로움 해소: 연속 그라디언트 흐름(깊어졌다 밝아지는 여정) + 포컬 글로우 */
+.p-index .proof { background: linear-gradient(180deg, #FFFFFF 0%, #EDF3FE 100%); }
+.p-index .rec-strip { background: #EDF3FE; border-color: rgba(11,27,61,.05); }
+.p-index .features { background: linear-gradient(180deg, #EDF3FE 0%, #E4EDFB 100%); }
+.p-index .features::after {
+  content: ''; position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  background: radial-gradient(58% 42% at 50% 26%, rgba(0,92,255,.07), transparent 72%);
+}
+.p-index .col-teaser { background: linear-gradient(180deg, #E4EDFB 0%, #F4F9FF 100%); }
 .sec-inner { max-width: 720px; margin: 0 auto; padding: clamp(64px, 12vw, 116px) 22px; position: relative; z-index: 1; }
 
 /* 넘버/라벨 뱃지 — 피그마 '혜택 0N' 스타일 */
@@ -1215,11 +1225,24 @@ html:not(.js) .rv-card { max-width: 320px; margin: 0 auto 14px; }
 .proof .sec-inner { text-align: center; padding-top: clamp(48px, 9vw, 80px); padding-bottom: clamp(48px, 9vw, 80px); }
 .proof-stats { display: flex; justify-content: center; flex-wrap: wrap; gap: 14px; margin-bottom: 40px; }
 .proof-stat {
-  flex: 1 1 150px; max-width: 220px; background: #fff; border: 1px solid rgba(8,42,110,.06);
-  border-radius: 18px; box-shadow: var(--shadow-card); padding: 22px 16px;
+  flex: 1 1 150px; max-width: 220px; position: relative; overflow: hidden;
+  background: linear-gradient(180deg, #FFFFFF 0%, #F6FAFF 100%);
+  border: 1px solid rgba(8,42,110,.07);
+  border-radius: 18px; box-shadow: var(--shadow-card); padding: 24px 16px 20px;
   display: flex; flex-direction: column; gap: 4px;
+  transition: transform .3s var(--ease-spring), box-shadow .3s ease;
 }
-.ps-num { font-size: clamp(26px, 6vw, 34px); font-weight: 900; letter-spacing: -0.03em; color: var(--blue); font-variant-numeric: tabular-nums; }
+.proof-stat::before {
+  content: ''; position: absolute; top: 0; left: 24%; right: 24%; height: 3px;
+  background: linear-gradient(90deg, transparent, var(--blue) 30%, #4D8DFF 70%, transparent);
+}
+.proof-stat:hover { transform: translateY(-3px); box-shadow: 0 6px 16px rgba(8,42,110,.08), 0 20px 44px rgba(8,42,110,.13); }
+.ps-num {
+  font-size: clamp(27px, 6.2vw, 36px); font-weight: 900; letter-spacing: -0.03em;
+  background: linear-gradient(120deg, #0052F5 10%, #3D82FF 92%);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  font-variant-numeric: tabular-nums;
+}
 .ps-unit { font-size: .55em; font-weight: 800; margin-left: 2px; }
 .ps-label { font-size: 13.5px; font-weight: 650; color: var(--text-sub); }
 .proof-cards { display: grid; grid-template-columns: 1fr; gap: 14px; text-align: left; }
