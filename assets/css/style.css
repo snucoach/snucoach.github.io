@@ -705,13 +705,15 @@ html:not(.js) [data-rv] { opacity: 1 !important; transform: none !important; }
   border-bottom: 1px solid var(--line);
 }
 .page-reviews { max-width: 1040px; }
-.rv-masonry { columns: 300px; column-gap: 14px; }
+.rv-masonry { display: flex; align-items: flex-start; gap: 14px; }
+.rv-col { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 14px; }
+/* JS 비활성 폴백: 단일 컬럼 흐름 */
+html:not(.js) .rv-masonry { display: block; }
+html:not(.js) .rv-card { max-width: 320px; margin: 0 auto 14px; }
 .rv-card {
-  break-inside: avoid; margin: 0 0 14px;
   border: 1px solid var(--line); border-radius: 16px;
   background: var(--paper); overflow: hidden;
   box-shadow: var(--shadow-s);
-  content-visibility: auto; contain-intrinsic-size: 300px 460px;
   transition: transform .3s var(--ease-spring), box-shadow .3s ease, opacity .25s ease;
 }
 .rv-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-m); }

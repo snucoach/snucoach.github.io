@@ -130,19 +130,55 @@
     });
   }
 
-  // ── 후기: 카테고리 칩 필터 ──
-  var rvChips = document.getElementById('rvChips');
-  if (rvChips) {
-    var cards = Array.prototype.slice.call(document.querySelectorAll('.rv-card'));
-    rvChips.addEventListener('click', function (e) {
+  // ── 후기: 행 우선 메이슨리 + 카테고리 필터 ──
+  var masonry = document.querySelector('.rv-masonry');
+  if (masonry) {
+    var allCards = Array.prototype.slice.call(masonry.querySelectorAll('.rv-card'));
+    var curCat = 'all';
+    function colCount() {
+      var w = masonry.clientWidth;
+      if (w < 520) return 1;
+      if (w < 820) return 2;
+      return 3;
+    }
+    function layout() {
+      var n = colCount();
+      masonry.textContent = '';
+      var cols = [], heights = [];
+      for (var i = 0; i < n; i++) {
+        var col = document.createElement('div');
+        col.className = 'rv-col';
+        masonry.appendChild(col);
+        cols.push(col); heights.push(0);
+      }
+      allCards.forEach(function (card) {
+        if (curCat !== 'all' && card.dataset.cat !== curCat) return;
+        // 가장 낮은 컬럼에 배치 (행 우선 → 앞 카드가 상단 전체에)
+        var min = 0;
+        for (var i = 1; i < n; i++) if (heights[i] < heights[min]) min = i;
+        cols[min].appendChild(card);
+        // 카드 비율로 예상 높이 가산 (썸네일 width/height 기반)
+        var img = card.querySelector('img');
+        var ar = (img && img.getAttribute('height') && img.getAttribute('width'))
+          ? img.getAttribute('height') / img.getAttribute('width') : 1.3;
+        heights[min] += ar + 0.5; // 이미지 비율 + 캡션 상수
+      });
+    }
+    layout();
+    var rt;
+    window.addEventListener('resize', function () {
+      clearTimeout(rt); rt = setTimeout(function () {
+        if (colCount() !== masonry.children.length) layout();
+      }, 160);
+    });
+    var rvChips = document.getElementById('rvChips');
+    if (rvChips) rvChips.addEventListener('click', function (e) {
       var chip = e.target.closest('.chip');
       if (!chip) return;
       rvChips.querySelectorAll('.chip').forEach(function (c) { c.classList.remove('on'); });
       chip.classList.add('on');
-      var cat = chip.dataset.cat;
-      cards.forEach(function (card) {
-        card.classList.toggle('is-hidden', cat !== 'all' && card.dataset.cat !== cat);
-      });
+      curCat = chip.dataset.cat;
+      layout();
     });
   }
 
