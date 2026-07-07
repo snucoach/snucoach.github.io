@@ -668,6 +668,35 @@ html:not(.js) [data-rv] { opacity: 1 !important; transform: none !important; }
   .nb-column-list { flex-direction: column; gap: 10px; }
   .nb-column { flex: none; width: 100%; }
 }
+.rv-hilite {
+  background: linear-gradient(180deg, var(--navy-2) 0%, #0E2242 60%, #0B1C38 100%);
+  padding: 0 16px clamp(36px, 7vw, 56px);
+}
+.rv-hilite-inner { max-width: 1040px; margin: 0 auto; }
+.rv-hilite-label {
+  text-align: center; margin: 0 0 20px;
+  font-size: 13.5px; font-weight: 750; letter-spacing: .04em;
+  color: var(--gold-soft);
+}
+.rv-hilite-grid {
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;
+}
+@media (min-width: 760px) { .rv-hilite-grid { grid-template-columns: repeat(4, 1fr); } }
+.rv-hi-card {
+  display: flex; flex-direction: column; align-items: center; text-align: center;
+  gap: 4px; padding: 22px 14px 20px;
+  border-radius: 18px;
+  background: linear-gradient(165deg, rgba(255,255,255,.07), rgba(255,255,255,.02));
+  border: 1px solid rgba(227,192,107,.22);
+  box-shadow: 0 6px 24px rgba(0,0,0,.18);
+}
+.rv-hi-emo { font-size: 26px; line-height: 1; margin-bottom: 4px; }
+.rv-hi-big {
+  font-size: clamp(18px, 4.6vw, 22px); font-weight: 800; letter-spacing: -0.03em;
+  line-height: 1.25; color: #fff; font-variant-numeric: tabular-nums;
+}
+.rv-hi-sub { font-size: 12.5px; font-weight: 550; color: rgba(230,236,248,.6); }
+
 .rv-toolbar {
   position: sticky; top: var(--nav-h); z-index: 40;
   background: rgba(255,255,255,.92);
@@ -688,6 +717,22 @@ html:not(.js) [data-rv] { opacity: 1 !important; transform: none !important; }
 .rv-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-m); }
 .rv-card.is-hidden { display: none; }
 .rv-card img { display: block; width: 100%; height: auto; cursor: zoom-in; }
+.rv-star {
+  border-color: rgba(201,159,69,.38);
+  box-shadow: 0 4px 20px rgba(201,159,69,.14);
+}
+.rv-star-head {
+  display: flex; align-items: center; gap: 9px;
+  padding: 14px 16px 12px;
+  background: linear-gradient(160deg, #FFFDF6, #FFF8E8);
+  border-bottom: 1px solid rgba(201,159,69,.22);
+}
+.rv-star-emo { font-size: 21px; line-height: 1; }
+.rv-star-key {
+  font-size: 19px; font-weight: 800; letter-spacing: -0.025em; line-height: 1.3;
+  color: var(--navy);
+  font-variant-numeric: tabular-nums;
+}
 .rv-cap { padding: 11px 14px 12px; border-top: 1px solid var(--line); }
 .rv-cap-row { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; margin-bottom: 3px; }
 .rv-key {
