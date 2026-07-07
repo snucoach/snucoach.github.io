@@ -179,6 +179,13 @@ html:not(.js) [data-rv] { opacity: 1 !important; transform: none !important; }
   font-size: clamp(15.5px, 2.4vw, 17.5px); line-height: 1.75; font-weight: 450;
 }
 
+.hero-logo {
+  display: block; margin: 0 auto 26px;
+  width: clamp(120px, 32vw, 168px); height: auto;
+  filter: invert(1) brightness(1.05);
+  opacity: .96;
+}
+
 /* 홈: 잉크 블랙 히어로 — 상세페이지 1번과 이어지는 배경 */
 .hero-home { background: var(--ink); }
 .hero-home::before {
