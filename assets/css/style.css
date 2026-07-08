@@ -600,9 +600,9 @@ body.drawer-open { overflow: hidden; }
 
 /* 홈 대표 소개 쇼케이스 */
 .rep-home .sec-inner { text-align: center; }
-.rep-showcase { display: block; margin: 30px auto 0; max-width: 292px; }
+.rep-showcase { display: block; margin: 30px auto 0; max-width: 380px; }
 .rep-showcase-photo {
-  position: relative;
+  position: relative; max-width: 288px; margin: 0 auto;
   background: radial-gradient(52% 46% at 50% 30%, rgba(255,255,255,.94) 0%, rgba(221,232,247,.52) 44%, transparent 74%);
 }
 .rep-showcase-photo::after {
@@ -613,10 +613,10 @@ body.drawer-open { overflow: hidden; }
 .rep-showcase-photo img { position: relative; z-index: 1; display: block; width: 100%; height: auto; filter: drop-shadow(0 14px 22px rgba(8,42,110,.16)); }
 /* 사진에 살짝 겹치는 플로팅 프로필 카드 */
 .rep-showcase-info {
-  position: relative; z-index: 2; margin: -24px 10px 0;
+  position: relative; z-index: 2; margin: -18px auto 0;
   background: #fff; border: 1px solid rgba(8,42,110,.07); border-radius: 20px;
   box-shadow: 0 4px 14px rgba(8,42,110,.06), 0 20px 42px rgba(8,42,110,.13);
-  padding: 16px 16px 14px; text-align: center;
+  padding: 17px 20px 16px; text-align: center;
 }
 .rsi-name { margin: 0; font-size: 18.5px; font-weight: 800; letter-spacing: -.02em; color: var(--navy); }
 .rsi-real { margin-left: 4px; font-size: 14px; font-weight: 700; color: var(--text-sub); }
@@ -625,10 +625,10 @@ body.drawer-open { overflow: hidden; }
   color: var(--blue); background: var(--sky-2); border-radius: 999px; padding: 4px 12px;
 }
 .rsi-creds {
-  list-style: none; margin: 11px 0 0; padding: 11px 0 0; border-top: 1px solid var(--line);
-  display: flex; flex-direction: column; gap: 6px;
+  list-style: none; margin: 12px 0 0; padding: 13px 0 0; border-top: 1px solid var(--line);
+  display: flex; flex-direction: column; gap: 8px;
 }
-.rsi-creds li { display: flex; align-items: center; justify-content: center; gap: 7px; font-size: 13.5px; font-weight: 600; color: var(--text-sub); }
+.rsi-creds li { display: flex; align-items: flex-start; justify-content: center; gap: 7px; font-size: 13px; font-weight: 600; line-height: 1.5; color: var(--text-sub); }
 .rsi-creds li b { color: var(--navy); font-weight: 750; }
 .rsi-ico { font-size: 14px; flex-shrink: 0; line-height: 1; }
 .rsi-note { margin: 11px 0 0; padding-top: 10px; border-top: 1px solid var(--line); font-size: 12.5px; font-weight: 600; color: var(--text-sub); }
