@@ -964,22 +964,26 @@ body.drawer-open { overflow: hidden; }
 }
 @media (min-width: 760px) { .rv-hilite-grid { grid-template-columns: repeat(4, 1fr); } }
 .rv-hi-card {
+  position: relative; overflow: hidden;
   display: flex; flex-direction: column; align-items: center; text-align: center;
-  gap: 4px; padding: 22px 14px 20px;
+  gap: 4px; padding: 24px 14px 20px;
   border-radius: 18px;
-  background: linear-gradient(165deg, rgba(255,255,255,.16) 0%, rgba(255,255,255,.055) 100%);
-  border: 1px solid rgba(240,214,150,.3);
-  box-shadow: 0 10px 30px rgba(0,0,0,.26), inset 0 1px 0 rgba(255,255,255,.2);
-  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
-  transition: transform .3s var(--ease-spring), box-shadow .3s ease, border-color .2s ease;
+  background: linear-gradient(165deg, #FFFFFF 0%, #F1F6FE 100%);
+  border: 1px solid rgba(255,255,255,.6);
+  box-shadow: 0 12px 34px rgba(0,8,26,.34), 0 2px 6px rgba(0,8,26,.18);
+  transition: transform .3s var(--ease-spring), box-shadow .3s ease;
 }
-.rv-hi-card:hover { transform: translateY(-3px); border-color: rgba(243,203,113,.5); box-shadow: 0 14px 36px rgba(0,0,0,.32), inset 0 1px 0 rgba(255,255,255,.24); }
+.rv-hi-card::before {
+  content: ''; position: absolute; top: 0; left: 26%; right: 26%; height: 3px;
+  background: linear-gradient(90deg, transparent, var(--gold) 30%, #E9C877 70%, transparent);
+}
+.rv-hi-card:hover { transform: translateY(-4px); box-shadow: 0 18px 44px rgba(0,8,26,.42), 0 3px 8px rgba(0,8,26,.2); }
 .rv-hi-emo { font-size: 26px; line-height: 1; margin-bottom: 4px; }
 .rv-hi-big {
   font-size: clamp(18px, 4.6vw, 22px); font-weight: 800; letter-spacing: -0.03em;
-  line-height: 1.25; color: #fff; font-variant-numeric: tabular-nums;
+  line-height: 1.25; color: var(--navy); font-variant-numeric: tabular-nums;
 }
-.rv-hi-sub { font-size: 12.5px; font-weight: 550; color: rgba(233,239,250,.74); }
+.rv-hi-sub { font-size: 12.5px; font-weight: 600; color: var(--text-sub); }
 
 .rv-toolbar {
   position: sticky; top: var(--nav-h); z-index: 40;
