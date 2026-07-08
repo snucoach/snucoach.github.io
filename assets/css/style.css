@@ -1337,7 +1337,7 @@ html:not(.js) .rv-card { max-width: 320px; margin: 0 auto 14px; }
 .col-teaser .sec-inner { text-align: center; }
 /* 무료 학습 칼럼 — 헤더 */
 .ct-head { display: flex; flex-direction: column; align-items: center; }
-.ct-illust { width: 86px; height: auto; margin: 0 auto 4px; display: block; filter: drop-shadow(0 12px 20px rgba(8,42,110,.16)); }
+.ct-illust { width: 150px; height: auto; margin: 0 auto 2px; display: block; filter: drop-shadow(0 14px 22px rgba(8,42,110,.16)); }
 .ct-sub { margin: 13px auto 0; max-width: 460px; font-size: 14.5px; line-height: 1.7; color: var(--text-sub); font-weight: 450; }
 
 /* 무료 학습 칼럼 — 콘텐츠 카드 (카테고리 색상·인덱스·읽기 어포던스) */
