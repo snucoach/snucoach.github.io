@@ -470,6 +470,9 @@ body.drawer-open { overflow: hidden; }
 }
 .rec-track:hover { animation-play-state: paused; }
 @keyframes marquee { to { transform: translateX(-50%); } }
+/* 2줄 마퀴 — 서로 반대 방향으로 흐름 */
+.rec-track-wrap-2 { display: flex; flex-direction: column; gap: 12px; }
+.rec-track-rev { animation-direction: reverse; }
 @media (prefers-reduced-motion: reduce) {
   .rec-track { animation: none; flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; }
 }
@@ -477,7 +480,7 @@ body.drawer-open { overflow: hidden; }
 /* 성과 후기 사진 카드 */
 .rec-photo {
   position: relative; flex-shrink: 0;
-  width: 122px; height: 168px; border-radius: 14px; overflow: hidden;
+  width: 114px; height: 158px; border-radius: 14px; overflow: hidden;
   text-decoration: none; display: block;
   border: 1px solid var(--line); background: var(--off);
   box-shadow: var(--shadow-s);
