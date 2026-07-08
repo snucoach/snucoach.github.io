@@ -600,7 +600,7 @@ body.drawer-open { overflow: hidden; }
 
 /* 홈 대표 소개 쇼케이스 */
 .rep-home .sec-inner { text-align: center; }
-.rep-showcase { display: block; margin: 32px auto 0; max-width: 344px; }
+.rep-showcase { display: block; margin: 30px auto 0; max-width: 292px; }
 .rep-showcase-photo {
   border-radius: 26px; overflow: hidden;
   background: radial-gradient(82% 64% at 50% 18%, #F5F9FE 0%, #E5ECF7 76%, #D8E2F2 100%);
@@ -609,25 +609,25 @@ body.drawer-open { overflow: hidden; }
 .rep-showcase-photo img { display: block; width: 100%; height: auto; }
 /* 사진에 살짝 겹치는 플로팅 프로필 카드 */
 .rep-showcase-info {
-  position: relative; z-index: 2; margin: -30px 14px 0;
-  background: #fff; border: 1px solid rgba(8,42,110,.07); border-radius: 22px;
-  box-shadow: 0 4px 14px rgba(8,42,110,.06), 0 22px 46px rgba(8,42,110,.13);
-  padding: 22px 20px 20px; text-align: center;
+  position: relative; z-index: 2; margin: -24px 10px 0;
+  background: #fff; border: 1px solid rgba(8,42,110,.07); border-radius: 20px;
+  box-shadow: 0 4px 14px rgba(8,42,110,.06), 0 20px 42px rgba(8,42,110,.13);
+  padding: 16px 16px 14px; text-align: center;
 }
-.rsi-name { margin: 0; font-size: 20px; font-weight: 800; letter-spacing: -.02em; color: var(--navy); }
-.rsi-real { margin-left: 5px; font-size: 15px; font-weight: 700; color: var(--text-sub); }
+.rsi-name { margin: 0; font-size: 18.5px; font-weight: 800; letter-spacing: -.02em; color: var(--navy); }
+.rsi-real { margin-left: 4px; font-size: 14px; font-weight: 700; color: var(--text-sub); }
 .rsi-role {
-  display: inline-block; margin-top: 9px; font-size: 12.5px; font-weight: 800; letter-spacing: -.01em;
-  color: var(--blue); background: var(--sky-2); border-radius: 999px; padding: 5px 13px;
+  display: inline-block; margin-top: 6px; font-size: 12px; font-weight: 800; letter-spacing: -.01em;
+  color: var(--blue); background: var(--sky-2); border-radius: 999px; padding: 4px 12px;
 }
 .rsi-creds {
-  list-style: none; margin: 15px 0 0; padding: 15px 0 0; border-top: 1px solid var(--line);
-  display: flex; flex-direction: column; gap: 11px;
+  list-style: none; margin: 11px 0 0; padding: 11px 0 0; border-top: 1px solid var(--line);
+  display: flex; flex-direction: column; gap: 6px;
 }
-.rsi-creds li { display: flex; align-items: center; justify-content: center; gap: 9px; font-size: 14.5px; font-weight: 600; color: var(--text-sub); }
+.rsi-creds li { display: flex; align-items: center; justify-content: center; gap: 7px; font-size: 13.5px; font-weight: 600; color: var(--text-sub); }
 .rsi-creds li b { color: var(--navy); font-weight: 750; }
-.rsi-ico { font-size: 15px; flex-shrink: 0; line-height: 1; }
-.rsi-note { margin: 15px 0 0; padding-top: 14px; border-top: 1px solid var(--line); font-size: 13px; font-weight: 600; color: var(--text-sub); }
+.rsi-ico { font-size: 14px; flex-shrink: 0; line-height: 1; }
+.rsi-note { margin: 11px 0 0; padding-top: 10px; border-top: 1px solid var(--line); font-size: 12.5px; font-weight: 600; color: var(--text-sub); }
 .rsi-note b { color: var(--blue); font-weight: 800; }
 .sec-inner { max-width: 720px; margin: 0 auto; padding: clamp(64px, 12vw, 116px) 22px; position: relative; z-index: 1; }
 
