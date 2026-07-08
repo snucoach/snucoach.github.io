@@ -256,13 +256,15 @@
     var items = Array.prototype.slice.call(document.querySelectorAll('.post-item'));
     var empty = document.getElementById('postEmpty');
     var activeCat = 'all';
+    function norm(s) { return (s || '').toLowerCase().replace(/\s+/g, ''); }
     function apply() {
-      var q = (search && search.value || '').trim().toLowerCase();
+      var q = norm(search && search.value);
       var shown = 0;
       items.forEach(function (li) {
         var okCat = activeCat === 'all' ||
           (activeCat === 'free' ? li.dataset.free === '1' : li.dataset.cat === activeCat);
-        var okQ = !q || li.dataset.title.indexOf(q) !== -1;
+        var hay = norm(li.dataset.kw || li.dataset.title);
+        var okQ = !q || hay.indexOf(q) !== -1;
         var ok = okCat && okQ;
         if (ok) {
           li.style.display = '';
