@@ -967,16 +967,19 @@ body.drawer-open { overflow: hidden; }
   display: flex; flex-direction: column; align-items: center; text-align: center;
   gap: 4px; padding: 22px 14px 20px;
   border-radius: 18px;
-  background: linear-gradient(165deg, rgba(255,255,255,.07), rgba(255,255,255,.02));
-  border: 1px solid rgba(227,192,107,.22);
-  box-shadow: 0 6px 24px rgba(0,0,0,.18);
+  background: linear-gradient(165deg, rgba(255,255,255,.16) 0%, rgba(255,255,255,.055) 100%);
+  border: 1px solid rgba(240,214,150,.3);
+  box-shadow: 0 10px 30px rgba(0,0,0,.26), inset 0 1px 0 rgba(255,255,255,.2);
+  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+  transition: transform .3s var(--ease-spring), box-shadow .3s ease, border-color .2s ease;
 }
+.rv-hi-card:hover { transform: translateY(-3px); border-color: rgba(243,203,113,.5); box-shadow: 0 14px 36px rgba(0,0,0,.32), inset 0 1px 0 rgba(255,255,255,.24); }
 .rv-hi-emo { font-size: 26px; line-height: 1; margin-bottom: 4px; }
 .rv-hi-big {
   font-size: clamp(18px, 4.6vw, 22px); font-weight: 800; letter-spacing: -0.03em;
   line-height: 1.25; color: #fff; font-variant-numeric: tabular-nums;
 }
-.rv-hi-sub { font-size: 12.5px; font-weight: 550; color: rgba(230,236,248,.6); }
+.rv-hi-sub { font-size: 12.5px; font-weight: 550; color: rgba(233,239,250,.74); }
 
 .rv-toolbar {
   position: sticky; top: var(--nav-h); z-index: 40;
