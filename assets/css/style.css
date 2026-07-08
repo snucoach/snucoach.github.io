@@ -600,24 +600,35 @@ body.drawer-open { overflow: hidden; }
 
 /* 홈 대표 소개 쇼케이스 */
 .rep-home .sec-inner { text-align: center; }
-.rep-showcase { display: block; margin: 32px auto 0; max-width: 360px; }
+.rep-showcase { display: block; margin: 32px auto 0; max-width: 344px; }
 .rep-showcase-photo {
   border-radius: 26px; overflow: hidden;
-  background: radial-gradient(82% 64% at 50% 20%, #F5F9FE 0%, #E5ECF7 78%, #DAE3F3 100%);
-  box-shadow: 0 2px 8px rgba(8,42,110,.06), 0 26px 54px rgba(8,42,110,.15);
+  background: radial-gradient(82% 64% at 50% 18%, #F5F9FE 0%, #E5ECF7 76%, #D8E2F2 100%);
+  box-shadow: 0 2px 8px rgba(8,42,110,.06), 0 24px 50px rgba(8,42,110,.15);
 }
 .rep-showcase-photo img { display: block; width: 100%; height: auto; }
-.rep-showcase-name { margin: 24px 0 0; font-size: 21px; font-weight: 800; letter-spacing: -.02em; color: var(--navy); }
-.rep-showcase-name span { font-weight: 700; font-size: 16px; color: var(--text-sub); }
-.rep-showcase-creds { list-style: none; margin: 14px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
-.rep-showcase-creds li { font-size: 15px; font-weight: 600; color: #45536B; }
-.rep-showcase-creds li::before { content: '– '; color: var(--blue); font-weight: 800; }
-.rep-showcase-note {
-  display: inline-block; margin: 20px auto 0; font-size: 14px; font-weight: 650; color: var(--navy);
-  background: rgba(255,255,255,.7); border: 1px solid rgba(0,88,248,.14);
-  border-radius: 999px; padding: 9px 18px;
+/* 사진에 살짝 겹치는 플로팅 프로필 카드 */
+.rep-showcase-info {
+  position: relative; z-index: 2; margin: -30px 14px 0;
+  background: #fff; border: 1px solid rgba(8,42,110,.07); border-radius: 22px;
+  box-shadow: 0 4px 14px rgba(8,42,110,.06), 0 22px 46px rgba(8,42,110,.13);
+  padding: 22px 20px 20px; text-align: center;
 }
-.rep-showcase-note b { color: var(--blue); font-weight: 800; }
+.rsi-name { margin: 0; font-size: 20px; font-weight: 800; letter-spacing: -.02em; color: var(--navy); }
+.rsi-real { margin-left: 5px; font-size: 15px; font-weight: 700; color: var(--text-sub); }
+.rsi-role {
+  display: inline-block; margin-top: 9px; font-size: 12.5px; font-weight: 800; letter-spacing: -.01em;
+  color: var(--blue); background: var(--sky-2); border-radius: 999px; padding: 5px 13px;
+}
+.rsi-creds {
+  list-style: none; margin: 15px 0 0; padding: 15px 0 0; border-top: 1px solid var(--line);
+  display: flex; flex-direction: column; gap: 11px;
+}
+.rsi-creds li { display: flex; align-items: center; justify-content: center; gap: 9px; font-size: 14.5px; font-weight: 600; color: var(--text-sub); }
+.rsi-creds li b { color: var(--navy); font-weight: 750; }
+.rsi-ico { font-size: 15px; flex-shrink: 0; line-height: 1; }
+.rsi-note { margin: 15px 0 0; padding-top: 14px; border-top: 1px solid var(--line); font-size: 13px; font-weight: 600; color: var(--text-sub); }
+.rsi-note b { color: var(--blue); font-weight: 800; }
 .sec-inner { max-width: 720px; margin: 0 auto; padding: clamp(64px, 12vw, 116px) 22px; position: relative; z-index: 1; }
 
 /* 넘버/라벨 뱃지 — 피그마 '혜택 0N' 스타일 */
