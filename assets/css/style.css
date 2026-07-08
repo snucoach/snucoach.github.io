@@ -639,8 +639,10 @@ body.drawer-open { overflow: hidden; }
 .sec-eyebrow {
   display: inline-flex; align-items: center; gap: 7px;
   font-size: 14px; font-weight: 800; letter-spacing: .01em;
-  color: var(--blue); background: var(--badge-bg);
-  border: 0; padding: 9px 18px; border-radius: 999px; margin-bottom: 24px;
+  color: var(--blue); background: linear-gradient(180deg, #FBFDFF, var(--badge-bg));
+  border: 1px solid rgba(0,88,248,.11);
+  box-shadow: 0 2px 10px rgba(0,88,248,.08), inset 0 1px 0 rgba(255,255,255,.85);
+  padding: 9px 18px; border-radius: 999px; margin-bottom: 24px;
 }
 .sec-dark .sec-eyebrow {
   color: var(--blue-soft); background: rgba(0,88,248,.14);
