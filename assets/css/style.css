@@ -823,15 +823,21 @@ body.drawer-open { overflow: hidden; }
 .feat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 @media (min-width: 760px) { .feat-grid { grid-template-columns: repeat(4, 1fr); } }
 .feat-card {
+  position: relative; overflow: hidden;
   background: var(--paper); border: 1px solid rgba(8,42,110,.06);
   border-radius: 22px; box-shadow: var(--shadow-card);
   padding: 26px 16px 22px; text-align: center;
   transition: transform .3s var(--ease-spring), box-shadow .3s ease;
 }
+.feat-card::before {
+  content: ''; position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
+  width: 98px; height: 98px; border-radius: 50%; z-index: 0;
+  background: radial-gradient(circle at 50% 42%, rgba(0,92,255,.13), rgba(0,92,255,.04) 56%, transparent 72%);
+}
 .feat-card:hover { transform: translateY(-4px); box-shadow: 0 6px 16px rgba(8,42,110,.08), 0 22px 50px rgba(8,42,110,.14); }
-.feat-card img { width: 88px; height: 88px; display: block; margin: 0 auto 12px; filter: drop-shadow(0 10px 18px rgba(8,42,110,.14)); }
-.feat-card h3 { margin: 0 0 5px; font-size: 16px; font-weight: 800; letter-spacing: -0.02em; color: var(--navy); }
-.feat-card p { margin: 0; font-size: 13px; line-height: 1.55; color: var(--text-sub); word-break: keep-all; }
+.feat-card img { position: relative; z-index: 1; width: 88px; height: 88px; display: block; margin: 0 auto 12px; filter: drop-shadow(0 10px 18px rgba(8,42,110,.14)); }
+.feat-card h3 { position: relative; z-index: 1; margin: 0 0 5px; font-size: 16px; font-weight: 800; letter-spacing: -0.02em; color: var(--navy); }
+.feat-card p { position: relative; z-index: 1; margin: 0; font-size: 13px; line-height: 1.55; color: var(--text-sub); word-break: keep-all; }
 
 /* 브리지 스트립 (라이트) + 다크 전환 그라데이션 */
 .bridge { background: #fff; }
