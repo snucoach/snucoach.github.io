@@ -423,8 +423,9 @@ body.drawer-open { overflow: hidden; }
 }
 .hero-reviews .hero-chip { color: rgba(240,236,224,.85); background: rgba(227,192,107,.08); border-color: rgba(227,192,107,.25); box-shadow: none; }
 .hero-chip .dot { width: 5px; height: 5px; border-radius: 50%; background: var(--blue-soft); }
-.hero-reviews .hero-chip { color: rgba(240,236,224,.85); background: rgba(227,192,107,.08); border-color: rgba(227,192,107,.25); }
-.hero-reviews .hero-chip .dot { background: var(--gold); }
+.hero-reviews .hero-chip { color: rgba(244,238,222,.92); background: linear-gradient(180deg, rgba(240,206,120,.15), rgba(240,206,120,.06)); border-color: rgba(235,200,115,.36); box-shadow: inset 0 1px 0 rgba(255,255,255,.08); }
+.hero-reviews .hero-chip .dot { background: var(--gold); box-shadow: 0 0 6px rgba(243,203,113,.7); }
+.hero-reviews .hero-illust-sm { filter: drop-shadow(0 0 34px rgba(243,203,113,.42)) drop-shadow(0 16px 28px rgba(0,0,0,.45)); }
 
 /* 카톡 피드백 목업 — 플로팅 말풍선 */
 .hero-visual {
@@ -504,17 +505,26 @@ body.drawer-open { overflow: hidden; }
 .rec-photo:focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; }
 
 /* 후기: 네이비+골드 프레스티지 히어로 (명예의 전당 모티프) */
-.hero-reviews { background: linear-gradient(180deg, var(--navy) 0%, var(--navy-2) 100%); }
-.hero-reviews::before {
-  content: ''; position: absolute; inset: 0;
+/* 후기 히어로 — 프리미엄 딥네이비 명예의 전당 (골드 스포트라이트 + 별빛 텍스처) */
+.hero-reviews {
   background:
-    radial-gradient(38% 52% at 50% 0%, rgba(227,192,107,.14), transparent 70%),
-    radial-gradient(45% 60% at 85% 100%, rgba(0,88,248,.18), transparent 70%);
-  pointer-events: none;
+    radial-gradient(48% 42% at 50% 14%, rgba(243,203,113,.22), transparent 62%),
+    radial-gradient(62% 48% at 88% 98%, rgba(0,108,255,.22), transparent 62%),
+    radial-gradient(52% 42% at 10% 90%, rgba(92,142,255,.13), transparent 62%),
+    linear-gradient(176deg, #0D1E40 0%, #10305A 44%, #0B1B39 100%);
+}
+.hero-reviews::before {
+  content: ''; position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  background-image: radial-gradient(rgba(255,255,255,.07) 1px, transparent 1.4px);
+  background-size: 28px 28px;
+  -webkit-mask-image: radial-gradient(74% 62% at 50% 24%, #000 0%, transparent 78%);
+  mask-image: radial-gradient(74% 62% at 50% 24%, #000 0%, transparent 78%);
 }
 .hero-reviews .hero-eyebrow {
-  color: var(--gold-soft); background: rgba(227,192,107,.10);
-  border: 1px solid rgba(227,192,107,.32);
+  color: var(--gold-soft);
+  background: linear-gradient(180deg, rgba(240,206,120,.17), rgba(240,206,120,.07));
+  border: 1px solid rgba(235,200,115,.4);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.1);
 }
 .hero-reviews .hero-title { color: #fff; }
 .hero-reviews .gold {
