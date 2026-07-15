@@ -1372,6 +1372,15 @@ html:not(.js) .rv-card { max-width: 320px; margin: 0 auto 14px; }
 }
 .btn-soft:hover { background: rgba(0,88,248,.14); transform: translateY(-2px); }
 
+/* 골드 버튼 — 후기 페이지 톤 (명예의 전당 느낌) */
+.btn-gold {
+  color: #96690E; background: linear-gradient(180deg, #FCF4DD 0%, #F6E5BB 100%);
+  border: 1px solid rgba(201,159,69,.42);
+  box-shadow: 0 1px 2px rgba(201,159,69,.16);
+}
+.btn-gold:hover { background: linear-gradient(180deg, #FAEECB 0%, #F1DBA6 100%); transform: translateY(-2px); box-shadow: 0 6px 18px rgba(201,159,69,.26); }
+.btn-gold .arr { color: #C99F45; }
+
 /* 특징 카드 더보기 링크 */
 .feat-more {
   display: inline-block; margin-top: 30px; font-size: 14.5px; font-weight: 700;
