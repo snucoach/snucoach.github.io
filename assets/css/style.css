@@ -885,7 +885,7 @@ body.drawer-open { overflow: hidden; }
   text-align: center; padding: clamp(64px, 13vw, 120px) 20px clamp(28px, 6vw, 44px);
 }
 /* 상세 이미지 내 앵커(스크롤 목적지) — sticky 내비 높이만큼 오프셋 */
-.d-anchor { display: block; height: 0; scroll-margin-top: 66px; }
+.d-anchor { display: block; height: 0; scroll-margin-top: 0; }
 
 /* 카톡 '압축' 안내 배너 (스누코치 채널 CTA) — 섹션 배경이 상세페이지 검정으로 자연 페이드 */
 .kakao-tip-sec { background: linear-gradient(180deg, #FFFFFF 0%, #FFFFFF 54%, #05070E 84%, var(--ink) 100%); }
