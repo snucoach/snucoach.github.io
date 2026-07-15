@@ -161,10 +161,10 @@ html:not(.js) [data-rv] { opacity: 1 !important; transform: none !important; }
 .nav-logo:hover img { transform: scale(1.04); }
 .nav-tabs {
   flex: 1; display: flex; align-items: center;
-  justify-content: flex-start; gap: 6px;
+  justify-content: flex-end; gap: 6px;
   overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch;
-  -webkit-mask-image: linear-gradient(90deg, transparent, #000 3%, #000 97%, transparent);
-  mask-image: linear-gradient(90deg, transparent, #000 3%, #000 97%, transparent);
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 4%, #000 100%);
+  mask-image: linear-gradient(90deg, transparent, #000 4%, #000 100%);
 }
 .nav-tabs::-webkit-scrollbar { display: none; }
 .nav-item { position: relative; flex-shrink: 0; }
