@@ -830,8 +830,8 @@ body.drawer-open { overflow: hidden; }
   position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain;
   will-change: opacity; filter: drop-shadow(0 14px 24px rgba(8,42,110,.16));
 }
-.hp-1 { animation: hp-cross 9s ease-in-out infinite; }
-.hp-2 { animation: hp-cross2 9s ease-in-out infinite; }
+.hp-1 { animation: hp-cross 7s ease-in-out infinite; }
+.hp-2 { animation: hp-cross2 7s ease-in-out infinite; }
 @keyframes hp-cross  { 0%,44% { opacity: 1 } 52%,94% { opacity: 0 } 100% { opacity: 1 } }
 @keyframes hp-cross2 { 0%,44% { opacity: 0 } 52%,94% { opacity: 1 } 100% { opacity: 0 } }
 @media (prefers-reduced-motion: reduce) { .hp-img { animation: none; } .hp-2 { opacity: 0; } }
@@ -862,7 +862,8 @@ body.drawer-open { overflow: hidden; }
 }
 .feat-card:hover { transform: translateY(-4px); box-shadow: 0 6px 16px rgba(8,42,110,.08), 0 22px 50px rgba(8,42,110,.14); }
 .feat-card img { position: relative; z-index: 1; width: 88px; height: 88px; display: block; margin: 0 auto 12px; filter: drop-shadow(0 10px 18px rgba(8,42,110,.14)); }
-.feat-card h3 { position: relative; z-index: 1; margin: 0 0 5px; font-size: 16px; font-weight: 800; letter-spacing: -0.02em; color: var(--navy); }
+.feat-emoji { position: relative; z-index: 1; display: block; text-align: center; font-size: 40px; line-height: 1; margin: 6px auto 14px; }
+.feat-card h3 { position: relative; z-index: 1; margin: 0; font-size: 15px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.42; color: var(--navy); word-break: keep-all; }
 .feat-card p { position: relative; z-index: 1; margin: 0; font-size: 13px; line-height: 1.55; color: var(--text-sub); word-break: keep-all; }
 
 /* 브리지 스트립 (라이트) + 다크 전환 그라데이션 */
