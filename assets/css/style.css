@@ -304,8 +304,7 @@ html:not(.js) [data-rv] { opacity: 1 !important; transform: none !important; }
 body.drawer-open { overflow: hidden; }
 @media (max-width: 640px) {
   .nav-tabs { display: none; }
-  .nav-cta { margin-left: auto; }
-  .nav-toggle { display: flex; }
+  .nav-toggle { display: flex; margin-left: auto; }
 }
 @media (prefers-reduced-motion: reduce) {
   .nav-drawer { transition: none; }
