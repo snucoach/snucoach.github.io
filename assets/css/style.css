@@ -1244,7 +1244,7 @@ html:not(.js) .rv-card { max-width: 320px; margin: 0 auto 14px; }
 .col-note a:hover { text-decoration: underline; }
 
 /* ── 공통 푸터 ─────────────────────────── */
-.site-footer { background: var(--ink); color: rgba(235,240,250,.62); margin-top: 40px; }
+.site-footer { background: var(--ink); color: rgba(235,240,250,.62); }
 .footer-inner { max-width: 860px; margin: 0 auto; padding: 46px 20px 120px; }
 .footer-top {
   display: flex; align-items: center; justify-content: space-between;
