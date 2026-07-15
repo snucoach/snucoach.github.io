@@ -820,6 +820,24 @@ body.drawer-open { overflow: hidden; }
 @keyframes hero-bob { from { transform: translateY(0); } to { transform: translateY(-10px); } }
 @media (prefers-reduced-motion: reduce) { .hero-illust { animation: none; } }
 
+/* 히어로 대표 프로필 — 두 사진(정장/흰셔츠) 크로스페이드 */
+.hero-rep { margin-top: 38px; }
+.hero-portrait {
+  position: relative; width: min(272px, 62vw); aspect-ratio: 41 / 50;
+  margin: 0 auto; border-radius: 22px; overflow: hidden;
+  background: linear-gradient(168deg, #EEF3FB 0%, #D8E3F4 100%);
+  box-shadow: 0 18px 38px rgba(8,42,110,.20), inset 0 0 0 1px rgba(255,255,255,.55);
+}
+.hp-img {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  object-fit: cover; object-position: center 12%; will-change: opacity;
+}
+.hp-1 { animation: hp-cross 9s ease-in-out infinite; }
+.hp-2 { object-position: center 8%; animation: hp-cross2 9s ease-in-out infinite; }
+@keyframes hp-cross  { 0%,44% { opacity: 1 } 52%,94% { opacity: 0 } 100% { opacity: 1 } }
+@keyframes hp-cross2 { 0%,44% { opacity: 0 } 52%,94% { opacity: 1 } 100% { opacity: 0 } }
+@media (prefers-reduced-motion: reduce) { .hp-img { animation: none; } .hp-2 { opacity: 0; } }
+
 /* 특징 4종 아이콘 섹션 */
 .features .sec-inner { text-align: center; }
 .feat-title {
