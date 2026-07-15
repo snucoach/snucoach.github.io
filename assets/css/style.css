@@ -1307,7 +1307,7 @@ html:not(.js) .rv-card { max-width: 320px; margin: 0 auto 14px; }
   background: linear-gradient(180deg, #FFFFFF 0%, #F6FAFF 100%);
   border: 1px solid rgba(8,42,110,.07);
   border-radius: 18px; box-shadow: var(--shadow-card); padding: 24px 16px 20px;
-  display: flex; flex-direction: column; gap: 4px;
+  display: flex; flex-direction: column; justify-content: center; gap: 4px;
   transition: transform .3s var(--ease-spring), box-shadow .3s ease;
 }
 .proof-stat::before {
