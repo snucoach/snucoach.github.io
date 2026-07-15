@@ -1483,6 +1483,11 @@ html:not(.js) .rv-card { max-width: 320px; margin: 0 auto 14px; }
 .fc-faq li::before { content: '✓'; position: absolute; left: 0; color: var(--blue-soft); font-weight: 800; }
 .fc-faq strong { color: #fff; font-weight: 700; display: block; margin-bottom: 1px; }
 .fc-note { margin: 0; font-size: 13px; color: rgba(230,236,248,.5); }
+/* 홈 마지막: 대표 철학 */
+.fc-inner-mission { max-width: 600px; }
+.fc-mission { text-align: left; margin: 0 auto 24px; max-width: 544px; display: flex; flex-direction: column; gap: 15px; }
+.fc-mission p { margin: 0; font-size: clamp(14.5px, 3.7vw, 16px); line-height: 1.85; letter-spacing: -.01em; color: rgba(230,236,248,.76); }
+.fc-mission b { color: #fff; font-weight: 750; }
 
 /* ── coaching 히어로 + 앵커 내비 ── */
 .hero-coaching { background: linear-gradient(180deg, var(--sky) 0%, var(--sec-bg) 100%); }
