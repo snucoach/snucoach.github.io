@@ -1364,6 +1364,8 @@ html:not(.js) .rv-card { max-width: 320px; margin: 0 auto 14px; }
 .proof-card blockquote::after { content: '”'; color: var(--blue-soft); font-weight: 800; }
 .proof-card figcaption { font-size: 13px; font-weight: 650; color: var(--text-faint); }
 .proof-more { margin-top: 28px; }
+.proof-trophy { display: block; width: 80px; height: auto; margin: 0 auto 12px;
+  filter: drop-shadow(0 8px 16px rgba(227,192,107,.4)) drop-shadow(0 0 28px rgba(243,203,113,.3)); }
 
 /* 소프트 버튼 (보조 CTA) */
 .btn-soft {
