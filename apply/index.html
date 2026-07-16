@@ -7,131 +7,136 @@
 <meta name="description" content="스누코치 학습코칭 — 수능·내신·생기부·수행평가·수시/정시 컨설팅. 스스로 공부할 수 있는 힘을 기르는 사교육.">
 <meta property="og:title" content="스누코치 학습코칭 안내">
 <meta property="og:description" content="스스로 공부할 수 있는 힘을 기르는 사교육 — 학습코칭 전 과정 안내">
-<meta name="theme-color" content="#15233f">
-<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<meta name="theme-color" content="#0058F8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
 <style>
   :root{
-    --navy:#15233f; --navy2:#223a63; --blue:#2f74c0; --blue-ink:#1d4e86;
-    --sky:#eaf2fb; --green:#12a150; --ink:#232c3a; --sub:#66727f;
-    --line:#e6ecf4; --bg:#e9eef4; --soft:#f5f8fc; --card:#ffffff; --radius:18px;
+    --ink:#00040A; --navy:#081830; --navy-2:#0B2148;
+    --blue:#0058F8; --blue-deep:#0047CC; --blue-soft:#7FA8FF;
+    --sky:#DCE4F5; --sky-2:#EDF2FB; --sec-bg:#F0F9FF; --banner:#005CFE; --badge-bg:#D4E4FE;
+    --paper:#fff; --kakao:#FEE500; --green:#0F9D58;
+    --text:#191C22; --text-sub:#545E6E; --text-faint:#6B7480; --line:rgba(11,12,16,.08);
+    --shadow-card:0 2px 8px rgba(8,42,110,.05), 0 16px 40px rgba(8,42,110,.09);
+    --shadow-blue:0 6px 24px rgba(0,88,248,.32);
+    --ease-out:cubic-bezier(.22,1,.36,1); --ease-spring:cubic-bezier(.34,1.56,.64,1);
   }
   *{box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent;}
   html{scroll-behavior:smooth;}
   body{
-    font-family:"Pretendard","Pretendard Variable",-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Segoe UI",Roboto,sans-serif;
-    background:var(--bg); color:var(--ink); line-height:1.72; letter-spacing:-.01em;
-    -webkit-font-smoothing:antialiased; word-break:keep-all; padding-bottom:78px;
+    font-family:"Pretendard Variable",Pretendard,-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Segoe UI",Roboto,sans-serif;
+    background:#eef2f7; color:var(--text); line-height:1.72; letter-spacing:-.015em;
+    -webkit-font-smoothing:antialiased; word-break:keep-all; padding-bottom:80px;
   }
-  .wrap{max-width:660px; margin:0 auto; background:var(--card); overflow:hidden;
-    box-shadow:0 0 60px rgba(21,35,63,.10);}
-  b,strong{font-weight:700;}
+  .wrap{max-width:660px; margin:0 auto; background:var(--paper); overflow:hidden; box-shadow:0 0 70px rgba(8,24,60,.10);}
+  b,strong{font-weight:800;}
 
-  /* ===== Hero ===== */
-  .hero{position:relative; overflow:hidden; text-align:center; color:#fff;
-    background:radial-gradient(120% 90% at 50% -10%, #2c4a83 0%, #15233f 62%);
-    padding:56px 26px 62px;}
-  .hero::after{content:""; position:absolute; left:0; right:0; bottom:-1px; height:34px;
-    background:var(--card); border-radius:50% 50% 0 0 / 100% 100% 0 0;}
-  .hero .logo{height:34px; width:auto; margin:0 auto 26px; display:block;}
-  .hero h1{font-size:34px; font-weight:800; letter-spacing:-1px; line-height:1.22;}
-  .hero .sub{margin-top:14px; font-size:15px; color:#c3d3ec; font-weight:500;}
-  .hero .tag{display:inline-block; margin-top:22px; font-size:13px; font-weight:600; color:#dbe7f7;
-    border:1px solid rgba(255,255,255,.3); border-radius:999px; padding:8px 17px; backdrop-filter:blur(2px);}
+  /* ===== Hero (라이트 그라데이션 — 홈 톤) ===== */
+  .hero{position:relative; text-align:center; padding:52px 26px 58px;
+    background:linear-gradient(180deg,#E6EFFD 0%,#F4F9FF 56%,#FFFFFF 100%);}
+  .hero .logo{height:30px; width:auto; margin:0 auto 26px; display:block;}
+  .hero h1{font-size:38px; font-weight:800; letter-spacing:-.038em; line-height:1.2; color:#0A1020;}
+  .hero h1 .hl{background:linear-gradient(105deg,#005CFF 10%,#4D8DFF 92%); -webkit-background-clip:text; background-clip:text; color:transparent;}
+  .hero .sub{margin-top:15px; font-size:15.5px; color:#4A5568; font-weight:500;}
+  .hero .chip{display:inline-flex; align-items:center; gap:7px; margin-top:22px; font-size:13px; font-weight:700;
+    color:var(--blue); background:linear-gradient(180deg,#FBFDFF,var(--badge-bg)); border:1px solid rgba(0,88,248,.12);
+    box-shadow:0 2px 10px rgba(0,88,248,.08); border-radius:999px; padding:8px 16px;}
+  .hero .chip .dot{width:5px; height:5px; border-radius:50%; background:var(--blue-soft);}
 
-  /* ===== Section frame ===== */
-  section{padding:40px 24px; position:relative;}
-  section.alt{background:var(--soft);}
-  .eyebrow{font-size:12px; font-weight:800; color:var(--blue); letter-spacing:1.4px; margin-bottom:9px;}
-  h2{font-size:23px; font-weight:800; color:var(--navy); letter-spacing:-.5px; line-height:1.3;}
-  h2 .bar{display:block; width:38px; height:3px; background:linear-gradient(90deg,var(--blue),#7fb0e6); border-radius:2px; margin-top:12px;}
-  p{font-size:15.5px; color:var(--ink); margin-bottom:13px;}
+  /* ===== Section ===== */
+  section{padding:44px 24px;}
+  section.sky{background:var(--sec-bg);}
+  .eyebrow{display:inline-flex; align-items:center; font-size:13px; font-weight:800; letter-spacing:.02em;
+    color:var(--blue); background:linear-gradient(180deg,#FBFDFF,var(--badge-bg)); border:1px solid rgba(0,88,248,.11);
+    box-shadow:0 2px 10px rgba(0,88,248,.08), inset 0 1px 0 rgba(255,255,255,.85);
+    padding:8px 16px; border-radius:999px; margin-bottom:16px;}
+  h2{font-size:24px; font-weight:800; color:var(--navy); letter-spacing:-.03em; line-height:1.3;}
+  h2 em{font-style:normal; color:var(--blue);}
+  p{font-size:15.5px; color:var(--text); margin-bottom:13px;}
   .lead{font-size:16.5px;}
-  .muted{color:var(--sub); font-size:13.5px;}
+  .greet{font-weight:800; color:var(--navy); font-size:18px; margin-bottom:12px; letter-spacing:-.03em;}
 
-  .greet{font-weight:800; color:var(--navy); font-size:18px; margin-bottom:12px; letter-spacing:-.4px;}
+  .quote{font-size:18px; font-weight:800; color:var(--navy); line-height:1.58; letter-spacing:-.03em;
+    background:linear-gradient(180deg,#fff,var(--sec-bg)); border-left:5px solid var(--blue);
+    border-radius:0 14px 14px 0; padding:20px; margin:16px 0; box-shadow:var(--shadow-card);}
 
-  .quote{font-size:18px; font-weight:700; color:var(--blue-ink); line-height:1.6;
-    background:linear-gradient(180deg,var(--sky),#fff); border-left:5px solid var(--blue);
-    border-radius:0 14px 14px 0; padding:20px 20px; margin:18px 0;}
+  .principles{display:flex; flex-direction:column; gap:11px; margin:18px 0 4px;}
+  .principle{display:flex; gap:14px; align-items:center; background:#fff; border:1px solid rgba(8,42,110,.08);
+    border-radius:16px; padding:15px 17px; box-shadow:var(--shadow-card);}
+  .num{flex:0 0 34px; height:34px; border-radius:11px; color:var(--blue); font-weight:800; font-size:16px;
+    display:flex; align-items:center; justify-content:center;
+    background:linear-gradient(180deg,#FBFDFF,var(--badge-bg)); border:1px solid rgba(0,88,248,.14);}
+  .principle p{font-size:15.5px; margin:0;} .principle b{color:var(--navy);}
 
-  /* principles */
-  .principles{display:flex; flex-direction:column; gap:11px; margin:20px 0 4px;}
-  .principle{display:flex; gap:14px; align-items:flex-start; background:var(--card);
-    border:1px solid var(--line); border-radius:14px; padding:15px 16px;
-    box-shadow:0 3px 12px rgba(21,35,63,.05);}
-  .principle .num{flex:0 0 32px; height:32px; border-radius:10px; background:var(--navy); color:#fff;
-    font-weight:800; font-size:15px; display:flex; align-items:center; justify-content:center;}
-  .principle p{font-size:15.5px; margin:2px 0 0;}
-  .principle b{color:var(--navy);}
-
-  /* care checklist */
-  .care{margin-top:16px; display:flex; flex-direction:column; gap:2px;}
-  .care li{list-style:none; position:relative; padding:11px 0 11px 34px; font-size:15.5px; border-top:1px solid var(--line);}
+  .banner{display:block; text-align:center; margin:22px 0 6px; color:#fff; background:var(--banner);
+    border-radius:14px; padding:16px 20px; font-size:16.5px; font-weight:800; line-height:1.5; letter-spacing:-.03em;
+    box-shadow:0 8px 22px rgba(0,88,248,.26);}
+  .care{margin-top:16px; display:flex; flex-direction:column;}
+  .care li{list-style:none; position:relative; padding:11px 0 11px 33px; font-size:15.5px; border-top:1px solid var(--line);}
   .care li:first-child{border-top:0;}
-  .care li::before{content:""; position:absolute; left:0; top:14px; width:21px; height:21px; border-radius:50%;
-    background:var(--green); }
+  .care li::before{content:""; position:absolute; left:0; top:13px; width:22px; height:22px; border-radius:50%; background:var(--blue);}
   .care li::after{content:"✓"; position:absolute; left:5px; top:11px; color:#fff; font-size:13px; font-weight:900;}
-  .banner{margin:22px 0 4px; background:linear-gradient(135deg,#1d4e86,#2f74c0); color:#fff;
-    border-radius:16px; padding:20px 20px; font-size:16.5px; font-weight:700; line-height:1.55; letter-spacing:-.3px;}
 
-  /* steps timeline */
-  .steps{list-style:none; margin:6px 0 6px; position:relative; padding-left:8px;}
-  .steps li{position:relative; padding:0 0 20px 44px;}
-  .steps li:last-child{padding-bottom:2px;}
-  .steps li::before{content:""; position:absolute; left:15px; top:26px; bottom:-4px; width:2px; background:var(--line);}
+  .steps{list-style:none; position:relative; margin:4px 0;}
+  .steps li{position:relative; padding:0 0 20px 46px;}
+  .steps li:last-child{padding-bottom:0;}
+  .steps li::before{content:""; position:absolute; left:16px; top:30px; bottom:-2px; width:2px; background:rgba(0,88,248,.18);}
   .steps li:last-child::before{display:none;}
-  .steps .n{position:absolute; left:0; top:0; width:32px; height:32px; border-radius:50%;
-    background:var(--blue); color:#fff; font-weight:800; font-size:14px; display:flex; align-items:center; justify-content:center; z-index:1;}
-  .steps .t{font-weight:700; color:var(--navy); font-size:16px;}
-  .steps .d{display:block; color:var(--sub); font-size:13.5px; margin-top:1px;}
+  .steps .sn{position:absolute; left:0; top:0; width:34px; height:34px; border-radius:50%; z-index:1;
+    color:#fff; background:linear-gradient(135deg,#2F6BFF,var(--blue) 60%,var(--blue-deep));
+    font-weight:800; font-size:14px; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 12px rgba(0,88,248,.3);}
+  .steps .t{font-weight:800; color:var(--navy); font-size:16px; letter-spacing:-.02em;}
+  .steps .d{display:block; color:var(--text-sub); font-size:13.5px; margin-top:1px; font-weight:500;}
 
-  /* images */
   .gallery{display:flex; flex-direction:column; gap:16px; margin-top:20px;}
-  .shot{width:100%; display:block; border:1px solid #eaeff6; border-radius:16px;
-    box-shadow:0 10px 30px rgba(21,35,63,.10); background:#fff;}
-  .shot.wide{border-radius:14px;}
+  .shot{width:100%; display:block; border:1px solid rgba(8,42,110,.08); border-radius:18px; background:#fff; box-shadow:var(--shadow-card);}
 
-  /* pricing */
-  .plans{display:flex; flex-direction:column; gap:11px; margin:18px 0 6px;}
-  .plan{display:flex; align-items:center; justify-content:space-between; gap:12px;
-    background:var(--card); border:1px solid var(--line); border-radius:15px; padding:16px 18px;
-    box-shadow:0 3px 12px rgba(21,35,63,.05);}
-  .plan .info .nm{font-weight:800; color:var(--navy); font-size:17px; letter-spacing:-.3px;}
-  .plan .info .sub{color:var(--sub); font-size:13px; margin-top:3px;}
-  .plan .won{font-weight:800; color:var(--blue); font-size:19px; white-space:nowrap; letter-spacing:-.5px;}
-  .plan .won small{display:block; font-weight:600; font-size:11px; color:var(--sub); text-align:right; margin-top:2px;}
-  .notes{background:var(--soft); border-radius:14px; padding:15px 17px; margin-top:10px;}
-  .notes p{font-size:13px; color:var(--sub); margin:0 0 8px; padding-left:15px; position:relative;}
-  .notes p:last-child{margin:0;}
-  .notes p::before{content:"※"; position:absolute; left:0; color:var(--blue);}
+  .plans{display:flex; flex-direction:column; gap:11px; margin:18px 0 8px;}
+  .plan{display:flex; align-items:center; justify-content:space-between; gap:12px; background:#fff;
+    border:1px solid rgba(8,42,110,.08); border-radius:16px; padding:16px 18px; box-shadow:var(--shadow-card);}
+  .plan .nm{font-weight:800; color:var(--navy); font-size:17px; letter-spacing:-.03em;}
+  .plan .ds{color:var(--text-sub); font-size:13px; margin-top:3px; font-weight:500;}
+  .plan .won{font-weight:800; color:var(--blue); font-size:19px; white-space:nowrap; letter-spacing:-.03em;}
+  .notes{background:#fff; border:1px solid var(--line); border-radius:14px; padding:15px 17px; margin-top:10px; box-shadow:var(--shadow-card);}
+  .notes p{font-size:13px; color:var(--text-sub); margin:0 0 8px; padding-left:16px; position:relative;}
+  .notes p:last-child{margin:0;} .notes p::before{content:"※"; position:absolute; left:0; color:var(--blue);}
 
-  /* CTA */
-  .cta{background:radial-gradient(120% 120% at 50% 0%, #2c4a83, #15233f 70%); color:#fff; text-align:center; padding:52px 26px 58px;}
-  .cta .eyebrow{color:#8fb6e8;}
-  .cta h2{color:#fff;} .cta h2 .bar{margin-left:auto; margin-right:auto; background:#8fb6e8;}
-  .cta p{color:#cddcf1; font-size:15.5px; margin-top:14px;}
-  .cta .btn{display:inline-flex; align-items:center; gap:9px; margin-top:22px; background:#FEE500; color:#191600;
-    font-weight:800; font-size:16.5px; padding:16px 34px; border-radius:14px; text-decoration:none;
-    box-shadow:0 12px 30px rgba(0,0,0,.28);}
-  .cta .btn:active{transform:translateY(1px);}
-  .cta .alt-contact{margin-top:16px; font-size:13.5px; color:#a9bdda;}
+  /* buttons */
+  .btn{display:inline-flex; align-items:center; justify-content:center; gap:8px; font-size:16px; font-weight:800;
+    padding:15px 26px; border-radius:14px; text-decoration:none; border:0; cursor:pointer; letter-spacing:-.02em;
+    transition:transform .25s var(--ease-spring), box-shadow .25s ease;}
+  .btn .arr{transition:transform .25s var(--ease-out);} .btn:hover .arr{transform:translateX(4px);}
+  .btn-primary{color:#fff; background:linear-gradient(135deg,#2F6BFF,var(--blue) 55%,var(--blue-deep)); box-shadow:var(--shadow-blue);}
+  .btn-primary:active{transform:scale(.98);}
+  .btn-kakao{color:#191600; background:var(--kakao);}
+  .btn-kakao:active{transform:scale(.98);}
 
-  footer{background:#101b31; color:#8497b6; text-align:center; font-size:12.5px; padding:26px; line-height:1.7;}
-  footer b{color:#cdd9ec; font-weight:700; font-size:14px;}
+  /* CTA dark */
+  .cta{background:radial-gradient(120% 130% at 50% 0%, #0B2148 0%, #00040A 72%); color:#fff; text-align:center; padding:54px 26px 60px;}
+  .cta .eyebrow{color:var(--blue-soft); background:rgba(0,88,248,.16); border-color:rgba(127,168,255,.25); box-shadow:none;}
+  .cta h2{color:#fff;} .cta h2 em{color:var(--blue-soft);}
+  .cta p{color:#c6d3e6; font-size:15.5px; margin:14px 0 0;}
+  .cta-btns{display:flex; flex-direction:column; gap:11px; margin-top:24px; max-width:420px; margin-left:auto; margin-right:auto;}
+  .cta-btns .btn{width:100%; padding:17px;}
+  .cta .fine{margin-top:16px; font-size:13px; color:#8ea3c4;}
 
-  /* sticky bottom CTA */
-  .sticky{position:fixed; left:0; right:0; bottom:0; z-index:50; display:flex; justify-content:center;
-    padding:12px 14px calc(12px + env(safe-area-inset-bottom)); pointer-events:none;
-    background:linear-gradient(180deg, rgba(233,238,244,0), rgba(233,238,244,.9) 40%);}
-  .sticky a{pointer-events:auto; width:100%; max-width:632px; background:#FEE500; color:#191600;
-    font-weight:800; font-size:16px; text-align:center; padding:16px; border-radius:14px; text-decoration:none;
-    box-shadow:0 8px 24px rgba(21,35,63,.22); display:flex; align-items:center; justify-content:center; gap:8px;}
-  .sticky a:active{transform:translateY(1px);}
-  .kakao-ic{width:19px; height:19px; flex:0 0 auto;}
+  footer{background:#050912; color:#7f8ea8; text-align:center; font-size:12.5px; padding:26px; line-height:1.7;}
+  footer b{color:#cdd9ec; font-weight:800; font-size:15px; letter-spacing:-.02em;}
+
+  /* sticky dock (홈 톤: 카톡 + 주 CTA) */
+  .dock{position:fixed; left:0; right:0; bottom:0; z-index:60; display:flex; justify-content:center;
+    padding:11px 13px calc(11px + env(safe-area-inset-bottom));
+    background:linear-gradient(180deg, rgba(238,242,247,0), rgba(238,242,247,.92) 42%);}
+  .dock-inner{width:100%; max-width:634px; display:flex; gap:9px;}
+  .dock a{display:flex; align-items:center; justify-content:center; gap:7px; text-decoration:none;
+    font-weight:800; border-radius:14px; padding:15px 12px; letter-spacing:-.02em; box-shadow:0 8px 22px rgba(8,24,60,.2);}
+  .dock .d-kakao{flex:0 0 34%; background:var(--kakao); color:#191600; font-size:14.5px;}
+  .dock .d-apply{flex:1; background:linear-gradient(135deg,#2F6BFF,var(--blue) 55%,var(--blue-deep)); color:#fff; font-size:16px;}
+  .dock a:active{transform:scale(.98);}
+  .ki{width:18px; height:18px; flex:0 0 auto;}
 
   @media (max-width:480px){
-    .hero{padding:48px 22px 56px;} .hero h1{font-size:29px;}
-    section{padding:34px 20px;} h2{font-size:21px;}
+    .hero{padding:46px 22px 52px;} .hero h1{font-size:32px;}
+    section{padding:38px 20px;} h2{font-size:22px;}
   }
 </style>
 </head>
@@ -140,10 +145,10 @@
 
   <!-- HERO -->
   <header class="hero">
-    <img class="logo" src="img/logo_white.png" alt="스누코치" width="474" height="160">
-    <h1>학습코칭 안내</h1>
+    <img class="logo" src="img/logo_dark.png" alt="스누코치" width="474" height="160">
+    <h1><span class="hl">학습코칭</span> 안내</h1>
     <div class="sub">수능 · 내신 · 생기부 · 수행평가 · 수시/정시 컨설팅</div>
-    <div class="tag">스스로 공부할 수 있는 힘을 기르는 사교육</div>
+    <div class="chip"><span class="dot"></span>스스로 공부할 수 있는 힘을 기르는 사교육</div>
   </header>
 
   <!-- 인사 -->
@@ -153,9 +158,9 @@
   </section>
 
   <!-- 철학 -->
-  <section class="alt" id="philosophy">
-    <div class="eyebrow">PHILOSOPHY</div>
-    <h2>스누코치 철학<span class="bar"></span></h2>
+  <section class="sky">
+    <span class="eyebrow">PHILOSOPHY</span>
+    <h2>스누코치 <em>철학</em></h2>
     <div class="quote">“한계가 명확한 개별과목 사교육에서,<br>스스로 공부할 수 있는 힘을 기르는 사교육으로”</div>
     <p>사교육은 결국 ‘도구’에 불과합니다. 좋은 도구, 좋은 장비가 분명 도움은 주겠지만 ‘장비’에 수천씩 써도 절대 내 ‘실력’이 늘지는 않습니다. 그래서 스누코치는 <b>‘학습코칭’</b>을 통해 본질적인 문제를 해결합니다.</p>
     <div class="principles">
@@ -175,24 +180,22 @@
 
   <!-- 커리큘럼 -->
   <section>
-    <div class="eyebrow">CURRICULUM</div>
-    <h2>학습코칭 전체 커리큘럼<span class="bar"></span></h2>
-    <div class="gallery">
-      <img class="shot wide" src="img/00_커리큘럼.jpg" alt="스누코치 학습코칭 전체 커리큘럼" loading="lazy">
-    </div>
+    <span class="eyebrow">CURRICULUM</span>
+    <h2>학습코칭 <em>전체 커리큘럼</em></h2>
+    <div class="gallery"><img class="shot" src="img/00_커리큘럼.jpg" alt="스누코치 학습코칭 전체 커리큘럼" loading="lazy"></div>
   </section>
 
   <!-- 진행 방식 -->
-  <section class="alt" id="how">
-    <div class="eyebrow">HOW IT WORKS</div>
-    <h2>학습코칭 진행 방식<span class="bar"></span></h2>
+  <section class="sky">
+    <span class="eyebrow">HOW IT WORKS</span>
+    <h2>학습코칭 <em>진행 방식</em></h2>
     <ul class="steps">
-      <li><span class="n">1</span><span class="t">사전 질문지 작성</span><span class="d">코치의 사전자료 준비</span></li>
-      <li><span class="n">2</span><span class="t">1:1 라이브 컨설팅</span><span class="d">월 1 · 2 · 4회 진행</span></li>
-      <li><span class="n">3</span><span class="t">시그니처 PDF 제공</span><span class="d">학생 맞춤 제작</span></li>
-      <li><span class="n">4</span><span class="t">매일 맞춤 피드백 제공</span></li>
-      <li><span class="n">5</span><span class="t">‘스누코치 분석서’ 매달 제공</span></li>
-      <li><span class="n">6</span><span class="t">중간/월간 코칭 레포트 제공</span></li>
+      <li><span class="sn">1</span><span class="t">사전 질문지 작성</span><span class="d">코치의 사전자료 준비</span></li>
+      <li><span class="sn">2</span><span class="t">1:1 라이브 컨설팅</span><span class="d">월 1 · 2 · 4회 진행</span></li>
+      <li><span class="sn">3</span><span class="t">시그니처 PDF 제공</span><span class="d">학생 맞춤 제작</span></li>
+      <li><span class="sn">4</span><span class="t">매일 맞춤 피드백 제공</span></li>
+      <li><span class="sn">5</span><span class="t">‘스누코치 분석서’ 매달 제공</span></li>
+      <li><span class="sn">6</span><span class="t">중간/월간 코칭 레포트 제공</span></li>
     </ul>
     <div class="gallery">
       <img class="shot" src="img/01_step1_사전준비.jpg" alt="STEP 1. 사전 준비 작업" loading="lazy">
@@ -208,14 +211,14 @@
   </section>
 
   <!-- 코칭비용 -->
-  <section id="price">
-    <div class="eyebrow">PRICING</div>
-    <h2>코칭비용 안내<span class="bar"></span></h2>
+  <section>
+    <span class="eyebrow">PRICING</span>
+    <h2>코칭비용 <em>안내</em></h2>
     <div class="plans">
-      <div class="plan"><div class="info"><div class="nm">시그니처1</div><div class="sub">컨설팅 1회 + 분석서 3회</div></div><div class="won">389,000원</div></div>
-      <div class="plan"><div class="info"><div class="nm">시그니처2</div><div class="sub">컨설팅 2회 + 분석서 6회</div></div><div class="won">439,000원</div></div>
-      <div class="plan"><div class="info"><div class="nm">시그니처4</div><div class="sub">컨설팅 4회 + 분석서 12회</div></div><div class="won">599,000원</div></div>
-      <div class="plan"><div class="info"><div class="nm">시그니처0</div><div class="sub">매일 카톡관리</div></div><div class="won">240,000원</div></div>
+      <div class="plan"><div><div class="nm">시그니처1</div><div class="ds">컨설팅 1회 + 분석서 3회</div></div><div class="won">389,000원</div></div>
+      <div class="plan"><div><div class="nm">시그니처2</div><div class="ds">컨설팅 2회 + 분석서 6회</div></div><div class="won">439,000원</div></div>
+      <div class="plan"><div><div class="nm">시그니처4</div><div class="ds">컨설팅 4회 + 분석서 12회</div></div><div class="won">599,000원</div></div>
+      <div class="plan"><div><div class="nm">시그니처0</div><div class="ds">매일 카톡관리</div></div><div class="won">240,000원</div></div>
     </div>
     <div class="notes">
       <p>시그니처 PDF는 컨설팅 횟수만큼 제공됩니다.</p>
@@ -230,43 +233,42 @@
   </section>
 
   <!-- 신청 절차 -->
-  <section class="alt">
-    <div class="eyebrow">HOW TO APPLY</div>
-    <h2>신청 절차<span class="bar"></span></h2>
+  <section class="sky">
+    <span class="eyebrow">HOW TO APPLY</span>
+    <h2>신청 <em>절차</em></h2>
     <ul class="steps">
-      <li><span class="n">1</span><span class="t">프로그램 결정</span><span class="d">신청폼 작성 &amp; 코칭 비용 입금</span></li>
-      <li><span class="n">2</span><span class="t">사전 질문지 &amp; VOD 강의 제공</span></li>
-      <li><span class="n">3</span><span class="t">컨설턴트와 컨설팅 일정 조율</span><span class="d">시작 날짜 확정</span></li>
-      <li><span class="n">4</span><span class="t">컨설팅 날짜를 기준으로 학습코칭 시작</span></li>
+      <li><span class="sn">1</span><span class="t">프로그램 결정</span><span class="d">신청폼 작성 &amp; 코칭 비용 입금</span></li>
+      <li><span class="sn">2</span><span class="t">사전 질문지 &amp; VOD 강의 제공</span></li>
+      <li><span class="sn">3</span><span class="t">컨설턴트와 컨설팅 일정 조율</span><span class="d">시작 날짜 확정</span></li>
+      <li><span class="sn">4</span><span class="t">컨설팅 날짜를 기준으로 학습코칭 시작</span></li>
     </ul>
   </section>
 
   <!-- CTA -->
   <section class="cta">
-    <div class="eyebrow">START NOW</div>
-    <h2>지금 시작하세요<span class="bar"></span></h2>
-    <p>진행 원하시는 <b style="color:#fff">프로그램 이름</b>을 말씀해 주세요.<br>문자 · 전화 상담 모두 가능합니다.</p>
-    <a class="btn" href="https://pf.kakao.com/_wiwxmG/chat" target="_blank" rel="noopener">
-      <svg class="kakao-ic" viewBox="0 0 24 24" fill="#191600" aria-hidden="true"><path d="M12 3C6.5 3 2 6.5 2 10.8c0 2.8 1.9 5.2 4.7 6.6-.2.7-.7 2.6-.8 3-.1.5.2.5.4.4.2-.1 2.6-1.8 3.6-2.5.7.1 1.4.2 2.1.2 5.5 0 10-3.5 10-7.8S17.5 3 12 3z"/></svg>
-      카카오톡으로 문의 · 신청하기
-    </a>
-    <div class="alt-contact">스누코치 카카오톡 채널로 편하게 문의해 주세요</div>
+    <span class="eyebrow">START NOW</span>
+    <h2>지금 <em>시작</em>하세요</h2>
+    <p>아래 버튼으로 바로 신청하거나, 궁금한 점은 카카오톡으로 편하게 문의해 주세요.</p>
+    <div class="cta-btns">
+      <a class="btn btn-primary" href="https://forms.gle/Z9phRHoSJoZn43aX9" target="_blank" rel="noopener">코칭 등록하기 <span class="arr">→</span></a>
+      <a class="btn btn-kakao" href="https://pf.kakao.com/_wiwxmG/chat" target="_blank" rel="noopener">
+        <svg class="ki" viewBox="0 0 24 24" fill="#191600" aria-hidden="true"><path d="M12 3C6.5 3 2 6.5 2 10.8c0 2.8 1.9 5.2 4.7 6.6-.2.7-.7 2.6-.8 3-.1.5.2.5.4.4.2-.1 2.6-1.8 3.6-2.5.7.1 1.4.2 2.1.2 5.5 0 10-3.5 10-7.8S17.5 3 12 3z"/></svg>
+        카카오톡으로 문의하기</a>
+    </div>
+    <div class="fine">문자 · 전화 상담도 모두 가능합니다 · 대표 유정원</div>
   </section>
 
-  <footer>
-    <b>SNUCOACH</b><br>
-    스스로 공부하는 힘을 기르는 사교육 · 대표 유정원
-  </footer>
+  <footer><b>SNUCOACH</b><br>스스로 공부하는 힘을 기르는 사교육 · 대표 유정원</footer>
 
 </div>
 
-<!-- 하단 고정 CTA -->
-<div class="sticky">
-  <a href="https://pf.kakao.com/_wiwxmG/chat" target="_blank" rel="noopener">
-    <svg class="kakao-ic" viewBox="0 0 24 24" fill="#191600" aria-hidden="true"><path d="M12 3C6.5 3 2 6.5 2 10.8c0 2.8 1.9 5.2 4.7 6.6-.2.7-.7 2.6-.8 3-.1.5.2.5.4.4.2-.1 2.6-1.8 3.6-2.5.7.1 1.4.2 2.1.2 5.5 0 10-3.5 10-7.8S17.5 3 12 3z"/></svg>
-    카카오톡으로 문의 · 신청하기
-  </a>
-</div>
+<!-- 하단 고정 도크 -->
+<div class="dock"><div class="dock-inner">
+  <a class="d-kakao" href="https://pf.kakao.com/_wiwxmG/chat" target="_blank" rel="noopener">
+    <svg class="ki" viewBox="0 0 24 24" fill="#191600" aria-hidden="true"><path d="M12 3C6.5 3 2 6.5 2 10.8c0 2.8 1.9 5.2 4.7 6.6-.2.7-.7 2.6-.8 3-.1.5.2.5.4.4.2-.1 2.6-1.8 3.6-2.5.7.1 1.4.2 2.1.2 5.5 0 10-3.5 10-7.8S17.5 3 12 3z"/></svg>
+    카톡 문의</a>
+  <a class="d-apply" href="https://forms.gle/Z9phRHoSJoZn43aX9" target="_blank" rel="noopener">코칭 등록하기 <span class="arr">→</span></a>
+</div></div>
 
 </body>
 </html>
