@@ -89,6 +89,9 @@
 
   .gallery{display:flex; flex-direction:column; gap:16px; margin-top:20px;}
   .shot{width:100%; display:block; border:1px solid rgba(8,42,110,.08); border-radius:18px; background:#fff; box-shadow:var(--shadow-card);}
+  /* 진행방식 — 테두리 없이 이어붙이기(stitched) */
+  .gallery.stitched{gap:0; margin-top:16px;}
+  .gallery.stitched .shot{border:0; border-radius:0; box-shadow:none;}
 
   .plans{display:flex; flex-direction:column; gap:11px; margin:18px 0 8px;}
   .plan{display:flex; align-items:center; justify-content:space-between; gap:12px; background:#fff;
@@ -145,7 +148,7 @@
 
   <!-- HERO -->
   <header class="hero">
-    <img class="logo" src="img/logo_dark.png" alt="스누코치" width="474" height="160">
+    <img class="logo" src="img/logo_cut.png" alt="스누코치" width="474" height="160">
     <h1><span class="hl">학습코칭</span> 안내</h1>
     <div class="sub">수능 · 내신 · 생기부 · 수행평가 · 수시/정시 컨설팅</div>
     <div class="chip"><span class="dot"></span>스스로 공부할 수 있는 힘을 기르는 사교육</div>
@@ -197,7 +200,7 @@
       <li><span class="sn">5</span><span class="t">‘스누코치 분석서’ 매달 제공</span></li>
       <li><span class="sn">6</span><span class="t">중간/월간 코칭 레포트 제공</span></li>
     </ul>
-    <div class="gallery">
+    <div class="gallery stitched">
       <img class="shot" src="img/01_step1_사전준비.jpg" alt="STEP 1. 사전 준비 작업" loading="lazy">
       <img class="shot" src="img/02_step2_라이브컨설팅.jpg" alt="STEP 2. 1:1 라이브 컨설팅" loading="lazy">
       <img class="shot" src="img/03_컨설팅진행예시.jpg" alt="컨설팅 진행 예시" loading="lazy">
