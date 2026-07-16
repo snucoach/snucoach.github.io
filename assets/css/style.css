@@ -409,6 +409,36 @@ body.drawer-open { overflow: hidden; }
 }
 .btn-ghost:hover { background: #fff; transform: translateY(-2px); box-shadow: var(--shadow-s); }
 .hero-reviews .btn-ghost { color: #fff; background: rgba(255,255,255,.06); border-color: rgba(255,255,255,.22); }
+
+/* 히어로 '학습코칭 안내 바로가기' — 클릭 유도 세련 모션(홉 + 블루 글로우 + 셰인 스윕 + 화살표 넛지) */
+.hero-cta-row .btn-ghost { position: relative; overflow: hidden; animation: ctaInvite 3.6s ease-in-out infinite; will-change: transform; }
+.hero-cta-row .btn-ghost::after {
+  content: ''; position: absolute; top: 0; left: -65%; width: 55%; height: 100%;
+  background: linear-gradient(100deg, transparent, rgba(37,110,255,.16), transparent);
+  transform: skewX(-18deg); pointer-events: none;
+  animation: ctaSheen 3.6s ease-in-out infinite;
+}
+.hero-cta-row .btn-ghost .arr { animation: ctaArrow 3.6s ease-in-out infinite; }
+.hero-cta-row .btn-ghost:hover, .hero-cta-row .btn-ghost:focus-visible {
+  animation: none; transform: translateY(-3px); background: #fff;
+  border-color: rgba(0,88,248,.32); box-shadow: 0 12px 28px rgba(0,88,248,.20);
+}
+.hero-cta-row .btn-ghost:hover::after { animation: none; opacity: 0; }
+.hero-cta-row .btn-ghost:hover .arr, .hero-cta-row .btn-ghost:focus-visible .arr { animation: none; transform: translateX(4px); }
+.hero-cta-row .btn-ghost:active { animation: none; transform: scale(.975); }
+@keyframes ctaInvite {
+  0%, 56% { transform: translateY(0); box-shadow: 0 2px 10px rgba(8,24,48,.05); }
+  66% { transform: translateY(-5px); box-shadow: 0 15px 30px rgba(0,88,248,.22); }
+  74% { transform: translateY(-1px); box-shadow: 0 7px 16px rgba(0,88,248,.12); }
+  81% { transform: translateY(-3px); box-shadow: 0 11px 22px rgba(0,88,248,.16); }
+  90%, 100% { transform: translateY(0); box-shadow: 0 2px 10px rgba(8,24,48,.05); }
+}
+@keyframes ctaSheen { 0%, 56% { left: -65%; } 74%, 100% { left: 165%; } }
+@keyframes ctaArrow { 0%, 58%, 92%, 100% { transform: translateX(0); } 68%, 82% { transform: translateX(5px); } }
+@media (prefers-reduced-motion: reduce) {
+  .hero-cta-row .btn-ghost, .hero-cta-row .btn-ghost .arr { animation: none; }
+  .hero-cta-row .btn-ghost::after { display: none; }
+}
 .hero-chips {
   display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;
   margin-top: 34px;
