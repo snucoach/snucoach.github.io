@@ -597,8 +597,8 @@ body.drawer-open { overflow: hidden; }
 .sec-sky { background: var(--sec-bg); color: var(--text); position: relative; overflow: hidden; }
 
 /* 홈 섹션 리듬 — 평면 단조로움 해소: 연속 그라디언트 흐름(깊어졌다 밝아지는 여정) + 포컬 글로우 */
-.p-index .proof { background: linear-gradient(180deg, #FFFFFF 0%, #EDF3FE 100%); }
-.p-index .rec-strip { background: #EDF3FE; border-color: rgba(11,27,61,.05); }
+.p-index .proof { background: #EDF3FE; }
+.p-index .rec-strip { background: linear-gradient(180deg, #FFFFFF 0%, #EDF3FE 100%); border-color: rgba(11,27,61,.05); border-top-color: transparent; }
 .p-index .features { background: linear-gradient(180deg, #EDF3FE 0%, #E4EDFB 100%); }
 .p-index .features::after {
   content: ''; position: absolute; inset: 0; z-index: 0; pointer-events: none;
