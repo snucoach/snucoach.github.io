@@ -264,7 +264,7 @@ html:not(.js) [data-rv] { opacity: 1 !important; transform: none !important; }
 
 /* ── 모바일 컴팩트 탭 스트립 (헤더 2번째 줄, ≤640px에서만 노출) ── */
 .nav-compact {
-  display: none; height: 44px; align-items: stretch; gap: 2px;
+  display: none; height: 46px; align-items: stretch; justify-content: center; gap: 4px;
   padding: 0 8px; overflow-x: auto; overflow-y: hidden;
   -webkit-overflow-scrolling: touch; scrollbar-width: none;
   border-top: 1px solid rgba(11,18,40,.05);
@@ -272,16 +272,15 @@ html:not(.js) [data-rv] { opacity: 1 !important; transform: none !important; }
 .nav-compact::-webkit-scrollbar { display: none; }
 .ctab {
   position: relative; flex: 0 0 auto;
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
-  padding: 0 11px; text-decoration: none; white-space: nowrap;
-  font-size: 13.5px; font-weight: 600; color: var(--text-sub); letter-spacing: -.01em;
+  display: flex; align-items: center; justify-content: center;
+  padding: 0 14px; text-decoration: none; white-space: nowrap;
+  font-size: 14px; font-weight: 600; color: var(--text-sub); letter-spacing: -.01em;
 }
 .ctab.active { color: var(--blue); font-weight: 700; }
 .ctab.active::after {
-  content: ''; position: absolute; left: 11px; right: 11px; bottom: 0;
+  content: ''; position: absolute; left: 14px; right: 14px; bottom: 0;
   height: 2px; border-radius: 2px 2px 0 0; background: var(--blue);
 }
-.ctab .ctab-sub { font-size: 9.5px; font-weight: 700; color: var(--blue); line-height: 1; letter-spacing: -.02em; }
 
 .nav-scrim {
   position: fixed; inset: 0; z-index: 120; background: rgba(8,16,32,.42);
@@ -1603,8 +1602,8 @@ html { scroll-padding-top: 72px; }
 
 /* 모바일 2줄 헤더(로고행 + 탭 스트립)에 맞춘 sticky 오프셋 — 기본 규칙보다 뒤에 두어 순서로 우선 적용 */
 @media (max-width: 640px) {
-  .rv-toolbar, .col-toolbar { top: calc(var(--nav-h) + 44px); }
-  html { scroll-padding-top: calc(var(--nav-h) + 60px); }
+  .rv-toolbar, .col-toolbar { top: calc(var(--nav-h) + 46px); }
+  html { scroll-padding-top: calc(var(--nav-h) + 62px); }
 }
 
 /* 404 페이지 */
