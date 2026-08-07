@@ -26,32 +26,6 @@
   document.body.appendChild(srLive);
   function announce(msg) { srLive.textContent = ''; setTimeout(function () { srLive.textContent = msg; }, 30); }
 
-  // ── 드롭다운 (aria-expanded 동기화 + ESC 닫기) ──
-  document.querySelectorAll('.nav-dropdown').forEach(function (dd) {
-    var btn = dd.querySelector('button');
-    var menu = dd.querySelector('.dropdown-menu');
-    function place() {
-      var r = btn.getBoundingClientRect();
-      menu.style.left = Math.max(8, Math.min(r.left, window.innerWidth - 190)) + 'px';
-    }
-    function show() { place(); menu.classList.add('show'); btn.setAttribute('aria-expanded', 'true'); }
-    function hide() { menu.classList.remove('show'); btn.setAttribute('aria-expanded', 'false'); }
-    dd.addEventListener('mouseenter', show);
-    dd.addEventListener('mouseleave', function () { if (!dd.classList.contains('open')) hide(); });
-    btn.addEventListener('click', function (e) {
-      e.stopPropagation();
-      dd.classList.toggle('open');
-      dd.classList.contains('open') ? show() : hide();
-    });
-    btn.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape') { dd.classList.remove('open'); hide(); btn.focus(); }
-    });
-    menu.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape') { dd.classList.remove('open'); hide(); btn.focus(); }
-    });
-    document.addEventListener('click', function () { dd.classList.remove('open'); hide(); });
-  });
-
   // ── 모바일 드로어 (햄버거 → 우측 슬라이드 메뉴) ──
   var navToggle = document.getElementById('navToggle');
   var navDrawer = document.getElementById('navDrawer');
@@ -73,6 +47,7 @@
       document.addEventListener('keydown', onDrawerKey);
     }
     function closeDrawer() {
+      if (lastFocus && lastFocus.focus) lastFocus.focus();
       navDrawer.classList.remove('open');
       navScrim.classList.remove('show');
       navToggle.setAttribute('aria-expanded', 'false');
@@ -81,7 +56,6 @@
       document.body.classList.remove('drawer-open');
       document.removeEventListener('keydown', onDrawerKey);
       setTimeout(function () { if (!navDrawer.classList.contains('open')) navScrim.hidden = true; }, 360);
-      if (lastFocus && lastFocus.focus) lastFocus.focus();
     }
     function onDrawerKey(e) {
       if (e.key === 'Escape') { closeDrawer(); return; }
@@ -154,7 +128,10 @@
     }
     function render() {
       var el = view[cur];
-      if (el) lbImg.src = el.dataset.full || el.src;
+      if (el) {
+        lbImg.src = el.dataset.full || el.src;
+        lbImg.alt = el.alt || '후기 확대 이미지';
+      }
     }
     function go(delta) {
       if (!view.length) return;
@@ -242,8 +219,9 @@
     if (rvChips) rvChips.addEventListener('click', function (e) {
       var chip = e.target.closest('.chip');
       if (!chip) return;
-      rvChips.querySelectorAll('.chip').forEach(function (c) { c.classList.remove('on'); });
+      rvChips.querySelectorAll('.chip').forEach(function (c) { c.classList.remove('on'); c.setAttribute('aria-pressed', 'false'); });
       chip.classList.add('on');
+      chip.setAttribute('aria-pressed', 'true');
       curCat = chip.dataset.cat;
       layout();
     });
@@ -267,12 +245,15 @@
         var okQ = !q || hay.indexOf(q) !== -1;
         var ok = okCat && okQ;
         if (ok) {
+          clearTimeout(li._hideTimer);
           li.style.display = '';
-          requestAnimationFrame(function () { li.classList.remove('is-hidden'); });
+          li._showRaf = requestAnimationFrame(function () { li.classList.remove('is-hidden'); });
           shown += 1;
         } else {
+          cancelAnimationFrame(li._showRaf);
+          clearTimeout(li._hideTimer);
           li.classList.add('is-hidden');
-          setTimeout(function () { if (li.classList.contains('is-hidden')) li.style.display = 'none'; }, 260);
+          li._hideTimer = setTimeout(function () { if (li.classList.contains('is-hidden')) li.style.display = 'none'; }, 260);
         }
       });
       if (empty) empty.style.display = shown ? 'none' : '';
@@ -280,8 +261,9 @@
     chipRow.addEventListener('click', function (e) {
       var chip = e.target.closest('.chip');
       if (!chip) return;
-      chipRow.querySelectorAll('.chip').forEach(function (c) { c.classList.remove('on'); });
+      chipRow.querySelectorAll('.chip').forEach(function (c) { c.classList.remove('on'); c.setAttribute('aria-pressed', 'false'); });
       chip.classList.add('on');
+      chip.setAttribute('aria-pressed', 'true');
       activeCat = chip.dataset.cat;
       apply();
     });
