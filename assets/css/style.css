@@ -2212,3 +2212,36 @@ body { color: var(--text); }
 .col-teaser .feat-title { margin-bottom: 0; }
 .ct-sub { margin-top: 14px; }
 @media (min-width: 1024px) { .sec-inner { padding-top: 100px; padding-bottom: 100px; } }
+
+/* ── 이벤트 (event.html) — 기존 plan-card·final-cta 재사용, 카드 전체가 버튼(스트레치 링크) ── */
+.hero-event { background: linear-gradient(180deg, #F2F4FB 0%, #FFFFFF 100%); }
+.hero-event .hero-title { color: var(--ink); }
+.hero-event .hero-sub { color: var(--text-sub); }
+.p-event .ev-sec { background: #fff; }
+.p-event .ev-sec .sec-inner { max-width: 880px; padding-top: 24px; text-align: center; }
+.ev-grid { grid-template-columns: 1fr; gap: 24px 20px; margin-top: 0; }
+@media (min-width: 720px) { .ev-grid { grid-template-columns: 1fr 1fr; } }
+.ev-card { padding: 28px 24px 24px; }
+.ev-card:hover { border-color: #C9D1EA; }
+.ev-ico {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 44px; height: 44px; margin-bottom: 16px;
+  border-radius: 12px; background: var(--sky-2); color: var(--navy);
+}
+.ev-ico svg { width: 24px; height: 24px; }
+.ev-card .plan-name { font-size: 20px; color: var(--ink); }
+.ev-desc { margin: 0 0 16px; font-size: 15px; line-height: 1.7; color: var(--text-sub); }
+.ev-card .plan-list { margin-bottom: 20px; }
+.ev-card .ev-btn, .ev-card .ev-btn:hover, .ev-card .ev-btn:active {
+  position: static; overflow: visible; transform: none;
+  width: 100%; justify-content: center; font-size: 16.5px; padding: 16px 20px;
+}
+.ev-card .ev-btn::after {
+  content: ''; display: block; position: absolute; inset: 0; z-index: 1;
+  width: auto; height: auto; background: none; transform: none; transition: none; border-radius: 16px;
+}
+.ev-card:hover .ev-btn { background: var(--navy-2); box-shadow: 0 10px 24px rgba(15,15,112,.26); }
+.ev-card:hover .ev-btn .arr { transform: translateX(4px); }
+.ev-card .ev-btn:focus-visible { outline: none; }
+.ev-card .ev-btn:focus-visible::after { outline: 3px solid var(--blue); outline-offset: 3px; }
+.p-event .ev-sec .plan-foot { max-width: 560px; }
