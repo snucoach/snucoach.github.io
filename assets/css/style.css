@@ -2219,8 +2219,8 @@ body { color: var(--text); }
 .hero-event .hero-sub { color: var(--text-sub); }
 .p-event .ev-sec { background: #fff; }
 .p-event .ev-sec .sec-inner { max-width: 880px; padding-top: 24px; text-align: center; }
-.ev-grid { grid-template-columns: 1fr; gap: 24px 20px; margin-top: 0; }
-@media (min-width: 720px) { .ev-grid { grid-template-columns: 1fr 1fr; } }
+.ev-grid { grid-template-columns: 1fr; gap: 24px 20px; margin-top: 0; max-width: 480px; margin-left: auto; margin-right: auto; }
+@media (min-width: 720px) { .ev-grid { grid-template-columns: 1fr 1fr; max-width: none; } }
 .ev-card { padding: 28px 24px 24px; }
 .ev-card:hover { border-color: #C9D1EA; }
 .ev-ico {
