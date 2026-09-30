@@ -356,7 +356,8 @@
       }
       // 의약 한도 완화(기존 규칙을 채우기 뒤로 미룸): ①~④를 다 쓰고도 MIN_ROWS가 안 되면 그 구간 판정의 의약 전용 행(① → ③)을 더 넣는다.
       //  이웃 판정(채우기) 의약 행은 한도를 넘기지 않는다(구간 밖 판정인 의약 행으로 목록이 쏠리지 않게)
-      for (const T of [rowsF, rowsP]) {
+      //  인문·통합 트랙은 완화하지 않는다(인문 학생 상향이 치의예·한의예로 채워지지 않게, 2026-09-30)
+      if (track !== "통합") for (const T of [rowsF, rowsP]) {
         if (sel.length >= goal) break;
         sel = sel.concat(select(T.filter((r) => r.med), goal - sel.length, Infinity, sel)); // 군 균형도 같이 맞춤
       }
