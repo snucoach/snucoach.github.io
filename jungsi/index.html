@@ -1,38 +1,329 @@
 <!DOCTYPE html>
 <html lang="ko">
-<!-- 임시 안내 페이지: 정시 배치 계산기를 배치할 때 이 파일을 계산기 index.html로 덮어쓴다(검색 제외 noindex, sitemap 미등록). -->
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>대학 라인 잡기(정시) 준비 중 — 스누코치</title>
-<meta name="description" content="대학 라인 잡기(정시)는 준비 중이에요. 모의고사 원점수와 목표 점수로 어느 대학의 어느 계열까지 노려 볼 수 있는지 보여 드리는 페이지예요.">
+<title>대학 라인 잡기(정시) — 스누코치</title>
+<meta name="description" content="모의고사 원점수와 올리고 싶은 목표 점수를 넣으면, 어느 대학의 어느 계열까지 노려 볼 수 있는지 상향·소신·적정 구간마다 대학을 계열 단위로 묶어 보여 드려요.">
 <link rel="canonical" href="https://snucoach.github.io/jungsi/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="스누코치 학습코칭">
-<meta property="og:title" content="대학 라인 잡기(정시) 준비 중 — 스누코치">
-<meta property="og:description" content="대학 라인 잡기(정시)는 준비 중이에요. 모의고사 원점수와 목표 점수로 어느 대학의 어느 계열까지 노려 볼 수 있는지 보여 드리는 페이지예요.">
+<meta property="og:title" content="대학 라인 잡기(정시) — 스누코치">
+<meta property="og:description" content="원점수와 목표 점수를 넣으면 어느 대학의 어느 계열까지 노려 볼 수 있는지 상향·소신·적정으로 보여 드려요.">
 <meta property="og:image" content="https://snucoach.github.io/assets/img/og_image.png">
 <meta property="og:url" content="https://snucoach.github.io/jungsi/">
 <meta property="og:locale" content="ko_KR">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="대학 라인 잡기(정시) 준비 중 — 스누코치">
-<meta name="twitter:description" content="대학 라인 잡기(정시)는 준비 중이에요. 모의고사 원점수와 목표 점수로 어느 대학의 어느 계열까지 노려 볼 수 있는지 보여 드리는 페이지예요.">
+<meta name="twitter:title" content="대학 라인 잡기(정시) — 스누코치">
+<meta name="twitter:description" content="원점수와 목표 점수를 넣으면 어느 대학의 어느 계열까지 노려 볼 수 있는지 상향·소신·적정으로 보여 드려요.">
 <meta name="twitter:image" content="https://snucoach.github.io/assets/img/og_image.png">
-<meta name="robots" content="noindex">
+<meta name="robots" content="index,follow">
 <meta name="theme-color" content="#0B0C10">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; script-src 'self' 'sha256-Du+OJKJSbdUgz5nrHeWWINvez6XKDDU/tyj/5c2uvwo='; object-src 'none'; base-uri 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; font-src 'self'; script-src 'self' 'sha256-Du+OJKJSbdUgz5nrHeWWINvez6XKDDU/tyj/5c2uvwo='; worker-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'">
 <script>document.documentElement.classList.add('js')</script>
 <link rel="icon" type="image/png" href="../assets/img/favicon.png">
 <link rel="apple-touch-icon" href="../assets/img/favicon.png">
 <link rel="stylesheet" href="../assets/fonts/pretendardvariable-dynamic-subset.min.css">
 <link rel="stylesheet" href="../assets/css/style.css?v=v3e">
+<style>
+/* 대학 라인 잡기(정시) 계산기 — 사이트 v3 "SNU Navy" 토큰에 맞춤.
+   사이트 공통 헤더·드로어·푸터는 ../assets/css/style.css 를 그대로 쓰고, 계산기 규칙은 .jc 안으로 한정한다(사이트 클래스와 충돌 방지). */
+.jc{
+  --ink:#08083C; --navy:#0F0F70; --navy-2:#1A1A86; --blue:#2D4BC8; --blue-soft:#A9B8F2;
+  --sky:#EDF1FB; --sky-2:#F5F7FD; --badge:#E4E9F8; --bg:#F5F7FD;
+  --text:#16183C; --sub:#4A5070; --faint:#646C8E; --line:#E3E8F5; --line-2:#D3DAEE;
+  --hl:#FFE771; --hl-soft:#FFF8D9;
+  --up:#C83A43; --mid:#6A4BDF; --safe:#2D4BC8;
+  --shadow:0 1px 2px rgba(15,15,112,.04),0 6px 20px rgba(15,15,112,.05);
+  --shadow-m:0 2px 6px rgba(15,15,112,.06),0 12px 28px rgba(15,15,112,.09);
+  --ease:cubic-bezier(.22,1,.36,1);
+  --max:1120px;
+  display:block;background:var(--bg);color:var(--text);font-size:16px;line-height:1.6;letter-spacing:-.015em;overflow-x:clip;
+}
+:where(.jc) *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:where(.jc) button{font:inherit;cursor:pointer;border:0;background:none;color:inherit}
+:where(.jc) button:disabled{cursor:default;opacity:.45}
+:where(.jc) input,:where(.jc) select{font:inherit;color:inherit}
+:where(.jc) a{color:inherit}
+.jc :focus-visible{outline:2px solid var(--navy);outline-offset:2px}
+
+/* ── 히어로(사이트 이벤트 페이지와 같은 밝은 톤) ── */
+.jc-hero{position:relative;overflow:hidden;background:linear-gradient(180deg,#F2F4FB 0%,#FFFFFF 100%);padding:40px 18px 40px;border-bottom:1px solid var(--line)}
+.jc-hero-in{position:relative;max-width:var(--max);margin:0 auto;display:grid;gap:32px}
+.jc-eyebrow{display:inline-block;font-size:13.5px;font-weight:800;letter-spacing:.06em;color:var(--blue)}
+.jc-hero h1{margin-top:12px;font-size:clamp(29px,6.2vw,48px);line-height:1.25;font-weight:800;letter-spacing:-.035em;color:var(--ink);text-wrap:balance}
+.jc-hero h1 .hl{color:var(--navy);background:linear-gradient(180deg,transparent 60%,var(--hl) 60%,var(--hl) 92%,transparent 92%);padding:0 .06em;-webkit-box-decoration-break:clone;box-decoration-break:clone}
+.jc-hero p{margin-top:16px;font-size:15.5px;line-height:1.72;color:var(--sub);font-weight:500;max-width:34em}
+.jc-hero p.small{font-size:13px;color:var(--faint);margin-top:10px}
+.steps3{display:flex;gap:8px;flex-wrap:wrap;margin-top:22px}
+.steps3 span{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:10px;padding:7px 12px 7px 8px}
+.steps3 i{font-style:normal;display:inline-flex;align-items:center;justify-content:center;width:21px;height:21px;border-radius:6px;background:var(--navy);color:#fff;font-weight:800;font-size:12px}
+.board{display:none}
+@media (min-width:960px){
+  .jc-hero{padding:60px 24px 64px}
+  .jc-hero-in{grid-template-columns:minmax(0,1.04fr) minmax(0,.96fr);gap:60px;align-items:center}
+  .board{display:grid;gap:9px;padding:20px;border-radius:20px;background:#fff;border:1px solid var(--line);box-shadow:var(--shadow-m)}
+}
+.board .bh,.board .br{display:grid;grid-template-columns:46px repeat(3,minmax(0,1fr));gap:9px;align-items:center}
+.board .bh span{font-size:12px;font-weight:700;letter-spacing:.06em;color:var(--faint);text-align:center}
+.board .bl{font-size:12.5px;font-weight:800;color:var(--ink)}
+.board .up{--c:var(--up)} .board .mid{--c:var(--mid)} .board .safe{--c:var(--safe)}
+.board i{display:block;height:76px;border-radius:12px;position:relative;border:1px solid var(--line);
+  background:
+    linear-gradient(var(--c),var(--c)) 11px 56px/calc((100% - 22px) * var(--w) / 100) 6px no-repeat,
+    linear-gradient(#E6EAF6,#E6EAF6) 11px 56px/calc(100% - 22px) 6px no-repeat,
+    linear-gradient(#CBD3EC,#CBD3EC) 37px 14px/48% 7px no-repeat,
+    linear-gradient(#E4E8F5,#E4E8F5) 37px 27px/32% 6px no-repeat,
+    linear-gradient(#EDF1FB,#EDF1FB) 11px 11px/19px 19px no-repeat,
+    var(--sky-2);
+  animation:deal .55s var(--ease) both}
+.board i.pk{box-shadow:0 0 0 2px var(--hl);border-color:#E9CF3F}
+.board i.pk::after{content:"★";position:absolute;right:9px;top:7px;font-size:12px;color:#C9A400}
+.board .br:nth-child(2) i:nth-of-type(1){animation-delay:.05s}.board .br:nth-child(2) i:nth-of-type(2){animation-delay:.12s}.board .br:nth-child(2) i:nth-of-type(3){animation-delay:.19s}
+.board .br:nth-child(3) i:nth-of-type(1){animation-delay:.26s}.board .br:nth-child(3) i:nth-of-type(2){animation-delay:.33s}.board .br:nth-child(3) i:nth-of-type(3){animation-delay:.4s}
+.board .br:nth-child(4) i:nth-of-type(1){animation-delay:.47s}.board .br:nth-child(4) i:nth-of-type(2){animation-delay:.54s}.board .br:nth-child(4) i:nth-of-type(3){animation-delay:.61s}
+@keyframes deal{from{opacity:0;transform:translateY(10px) scale(.96)}to{opacity:1;transform:none}}
+
+/* ── 입력: STEP 1 · STEP 2 ── */
+.steps-grid{max-width:var(--max);margin:0 auto;padding:24px 16px 0;display:grid;gap:16px}
+.jc section{padding:24px 16px}
+.steps-grid>section{padding:0}
+@media (min-width:1024px){
+  .steps-grid{grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);align-items:start;gap:20px;padding-top:36px}
+  #goalcard{position:sticky;top:calc(var(--nav-h,64px) + 20px)}
+}
+.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:24px 18px;box-shadow:var(--shadow)}
+@media (min-width:1024px){.card{padding:28px 26px}}
+.jc .step{display:inline-block;font-size:12.5px;font-weight:800;letter-spacing:.08em;color:var(--blue)}
+.jc h2{margin-top:8px;font-size:22px;font-weight:800;letter-spacing:-.03em;color:var(--ink);line-height:1.35;text-wrap:balance}
+.jc h2 em{font-style:normal;color:var(--navy);background:linear-gradient(180deg,transparent 60%,var(--hl) 60%,var(--hl) 92%,transparent 92%);padding:0 .04em;-webkit-box-decoration-break:clone;box-decoration-break:clone}
+.hint{margin-top:8px;font-size:13.5px;line-height:1.68;color:var(--sub)}
+.hint b{color:var(--ink)}
+
+.subj{display:grid;grid-template-columns:74px minmax(0,1fr);gap:10px;align-items:start;padding:16px 0;border-top:1px solid var(--line)}
+.subj:first-of-type{margin-top:16px}
+.subj .name{font-weight:800;font-size:15.5px;padding-top:10px;color:var(--ink)}
+.subj .opt{display:block;font-size:11px;font-weight:700;color:var(--faint)}
+.subj .ctl{display:flex;flex-wrap:wrap;gap:8px;align-items:center;min-width:0}
+.seg{display:inline-flex;background:var(--sky);border-radius:12px;padding:3px}
+.seg button{font-size:14px;font-weight:700;color:var(--sub);padding:0 14px;min-height:40px;border-radius:9px;transition:background .15s,color .15s}
+.seg button:hover{color:var(--navy)}
+.seg button[aria-pressed="true"]{background:var(--navy);color:#fff}
+.num{display:inline-flex;align-items:center;background:#fff;border:1.5px solid var(--line-2);border-radius:12px;padding:0 10px 0 4px;min-height:44px;transition:border-color .15s,box-shadow .15s}
+.num:focus-within{border-color:var(--navy);box-shadow:0 0 0 3px rgba(15,15,112,.12)}
+.num:has(input[aria-invalid="true"]){border-color:var(--up)}
+.num input{width:62px;border:0;background:transparent;font-size:19px;font-weight:800;text-align:right;padding:8px 4px;outline:none;-moz-appearance:textfield;color:var(--ink);font-variant-numeric:tabular-nums}
+.num input::-webkit-outer-spin-button,.num input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.num small{font-size:13px;color:var(--faint);font-weight:600}
+select.subjpick{appearance:none;min-height:44px;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%230F0F70' stroke-width='1.6' fill='none'/%3E%3C/svg%3E") no-repeat right 12px center;border:1.5px solid var(--line-2);border-radius:12px;padding:0 32px 0 12px;font-size:14.5px;font-weight:700;color:var(--ink);max-width:170px}
+select.subjpick:focus{border-color:var(--navy);outline:none;box-shadow:0 0 0 3px rgba(15,15,112,.12)}
+.conv{flex-basis:100%;font-size:12.5px;color:var(--sub);min-height:18px}
+.conv.note{color:var(--faint);line-height:1.62}
+.conv b{color:var(--ink)}
+.conv .warn{color:var(--up);font-weight:700}
+
+/* 표준점수·백분위 수정 칸 */
+.num .nl{font-size:12px;font-weight:700;color:var(--faint);padding-left:8px}
+.ovrow{flex-basis:100%;display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;font-size:12.5px;color:var(--sub);min-height:18px}
+.ovrow .mini{display:inline-flex;align-items:center;gap:4px;background:var(--sky-2);border:1px solid var(--line);border-radius:10px;padding:0 4px 0 9px;min-height:36px}
+.ovrow .mini span{font-size:11.5px;font-weight:700;color:var(--faint)}
+.ovrow .mini input{width:52px;border:0;background:transparent;font-size:15px;font-weight:800;text-align:right;padding:6px 4px;outline:none;-moz-appearance:textfield;color:var(--ink);font-variant-numeric:tabular-nums}
+.ovrow .mini input::-webkit-outer-spin-button,.ovrow .mini input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.ovrow .mini:focus-within{border-color:var(--navy);background:#fff}
+.ovrow .mini input.edited{color:#B4410E}
+.ovrow .g,.conv .g{display:inline-block;font-weight:800;color:var(--navy);background:var(--badge);border-radius:6px;padding:1px 8px}
+.ovrow .src,.conv .src{font-size:11.5px;color:var(--faint)}
+.ovrow .warn{flex-basis:100%;color:var(--up);font-weight:700}
+.ovrow .rnote{flex-basis:100%;font-size:11.5px;font-weight:700;color:#B4410E}
+.ovrow .rnote:empty{display:none}
+.jc .reset{font-size:11.5px;font-weight:800;color:var(--navy);text-decoration:underline;padding:2px}
+
+/* 목표 */
+.goal{display:grid;grid-template-columns:58px minmax(0,1fr) auto;gap:10px;align-items:center;padding:13px 0;border-top:1px solid var(--line)}
+.goal:first-of-type{margin-top:16px}
+.goal .name{font-weight:800;font-size:15px;color:var(--ink)}
+.goal .from{font-size:13px;color:var(--sub);font-variant-numeric:tabular-nums;min-width:0}
+.goal .from b{color:var(--text)}
+.goal .from b.to{color:var(--navy);background:linear-gradient(180deg,transparent 58%,var(--hl) 58%,var(--hl) 92%,transparent 92%);padding:0 .08em}
+.nextg{margin-top:5px;font-size:12px;font-weight:750;color:var(--navy);background:#fff;border:1px solid var(--line-2);border-radius:8px;padding:4px 9px;transition:border-color .15s}
+.nextg:hover{border-color:var(--navy)}
+.stepper{display:inline-flex;align-items:center;gap:4px}
+.stepper button{width:42px;height:42px;border-radius:12px;background:var(--sky);font-size:19px;font-weight:800;color:var(--navy);transition:background .15s}
+.stepper button:hover:not(:disabled){background:#E0E6F7}
+.stepper button:active{transform:scale(.95)}
+.stepper .d{min-width:40px;text-align:center;font-weight:800;font-size:16px;color:var(--navy);font-variant-numeric:tabular-nums}
+.presets{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
+.presets button{font-size:13px;font-weight:700;border:1px solid var(--line-2);border-radius:10px;padding:0 12px;min-height:38px;background:#fff;color:var(--sub);transition:border-color .15s,color .15s}
+.presets button:hover{border-color:var(--navy);color:var(--navy)}
+.presets button.hot{border-color:var(--navy);color:var(--navy);background:var(--sky)}
+.go{display:block;width:100%;margin-top:22px;background:var(--navy);color:#fff;font-size:17px;font-weight:800;border-radius:12px;padding:17px;box-shadow:0 6px 16px rgba(15,15,112,.2);transition:background .15s,transform .15s}
+.go:hover:not(:disabled){background:var(--navy-2)}
+.go:active:not(:disabled){transform:scale(.99)}
+.go:disabled{opacity:.5;box-shadow:none}
+.err{margin-top:10px;font-size:13.5px;color:var(--up);font-weight:700;min-height:1em}
+#goalcard .loading{font-size:13px;color:var(--faint);text-align:center;margin-top:10px}
+
+/* ── 결과 ── */
+#result{scroll-margin-top:calc(var(--nav-h,56px) + 56px);max-width:var(--max);margin:0 auto;padding:40px 16px 28px}
+#result[hidden]{display:none}
+#result.stale #sum,#result.stale #hook,#result.stale #cnote,#result.stale #picks,#result.stale #plan{opacity:.3;pointer-events:none}
+#result.stale .stalenote{display:block}
+.stalenote{display:none;margin-top:10px;font-size:13px;font-weight:700;color:var(--up)}
+#result>h2{font-size:clamp(22px,3.4vw,30px)}
+.sum{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:18px;position:relative}
+.sum:not(:empty)::after{content:"→";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:30px;height:30px;border-radius:50%;background:#fff;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;color:var(--navy);box-shadow:var(--shadow)}
+.sum .box{border-radius:16px;padding:16px 14px 15px;background:#fff;border:1px solid var(--line);min-width:0}
+.sum .box.t{background:var(--navy);border-color:var(--navy);color:#fff;padding-left:20px}
+.sum .lab{font-size:12.5px;font-weight:800;letter-spacing:.03em;color:var(--sub)}
+.sum .box.t .lab{color:var(--blue-soft)}
+.sum .big{font-size:30px;font-weight:800;color:var(--ink);letter-spacing:-.03em;line-height:1.3;font-variant-numeric:tabular-nums}
+.sum .box.t .big{color:var(--hl)}
+.sum .big small{font-size:13px;color:var(--sub);font-weight:700}
+.sum .box.t .big small{color:#DCE2FA}
+.sum .line{font-size:12.5px;color:var(--sub);margin-top:4px;line-height:1.5}
+.sum .box.t .line{color:#C9D0F0}
+.hook{margin-top:10px;border-radius:16px;padding:15px 17px;background:var(--hl-soft);border:1px solid #F1E29C;color:var(--ink);font-size:15px;font-weight:600;line-height:1.58}
+.hook b{color:var(--navy);font-weight:800}
+.hook:empty{display:none}
+.cnote{margin-top:10px;font-size:13px;font-weight:600;color:var(--up);line-height:1.6}
+.cnote:empty{display:none}
+.filters{display:flex;gap:6px;flex-wrap:wrap;margin-top:24px;align-items:center}
+.filters .lb{font-size:12.5px;font-weight:800;letter-spacing:.04em;color:var(--sub);margin-right:4px}
+.filters button{font-size:13px;font-weight:700;border:1px solid var(--line-2);border-radius:10px;padding:0 13px;min-height:36px;background:#fff;color:var(--sub);transition:border-color .15s,color .15s}
+.filters button:hover{border-color:var(--navy);color:var(--navy)}
+.filters button[aria-pressed="true"]{background:var(--navy);color:#fff;border-color:var(--navy)}
+
+/* 상향·소신·적정 대학 목록: 대학 행 + 군·계열 칩 */
+.picks{margin-top:6px}
+.plegend{margin-top:16px;font-size:12.5px;color:var(--faint);line-height:1.7}
+.band{margin-top:22px}
+.band.up{--bc:var(--up)} .band.mid{--bc:var(--mid)} .band.safe{--bc:var(--safe)}
+.band h3{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:16.5px;font-weight:800;color:var(--ink);padding-top:12px;border-top:2px solid var(--bc)}
+.band h3 .tag{font-size:12px;font-weight:800;color:#fff;border-radius:6px;padding:2px 8px;background:var(--bc)}
+.band h3 .few{font-size:13px;font-weight:700;color:var(--sub)}
+.band h3 small{font-size:12.5px;color:var(--sub);font-weight:600}
+.bnote{margin-top:8px;font-size:12.5px;color:var(--faint);line-height:1.6}
+.ulist{list-style:none;display:grid;gap:8px;margin-top:12px}
+@media (min-width:900px){.ulist{grid-auto-flow:column;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(var(--rows,5),auto);column-gap:12px}}
+.urow{--bc:var(--navy);display:grid;grid-template-columns:40px minmax(0,1fr) auto;gap:10px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:16px;padding:11px 11px 11px 12px;box-shadow:var(--shadow);animation:pop .45s var(--ease) both;transition:box-shadow .2s,border-color .2s}
+.urow.up{--bc:var(--up)} .urow.mid{--bc:var(--mid)} .urow.safe{--bc:var(--safe)}
+.urow:hover{box-shadow:var(--shadow-m)}
+@keyframes pop{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.urow .lg{width:40px;height:40px;border-radius:11px;background:#fff;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;overflow:hidden;align-self:start}
+.urow .lg img{width:32px;height:32px;object-fit:contain}
+.urow .lg.med{border:0}
+.urow .lg .ini{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:#fff;background:var(--navy)}
+.urow .ub{min-width:0}
+.urow .u{font-size:16px;font-weight:800;color:var(--ink);letter-spacing:-.035em;line-height:1.3;overflow-wrap:anywhere}
+.jc .ref{display:inline-block;margin-left:4px;font-size:11px;font-weight:700;letter-spacing:0;line-height:1.5;color:#5F6477;background:#EDEFF4;border:1px solid #DDE1EA;border-radius:5px;padding:0 5px;vertical-align:2px;cursor:help}
+.plegend .ref{margin:0 1px;vertical-align:1px;cursor:default}
+.urow .chips{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px}
+.gc{display:inline-flex;align-items:baseline;gap:5px;max-width:100%;font-size:12px;font-weight:600;color:var(--sub);background:var(--sky-2);border:1px solid var(--line);border-radius:7px;padding:2px 7px;line-height:1.45;overflow-wrap:anywhere}
+.gc b{flex:0 0 auto;font-weight:800;color:var(--navy)}
+.gc em{font-style:normal;font-weight:800;color:var(--ink)}
+.urow .side{display:flex;flex-direction:column;align-items:flex-end;gap:6px;text-align:right;max-width:118px}
+.urow .pr .now{display:block;font-size:11px;color:var(--faint);line-height:1.35}
+.urow .pr .pv{display:block;font-size:15px;font-weight:800;letter-spacing:-.03em;color:var(--bc);line-height:1.3;word-break:keep-all}
+.urow .settarget{font-size:12px;font-weight:750;color:var(--navy);background:#fff;border:1px solid var(--line-2);border-radius:10px;padding:0 9px;min-height:40px;white-space:nowrap;transition:border-color .15s,background .15s}
+.urow .settarget:hover{border-color:var(--navy)}
+.urow .settarget[aria-pressed="true"]{background:var(--hl);color:var(--ink);border-color:#E9CF3F}
+.urow.picked{border-color:#E9CF3F;box-shadow:0 0 0 2px var(--hl),var(--shadow-m)}
+.band .subh{margin-top:14px;font-size:12.5px;font-weight:800;letter-spacing:.02em;color:var(--sub)}
+.band .subh+.ulist{margin-top:8px}
+.bempty{margin-top:12px;border-radius:14px;padding:14px 16px;background:var(--sky-2);border:1.5px dashed var(--line-2);font-size:13px;color:var(--sub)}
+@media (max-width:380px){.urow{grid-template-columns:34px minmax(0,1fr) auto;gap:8px;padding:10px 9px}.urow .lg{width:34px;height:34px}.urow .lg img{width:28px;height:28px}.urow .pr .pv{font-size:14px}.urow .side{max-width:96px}}
+
+.rowbtns{display:flex;gap:8px;margin-top:18px}
+@media (min-width:1024px){
+  #result{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));column-gap:12px;align-items:stretch}
+  #result>*{grid-column:1/-1}
+  #result>#sum{grid-column:1/3}
+  #result>#hook{grid-column:3/4;margin-top:18px;padding:18px 18px}
+  #result>#hook:empty{display:none}
+}
+.share{font-size:14px;font-weight:700;color:var(--sub);background:#fff;border:1px solid var(--line-2);border-radius:12px;padding:0 18px;min-height:48px}
+.share:hover{border-color:var(--navy);color:var(--navy)}
+.share:active{transform:scale(.98)}
+.pnote{margin-top:12px;font-size:12.5px;color:var(--faint);line-height:1.68;max-width:64em}
+
+/* 목표 대학 바 */
+.tbar{position:fixed;left:50%;bottom:calc(12px + env(safe-area-inset-bottom));transform:translateX(-50%);width:min(760px,calc(100% - 20px));z-index:60;display:flex;align-items:center;gap:8px;background:var(--ink);color:#fff;border-radius:16px;padding:10px 10px 10px 16px;box-shadow:0 14px 34px rgba(8,8,60,.35);border:1px solid rgba(255,255,255,.08)}
+.tbar[hidden]{display:none}
+.tbar .tinfo{flex:1;min-width:0;display:flex;flex-direction:column}
+.tbar .tinfo b{font-size:14px;color:var(--hl)}
+.tbar .tinfo span{font-size:11.5px;color:#C4CBEA;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tbar .tinfo small{font-size:11px;color:#9FA7D2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tbar .tgo{flex:0 0 auto;display:inline-flex;align-items:center;background:var(--hl);color:var(--ink);font-weight:800;font-size:13.5px;border-radius:12px;padding:0 14px;min-height:44px;text-decoration:none;white-space:nowrap}
+.tbar .tgo:hover{background:#FFEE99}
+.tbar .tclear{flex:0 0 auto;color:#C4CBEA;font-size:13px;font-weight:700;padding:0 8px;min-height:44px;border-radius:10px}
+.tbar .tclear:hover{color:#fff}
+@media (max-width:520px){
+  .tbar{flex-wrap:wrap;padding:10px 10px 10px 14px;gap:6px 8px}
+  .tbar .tinfo{flex:1 1 100%}
+  .tbar .tgo{flex:1 1 auto;justify-content:center}
+}
+body.has-tbar .site-footer .footer-inner{padding-bottom:calc(150px + env(safe-area-inset-bottom))}
+
+/* 계산 중 */
+.loader{display:none;margin-top:18px;border-radius:16px;padding:28px 18px 26px;background:#fff;border:1px solid var(--line);text-align:center}
+#result.loading .loader{display:block}
+#result.loading #sum,#result.loading #hook,#result.loading #cnote,#result.loading #track,#result.loading #picks,#result.loading .rowbtns,#result.loading .pnote,#result.loading #plan{display:none}
+.dealer{display:grid;grid-template-columns:repeat(3,34px);gap:6px;justify-content:center;margin:0 auto 16px}
+.dealer i{display:block;height:44px;border-radius:8px;background:var(--sky);border:1px solid var(--line);animation:flip 1.8s var(--ease) infinite}
+.dealer i:nth-child(-n+3){--c:var(--up)} .dealer i:nth-child(n+4):nth-child(-n+6){--c:var(--mid)} .dealer i:nth-child(n+7){--c:var(--safe)}
+.dealer i:nth-child(2){animation-delay:.1s}.dealer i:nth-child(3){animation-delay:.2s}.dealer i:nth-child(4){animation-delay:.3s}.dealer i:nth-child(5){animation-delay:.4s}.dealer i:nth-child(6){animation-delay:.5s}.dealer i:nth-child(7){animation-delay:.6s}.dealer i:nth-child(8){animation-delay:.7s}.dealer i:nth-child(9){animation-delay:.8s}
+@keyframes flip{0%,18%{background:var(--sky);transform:none}34%,70%{background:var(--c);border-color:var(--c);transform:translateY(-3px)}86%,100%{background:var(--sky);transform:none}}
+.loader p{font-size:14.5px;font-weight:700;color:var(--ink)}
+.lbar{height:6px;border-radius:99px;background:var(--sky);margin:14px auto 0;max-width:260px;overflow:hidden}
+.lbar i{display:block;height:100%;width:0;background:var(--navy);border-radius:99px;transition:width .35s ease}
+
+/* 목표까지 가는 길 = 학습코칭 (네이비 패널, 사이트 final-cta 톤) */
+#plan{margin-top:34px;position:relative;overflow:hidden;background:var(--ink);color:#fff;border-radius:20px;padding:28px 18px 26px}
+#plan::before{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(60% 80% at 100% 0%,rgba(45,75,200,.38),transparent 70%)}
+#plan>*{position:relative}
+#plan .step{color:var(--hl)}
+#plan h2{color:#fff;max-width:26em}
+#plan h2 em{color:var(--hl);background:none;padding:0}
+#plan .lead{margin-top:8px;font-size:14px;color:#C9D0F0;max-width:44em}
+table.gap{width:100%;max-width:760px;border-collapse:collapse;margin-top:14px;font-size:13.5px;font-variant-numeric:tabular-nums}
+table.gap th,table.gap td{padding:10px 6px;border-bottom:1px solid rgba(255,255,255,.1);text-align:left;color:#E3E7F8}
+table.gap thead th{font-size:12px;color:#9FA7D2;font-weight:700}
+table.gap tbody th{font-weight:800;color:#fff}
+table.gap td b{color:var(--hl)}
+ol.how{list-style:none;margin-top:20px;display:grid;gap:10px;counter-reset:h}
+ol.how li{position:relative;padding:15px 15px 15px 54px;border-radius:16px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);counter-increment:h}
+ol.how li::before{content:counter(h);position:absolute;left:15px;top:15px;width:26px;height:26px;border-radius:8px;background:var(--hl);color:var(--ink);font-weight:800;font-size:14px;display:flex;align-items:center;justify-content:center}
+ol.how b{display:block;font-size:15px;color:#fff;line-height:1.45}
+ol.how span{display:block;margin-top:5px;font-size:13.5px;color:#C9D0F0;line-height:1.62}
+.bigcta{display:block;margin-top:20px;text-align:center;background:var(--hl);color:var(--ink);font-size:16.5px;font-weight:800;border-radius:12px;padding:16px;text-decoration:none;transition:background .15s}
+.bigcta:hover{background:#FFEE99}
+#plan .sub{margin-top:10px;font-size:12.5px;color:#9FA7D2;text-align:center}
+@media (min-width:900px){
+  #plan{padding:40px 40px 34px}
+  ol.how{grid-template-columns:repeat(3,minmax(0,1fr))}
+  ol.how li{padding:52px 18px 18px}
+  ol.how li::before{top:18px;left:18px}
+  .bigcta{max-width:420px;margin-left:auto;margin-right:auto}
+}
+
+/* 계산 기준·이용 주의 */
+.foot{max-width:var(--max);margin:0 auto;padding:30px 16px 56px;font-size:12px;color:var(--faint);line-height:1.78;border-top:1px solid var(--line)}
+.foot>*{max-width:860px}
+.foot b{color:var(--sub)} .foot a{color:var(--sub)}
+.foot ul{margin:6px 0 0 16px}
+.foot p+p,.foot ul+p{margin-top:8px}
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;font-size:13.5px;font-weight:600;padding:11px 16px;border-radius:12px;opacity:0;transition:all .25s;z-index:70;max-width:92%;text-align:center;pointer-events:none}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+body.has-tbar .toast{bottom:calc(96px + env(safe-area-inset-bottom))}
+@media (prefers-reduced-motion:reduce){.jc *{animation:none!important;transition:none!important}}
+</style>
 <script type="application/ld+json">{"@context": "https://schema.org", "@type": "EducationalOrganization", "name": "스누코치", "alternateName": "SNUCOACH", "url": "https://snucoach.github.io/", "logo": "https://snucoach.github.io/assets/img/logo.png", "image": "https://snucoach.github.io/assets/img/og_image.png", "description": "중·고등학생 1:1 학습코칭 서비스. 화상 컨설팅과 매일 카카오톡 플래너 피드백으로 공부 습관과 성적을 관리합니다.", "founder": {"@type": "Person", "name": "유정원"}, "sameAs": ["https://blog.naver.com/snustudycoach", "https://www.instagram.com/snu_studycoach/", "https://pf.kakao.com/_wiwxmG"]}</script>
 </head>
-<body class="p-event p-jungsi-wait">
+<body class="p-jungsi">
 <header class="topnav" id="topnav">
   <div class="topnav-inner">
     <a class="nav-logo" href="../index.html" aria-label="스누코치 홈"><img src="../assets/img/logo_black.png" alt="스누코치 SNUCOACH 로고" height="26"></a>
-    <nav class="nav-tabs" aria-label="주 메뉴"><div class="nav-item"><a href="../index.html"><span class="nav-lb">홈</span></a></div><div class="nav-item"><a href="../coaching.html"><span class="nav-lb"><sup class="nav-badge nb-best">BEST</sup>학습코칭 안내</span></a></div><div class="nav-item"><a href="../event.html" class="active" aria-current="true"><span class="nav-lb"><sup class="nav-badge nb-free">무료</sup>이벤트</span></a></div><div class="nav-item"><a href="../reviews.html"><span class="nav-lb">후기</span></a></div><div class="nav-item"><a href="../columns.html"><span class="nav-lb">자료·칼럼</span></a></div></nav><a class="nav-cta" href="https://smore.im/form/r7q2TCOBoc" target="_blank" rel="noopener">무료 상담 신청</a>
+    <nav class="nav-tabs" aria-label="주 메뉴"><div class="nav-item"><a href="../index.html"><span class="nav-lb">홈</span></a></div><div class="nav-item"><a href="../coaching.html"><span class="nav-lb"><sup class="nav-badge nb-best">BEST</sup>학습코칭 안내</span></a></div><div class="nav-item"><a href="../event.html" class="active" aria-current="true"><span class="nav-lb"><sup class="nav-badge nb-free">무료</sup>이벤트</span></a></div><div class="nav-item"><a href="../reviews.html"><span class="nav-lb">후기</span></a></div><div class="nav-item"><a href="../columns.html"><span class="nav-lb">자료·칼럼</span></a></div></nav><a class="nav-cta" href="https://smore.im/form/r7q2TCOBoc?utm_source=jungsi_calc&amp;utm_medium=header" target="_blank" rel="noopener">무료 상담 신청</a>
     <button class="nav-toggle" id="navToggle" type="button" aria-label="메뉴 열기" aria-expanded="false" aria-controls="navDrawer"><span></span><span></span><span></span></button>
   </div>
   <nav class="nav-compact" aria-label="주 메뉴(모바일)"><a class="ctab" href="../index.html">홈</a><a class="ctab" href="../coaching.html">학습코칭</a><a class="ctab active" href="../event.html" aria-current="true">이벤트</a><a class="ctab" href="../reviews.html">후기</a><a class="ctab" href="../columns.html">칼럼</a></nav>
@@ -45,24 +336,119 @@
     <button class="drawer-close" id="drawerClose" type="button" aria-label="메뉴 닫기">✕</button>
   </div>
   <nav class="drawer-links" aria-label="모바일 주 메뉴"><a href="../index.html"><span class="nav-lb">홈</span></a><a href="../coaching.html"><span class="nav-lb"><sup class="nav-badge nb-best">BEST</sup>학습코칭 안내</span></a><a href="../event.html" class="active" aria-current="true"><span class="nav-lb"><sup class="nav-badge nb-free">무료</sup>이벤트</span></a><a href="../reviews.html"><span class="nav-lb">후기</span></a><a href="../columns.html"><span class="nav-lb">자료·칼럼</span></a></nav>
-  <a class="drawer-cta" href="https://smore.im/form/r7q2TCOBoc" target="_blank" rel="noopener">무료 상담 신청</a>
+  <a class="drawer-cta" href="https://smore.im/form/r7q2TCOBoc?utm_source=jungsi_calc&amp;utm_medium=header" target="_blank" rel="noopener">무료 상담 신청</a>
   <a class="drawer-kakao" href="https://pf.kakao.com/_wiwxmG/chat" target="_blank" rel="noopener">카톡으로 문의</a>
 </aside>
 
-<h1 class="sr-only">대학 라인 잡기(정시) — 준비 중</h1>
-<main>
-<section class="hero hero-event">
-  <div class="hero-inner">
-    <span class="hero-eyebrow" data-rv>대학 라인 잡기(정시)</span>
-    <h2 class="hero-title" data-rv style="--rv-delay:.08s">대학 라인 잡기는<br><span class="grad">준비 중</span>이에요</h2>
-    <p class="hero-sub" data-rv style="--rv-delay:.16s">원점수와 목표 점수로 노려 볼 수 있는<br>대학·계열을 보여 드리는 페이지예요.<br>준비가 끝나면 이 주소에서 바로 이용할 수 있어요.</p>
-    <div class="hero-cta-row" data-rv style="--rv-delay:.24s">
-      <a class="btn btn-primary" href="../event.html">이벤트 페이지로 <span class="arr" aria-hidden="true">→</span></a>
-      <a class="btn btn-ghost" href="https://smore.im/form/r7q2TCOBoc" target="_blank" rel="noopener">무료 상담 신청</a>
+<main class="jc" id="main">
+  <section class="jc-hero">
+    <div class="jc-hero-in">
+      <div class="jc-copy">
+        <span class="jc-eyebrow">대학 라인 잡기(정시)</span>
+        <h1>점수를 올리면 갈 수 있는<br><span class="hl">내 정시 목표 대학</span></h1>
+        <p>지금 원점수를 넣고, 올릴 수 있다고 생각하는 만큼 목표 점수를 넉넉하게 올려 보세요. 그 점수로 어느 대학의 어느 계열까지 노려 볼 수 있는지 상향·소신·적정으로 골라 드려요.</p>
+        <p class="small">2026학년도 입시 결과로 맞춘 추정이에요. 현 고3·N수생(2027학년도 수능)에게는 참고용이고, 올해 모집인원과 수능 난이도에 따라 달라질 수 있어요.</p>
+        <div class="steps3"><span><i>1</i>지금 원점수</span><span><i>2</i>목표 점수</span><span><i>3</i>상향·소신·적정 대학</span></div>
+      </div>
+      <div class="board" aria-hidden="true">
+        <div class="bh"><span></span><span>가군</span><span>나군</span><span>다군</span></div>
+        <div class="br up"><span class="bl">상향</span><i style="--w:22"></i><i style="--w:31"></i><i style="--w:12"></i></div>
+        <div class="br mid"><span class="bl">소신</span><i class="pk" style="--w:58"></i><i style="--w:47"></i><i style="--w:64"></i></div>
+        <div class="br safe"><span class="bl">적정</span><i style="--w:78"></i><i style="--w:86"></i><i style="--w:93"></i></div>
+      </div>
     </div>
+  </section>
+
+  <div class="steps-grid">
+  <section>
+    <div class="card" id="input">
+      <span class="step">STEP 1</span>
+      <h2>지금 모의고사 원점수를 넣어 주세요</h2>
+      <p class="hint">대략적인 점수여도 괜찮아요. 원점수를 넣으면 <b>2026학년도 수능 채점 결과 기준</b>으로 표준점수·백분위를 채워 드려요. 성적표에 표준점수·백분위가 있으면 직접 고쳐 넣으세요. 고치지 않으면 2026학년도 수능 기준으로 계산해요.</p>
+      <div id="subjects"></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="card" id="goalcard">
+      <span class="step">STEP 2</span>
+      <h2>과목별로 <em>얼마나 올릴 수 있을까요?</em></h2>
+      <p class="hint">남은 기간에 스스로 올릴 수 있다고 생각하는 만큼 넉넉하게 올려 보세요. 그 목표 점수로 상향·소신·적정 대학을 뽑아요.</p>
+      <div id="goals"></div>
+      <div class="presets">
+        <button type="button" class="hot" data-p="next">모든 과목 다음 등급까지</button>
+        <button type="button" data-p="10,5">국·수·영 +10 · 탐구·한국사 +5</button>
+        <button type="button" data-p="5,3">국·수·영 +5 · 탐구·한국사 +3</button>
+        <button type="button" data-p="0">초기화</button>
+      </div>
+      <button type="button" class="go" id="go" disabled>내 목표 대학 뽑기</button>
+      <div class="err" id="err" role="alert"></div>
+      <div class="loading" id="loading">배치표 데이터를 불러오는 중이에요…</div>
+    </div>
+  </section>
   </div>
-</section>
+
+  <section id="result" hidden>
+    <span class="step">결과</span>
+    <h2>목표 점수로 보는 <em>상향·소신·적정 대학</em></h2>
+    <div class="loader" id="loader" aria-live="polite"><div class="dealer" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><p id="loadtxt">계산을 준비하는 중</p><div class="lbar"><i id="loadbar"></i></div></div>
+    <div class="stalenote">입력을 고치면 결과가 다시 계산돼요.</div>
+    <div class="sum" id="sum"></div>
+    <div class="hook" id="hook" aria-live="polite"></div>
+    <p class="cnote" id="cnote" role="note"></p>
+    <div class="filters" id="track" role="group" aria-label="계열">
+      <span class="lb">계열</span>
+      <button type="button" data-t="자연" aria-pressed="false">자연</button>
+      <button type="button" data-t="통합" aria-pressed="false">인문·통합</button>
+      <button type="button" data-t="all" aria-pressed="true">전체</button>
+    </div>
+    <div class="picks" id="picks"></div>
+    <div class="rowbtns">
+      <button class="share" id="share" type="button">공유</button>
+    </div>
+    <p class="pnote">상향·소신·적정마다 대학을 계열 단위로 묶어 최대 10곳씩 보여 줘요. 같은 대학·군·계열 안에서도 학과마다 차이가 있어요. 대학마다 국어·수학·탐구·영어 반영 비율이 달라서, 같은 성적이라도 목록의 대학 순서와 판정 순서가 다르게 나올 수 있어요. 판정은 추정이고, 농어촌·기회균형·저소득·지역인재·만학도처럼 지원 자격이 따로 있는 전형과 예체능 계열은 뺐어요.</p>
+    <div id="plan"></div>
+  </section>
+
+  <div class="foot">
+    <p><b>계산 기준</b></p>
+    <ul>
+      <li>대학별 환산 공식: 베텔기우스, 「환산점수 엑셀배치표 (2026 수능실채점)(20251212)」 (<a href="https://betelgeuse058.tistory.com/24" target="_blank" rel="noopener">「2026학년도 수능 배치표(실채점)」, 2025.12.12</a>), <a href="https://creativecommons.org/licenses/by-sa/4.0/deed.ko" target="_blank" rel="noopener">CC BY-SA 4.0</a>. 과목 반영 비율과 환산 방식은 원자료 수식을 그대로 계산해요.</li>
+      <li>합격선: 입시기관의 2026학년도 수능 실채점 지원 가능 점수 자료와 대입정보포털 어디가에 공개된 대학별 2026학년도 정시 결과로 스누코치가 보정한 추정치예요. 원자료에 환산 공식이 있는 모집단위는 원자료 기준점과 반씩 섞어 썼어요.</li>
+      <li>판정하는 범위: 대학·캠퍼스 197곳, 모집단위 3,935개(특별전형·예체능 계열 제외). 이 중 2,438개는 대학별 환산 공식으로, 1,497개는 국어·수학·탐구 백분위와 영어·한국사 등급 보정으로 간이 판정해요.</li>
+    </ul>
+    <p><b>스누코치가 바꾼 점</b></p>
+    <ul>
+      <li>원자료의 '표준점수 기준' 입력 방식을 쓰고, 원점수는 2026학년도 수능 기준 표준점수·백분위로 바꿔 넣음(원자료의 원점수 환산표는 2025학년도 수능 기준이라 쓰지 않음)</li>
+      <li>표준점수를 최고 표준점수로 나눠 반영하는 대학의 계산에 쓰는 과목별 최고 표준점수·탐구 과목별 응시인원을 원자료의 2025학년도 수능 값에서 2026학년도 수능 값(한국교육과정평가원 발표. 국어·수학 선택과목별 최고점은 공개되지 않아 추정값이고, 계산에는 영역 최고점만 쓰임)으로 바꿈</li>
+      <li>원자료의 합격 가능성 기준점 대신 위 합격선 추정치로 판정함. 원자료 기준점 척도가 맞지 않는 강원대 삼척·도계 캠퍼스 19개 모집단위는 섞지 않고 입시기관 자료만 썼고, 입시기관 자료와 연결되지 않은 43개 모집단위는 원자료 기준점을 그대로 씀</li>
+      <li>원자료에 없는 모집단위 1,911개를 추가함: 같은 대학의 환산 공식을 빌려 판정하는 414개, 기준 영역 백분위로 간이 판정하는 1,497개</li>
+      <li>합격 가능성 숫자 대신 적정·소신·상향 단계 문구로 표시함</li>
+      <li>환산점수가 계산되지 않는 모집단위, 특별전형 모집단위, 예체능 계열을 결과에서 제외함</li>
+      <li>캠퍼스 구분 추가(중앙대 안성, 한국외국어대 글로벌, 경희대 국제, 명지대 용인, 강원대 삼척·도계 — 각 대학 2026학년도 정시 공식 자료로 확인)와 표기 정리(관동대 → 가톨릭관동대 등)</li>
+      <li>모집단위를 대학·군·계열로 묶어 보여 주고, 묶음 판정은 모집단위 판정의 중앙값으로 정함. 목록 순서는 묶음마다 스누코치가 추정한 합격선의 중앙값으로 정함. 환산 공식으로 판정한 묶음을 먼저 고르고, 구간에 8곳이 안 될 때만 간이 판정 묶음을 채움</li>
+    </ul>
+    <p>바꾼 배치 데이터(data/depts.json, data/model.json)는 CC BY-SA 4.0으로 배포해요. 합격선 파일(data/lines.json, data/extra.json)은 이 라이선스로 배포하는 대상이 아니에요. 계열 분류는 스누코치가 정한 것이에요.</p>
+    <p><b>읽을 때 주의할 점</b></p>
+    <ul>
+      <li>판정은 2026학년도 입시 결과로 맞춘 추정이에요. 2027학년도 수능을 보는 학생에게는 참고용이고, 해마다 모집인원·수능 난이도·지원 경향이 바뀌어서 실제와 더 벌어질 수 있어요. 합격을 보장하지 않아요.</li>
+      <li>대학 이름 옆 <span class="ref">참고</span> 표시는 대학별 반영 비율을 반영하지 않은 간이 판정이에요. 원자료에 환산 공식이 없는 대학은 국어·수학·탐구 백분위와 영어·한국사 등급 보정만으로 비교해서, 실제 환산점수로 본 위치와 다를 수 있어요.</li>
+      <li>공식 입시 결과가 공개된 대학들보다 합격선이 낮은 모집단위(판정 대상의 약 56%)는 추정 오차가 더 커요. 이런 모집단위와 같은 대학 환산 공식을 빌린 모집단위는 '여유 있어요'·'쉽지 않아요'처럼 나누지 않고 적정·소신·상향 단계만 보여 줘요.</li>
+      <li id="convsrc">원점수 → 표준점수·백분위는 2026학년도 수능(2025. 11. 13. 시행) 실채점 기준이에요. 백분위·등급은 한국교육과정평가원이 발표한 과목별 표준점수 도수분포로 계산했어요. 국어·수학 원점수 → 표준점수는 크럭스(Crux) 2026 수능 표준점수 산출 공식을, 탐구는 평가원 도수분포를 역산한 뒤 EBSi·메가스터디 등급컷과 대조한 값을 썼어요. 국어·수학은 공통·선택 점수 조합에 따라 같은 원점수라도 표준점수가 1~4점 달라질 수 있어요. 모의고사는 시험마다 난이도가 다르니 성적표의 표준점수·백분위를 직접 넣으면 더 정확해요.</li>
+      <li>캠퍼스는 각 대학 2026학년도 정시 자료로 확인해 따로 표시했어요. 올해 모집요강에서 모집단위 이름과 지원 자격이 바뀌었는지 꼭 확인해 주세요.</li>
+      <li>점수 계산은 이 기기 안에서만 해요. 입력한 점수는 스누코치로 보내지 않아요. 상담을 신청할 때는 복사된 목표 문구를 직접 붙여 넣어요.</li>
+    </ul>
+    <p>화면 디자인·문구 © 스누코치 · 대학별 환산 데이터 CC BY-SA 4.0</p>
+  </div>
+
+  <div class="tbar" id="tbar" hidden>
+    <div class="tinfo"><b id="tbar-n">목표 대학 0곳</b><span id="tbar-list"></span><small>누르면 목표 문구가 복사돼요. 상담 신청서에 붙여 넣어 주세요.</small></div>
+    <a class="tgo" id="tbar-go" href="https://smore.im/form/r7q2TCOBoc?utm_source=jungsi_calc&amp;utm_medium=target" target="_blank" rel="noopener">이 목표로 무료 상담 받기</a>
+    <button type="button" class="tclear" id="tbar-clear" aria-label="고른 목표 모두 지우기">지우기</button>
+  </div>
+  <div class="toast" id="toast" role="status"></div>
 </main>
+
 <footer class="site-footer">
   <div class="footer-inner">
     <div class="footer-top">
@@ -104,13 +490,8 @@
   </div>
 </footer>
 
-<div class="action-dock">
-  <a class="dock-kakao" href="https://pf.kakao.com/_wiwxmG" target="_blank" rel="noopener" aria-label="스누코치 카카오톡 채널 문의">
-    <img src="../assets/img/kakao_channel.png" alt="" width="26" height="26"><span class="dk-label">카톡 문의</span></a>
-  <a class="dock-cta" href="https://smore.im/form/r7q2TCOBoc" target="_blank" rel="noopener">무료 상담 신청 <span class="arr">→</span></a>
-</div>
-<button class="goto-top" id="gotoTop" aria-label="맨 위로"><svg width="12" height="8" viewBox="0 0 12 8"><path d="M6 0 12 8H0z" fill="currentColor"/></svg><span>TOP</span></button>
-
 <script src="../assets/js/site.js?v=v3e" defer></script>
+<script src="picks.js?v=20260930e"></script>
+<script src="app.js?v=20260930e"></script>
 </body>
 </html>
