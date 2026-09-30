@@ -1,23 +1,68 @@
 // 배치 계산 워커: 원본 엑셀 수식(model.json)을 xlcalc로 그대로 평가한다.
-// 합격선: data/lines.json 이 있는 학과는 군 시트 R~V열(90·70·40·10·3% 기준점)을 새 기준점으로 바꿔 넣고 엑셀 AD·P 수식으로 판정한다.
+// 합격선: 학과마다 b 척도 기준점(lines.json e, 섞은 선이면 + base.json b70의 절반)을 base.json 곡선으로 환산점수 기준점으로 바꿔
+//  군 시트 R~V열(90·70·40·10·3% 기준점)에 넣고 엑셀 AD·P 수식으로 판정한다.
 // data/extra.json 모집단위(원본 배치표에 없는 곳)는 아래 judgeExtra 로 판정한다. 데이터 형식은 엔진 폴더의 INTEGRATION_CONTRACT.md
-importScripts("xlcalc.js");
-const DATA_V = "20260930e"; // lines.json·extra.json 을 바꾸면 올림(브라우저 캐시)
-let MODEL = null, DEPTS = null, LINES = null, EXTRA = null, SHEET = {};
-let LSET = [], XU = [], LOK = []; // LSET: [시트, [R..V 주소], 기준점 5개], XU: extra 모집단위(빌릴 학과 번호 붙임), LOK: 학과별 새 기준점 사용 여부
+// 파일 출처: model.json·depts.json·base.json = 원자료 파생(CC BY-SA 4.0), lines.json·extra.json = 스누코치가 맞춘 합격선(원자료 값 없음). 계산할 때만 합친다
+const DATA_V = "20260930f"; // data/ 파일이나 이 파일을 바꾸면 올림(브라우저 캐시). app.js 의 new Worker("worker.js?v=…")도 같이
+importScripts("xlcalc.js?v=" + DATA_V);
+let MODEL = null, DEPTS = null, LINES = null, BASE = null, EXTRA = null, VIEW = null, SHEET = {};
+let LSET = [], XU = [], LOK = []; // LSET: [시트, [R..V 주소], 기준점 5개], XU: extra 모집단위(빌릴 학과 번호·환산점수 기준점 붙임), LOK: 학과별 새 기준점 사용 여부
 const AST = new Map(); // 시나리오마다 새 워크북을 만들되 수식 파싱 결과는 공유
-const optJSON = (u) => fetch(u).then((r) => (r.ok ? r.json() : null)).catch(() => null); // 새 합격선 파일이 없으면 원본 기준점으로 동작
-const ready = Promise.all([
-  fetch("data/model.json").then((r) => r.json()),
-  fetch("data/depts.json").then((r) => r.json()),
-  optJSON("data/lines.json?v=" + DATA_V),
-  optJSON("data/extra.json?v=" + DATA_V),
-]).then(([m, d, ln, ex]) => {
-  MODEL = m; DEPTS = d; LINES = ln && ln.d ? ln : null; EXTRA = ex && ex.units ? ex : null;
-  for (const n of Object.keys(m.sheets)) SHEET[n.trim()] = n;
-  prep();
-  postMessage({ type: "ready", lines: LSET.length, extra: XU.length });
-}).catch((e) => postMessage({ type: "error", message: String(e) }));
+const getJSON = (u) => fetch(u + "?v=" + DATA_V).then((r) => { if (!r.ok) throw new Error(u + " " + r.status); return r.json(); });
+const optJSON = (u) => getJSON(u).catch(() => null); // 합격선 파일이 없으면 원본 기준점으로 동작
+const ready = Promise.all([getJSON("data/model.json"), getJSON("data/depts.json"), optJSON("data/lines.json"), optJSON("data/base.json"), optJSON("data/extra.json")])
+  .then(([m, d, ln, bs, ex]) => {
+    const ok = ln && ln.d && bs && bs.bg && bs.c && bs.d; // 합격선은 두 파일(lines·base)을 합쳐야 계산됨
+    LINES = ok ? ln : null; BASE = ok ? bs : null; EXTRA = ok && ex && ex.units ? ex : null;
+    for (const n of Object.keys(m.sheets)) SHEET[n.trim()] = n;
+    const r = buildData(d, LINES, BASE, EXTRA);
+    if (!d.some((x) => x.gy)) throw new Error("계열 정보 없음"); // 배포본 depts.json 에는 계열이 없고 lines.json 에서 붙임
+    LSET = r.LSET; LOK = r.LOK; XU = r.XU; VIEW = r.VIEW;
+    DEPTS = d; MODEL = m; // 여기까지 와야 계산을 받는다(onmessage 가 MODEL 로 확인)
+    postMessage({ type: "ready", lines: LSET.length, extra: XU.length });
+  }).catch((e) => postMessage({ type: "error", message: String(e) }));
+
+// ── 합격선 준비(한 번만) ──
+// base.json 곡선(원자료 수식을 전형적 과목 구성 학생에게 적용한 환산점수, b 30~100 격자)으로 b 척도 → 환산점수. 곡선 밖은 양 끝 기울기로 연장
+function interp(xs, ys, x) {
+  const n = xs.length;
+  if (x <= xs[0]) return ys[0] + ((ys[1] - ys[0]) / (xs[1] - xs[0])) * (x - xs[0]);
+  if (x >= xs[n - 1]) return ys[n - 1] + ((ys[n - 1] - ys[n - 2]) / (xs[n - 1] - xs[n - 2])) * (x - xs[n - 1]);
+  let lo = 0, hi = n - 1;
+  while (hi - lo > 1) { const m = (lo + hi) >> 1; if (xs[m] <= x) lo = m; else hi = m; }
+  return ys[lo] + ((ys[hi] - ys[lo]) * (x - xs[lo])) / (xs[hi] - xs[lo]);
+}
+// 원자료 Q처럼 소수 셋째 자리로 반올림하고, 곡선이 평평한 구간에서 두 기준점이 같아지면 0.001씩 내려 90 > 70 > 40 > 10 > 3을 지킴
+function finTh(a) { const t = a.map((x) => +x.toFixed(3)); for (let j = 1; j < t.length; j++) if (t[j] >= t[j - 1]) t[j] = +(t[j - 1] - 0.001).toFixed(3); return t; }
+const R5 = ["R", "S", "T", "U", "V"];
+const r2 = (x) => Math.round(x * 100) / 100;
+// VIEW = 화면(picks.js)에 넘기는 합쳐진 값: {d:{k:{t, lv, o}}, r:{k: 서열값}, w:{k:1}}, extra(빌린 식에 w 표시)
+function buildData(depts, lines, base, extra) {
+  const LSET = [], LOK = new Array(depts.length).fill(0), kIdx = new Map();
+  const view = { d: {}, r: {}, w: {} };
+  // 계열·이상치 표시: 배포본 depts.json 에는 없고 lines.json 에 있음(입시기관 계열 정보를 쓰는 값이라 원자료 파생 파일과 나눔)
+  if (lines && lines.gy) { const eo = new Set(lines.eo || []); for (const d of depts) { if (lines.gy[d.k]) d.gy = lines.gy[d.k]; d.eo = eo.has(d.k) ? 1 : 0; } }
+  if (base) for (const k of base.w || []) view.w[k] = 1;
+  const curve = (k) => { const b = base && base.d[k]; return b && b[0] >= 0 ? base.c[b[0]] : null; };
+  depts.forEach((d, i) => {
+    kIdx.set(d.k, i);
+    const x = lines && lines.d[d.k], b = base && base.d[d.k];
+    if (!x) { if (b && b[1] != null && !d.sp) view.r[d.k] = r2(b[1]); return; } // 새 기준점이 없는 학과: 원자료 기준점 그대로, 서열값만
+    const c = curve(d.k), h = x.h ? (b && b[1] != null ? b[1] / 2 : null) : 0;
+    if (!c || h == null || !Array.isArray(x.e) || x.e.length !== 5) return;
+    const t = finTh(x.e.map((v) => interp(base.bg, c, v + h)));
+    LSET.push([SHEET[d.s.trim()], R5.map((col) => col + d.r), t]); LOK[i] = x.o ? 2 : 1; // 1 = 새 기준점, 2 = 새 기준점(공식 자료 밖 수준 → 참고)
+    view.d[d.k] = { t, lv: r2(x.lv + h), ...(x.o ? { o: 1 } : {}) };
+  });
+  let exView = null;
+  const XU = !extra ? [] : extra.units.map((u) => {
+    if (u.m !== "b") return u;
+    const qi = kIdx.has(u.q) ? kIdx.get(u.q) : -1, c = curve(u.q);
+    return { ...u, qi: c ? qi : -1, th: c ? finTh(u.tb.map((v) => interp(base.bg, c, v))) : null };
+  });
+  if (extra) exView = { ...extra, units: extra.units.map((u) => (u.m === "b" && view.w[u.q] ? { ...u, w: 1 } : u)) };
+  return { LSET, LOK, XU, VIEW: lines ? { lines: view, extra: exView } : null };
+}
 
 // ── '본인점수 입력' 48~53행을 2026 수능 값으로 바꿈 ──
 // 원자료 48행=과목 이름, 49행=만점표점(AA49 라벨 '25수능'), 52행=탐구 과목 약칭, 53행=응시인원(X53 라벨 '25수능').
@@ -42,20 +87,6 @@ const INPUT_2026 = (() => {
   o.X49 = wavg(sci); o.Y49 = wavg(soc); o.Z49 = wavg([...sci, ...soc]); // 70.67 · 70.473 · 70.535 (원자료 25수능 69.823 · 71.561 · 70.789)
   return o;
 })();
-
-// 새 기준점·extra 준비(한 번만)
-const R5 = ["R", "S", "T", "U", "V"];
-function prep() {
-  LSET = []; LOK = new Array(DEPTS.length).fill(0);
-  const kIdx = new Map();
-  DEPTS.forEach((d, i) => {
-    kIdx.set(d.k, i);
-    const x = LINES && LINES.d[d.k];
-    if (!x || !Array.isArray(x.t) || x.t.length !== 5) return;
-    LSET.push([SHEET[d.s.trim()], R5.map((c) => c + d.r), x.t]); LOK[i] = x.o ? 2 : 1; // 1 = 새 기준점, 2 = 새 기준점(공식 자료 밖 수준 → 참고)
-  });
-  XU = EXTRA ? EXTRA.units.map((u) => (u.m === "b" ? { ...u, qi: kIdx.has(u.q) ? kIdx.get(u.q) : -1 } : u)) : [];
-}
 
 // 입력 셀(표준점수 기준): 국어 B/C, 수학 D/E/F, 과탐 G~N, 사탐 O~W (22 표준점수·23 백분위·24 등급), 영어·한국사·제2외 B/C/D27 등급
 // withLines=false 면 원본 기준점 그대로(점수 변환만 할 때)
@@ -129,7 +160,7 @@ function judgeExtra(rows, cells) {
   const s = student(cells), hasPct = s.kor != null && s.math != null && s.t1 != null;
   return XU.map((u) => {
     if (u.m === "b") {
-      const r = u.qi >= 0 ? rows[u.qi] : null;
+      const r = u.qi >= 0 && u.th ? rows[u.qi] : null;
       if (!r || r.x) return { x: 1 };
       return { ok: r.ok, q: r.q, ad: adOf(r.q, u.th, r.ok), p: pOf(r.q, u.th), ref: 1 };
     }
@@ -156,6 +187,6 @@ onmessage = async (ev) => {
       const wb = makeWB(cells), rows = placement(wb);
       out[name] = { conv: conversions(wb, cells), rows, extra: judgeExtra(rows, cells) };
     }
-    postMessage({ type: "placed", id: msg.id, out, depts: msg.wantDepts ? DEPTS : undefined, data: msg.wantDepts ? { lines: LINES, extra: EXTRA } : undefined, ms: Date.now() - t0 });
+    postMessage({ type: "placed", id: msg.id, out, depts: msg.wantDepts ? DEPTS : undefined, data: msg.wantDepts ? VIEW : undefined, ms: Date.now() - t0 });
   }
 };

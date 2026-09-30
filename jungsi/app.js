@@ -1,6 +1,6 @@
 // 스누코치 정시 배치 계산기 — 화면 로직
 // 원점수 → (2026 수능 기준 표준점수·백분위, 학생이 수정 가능) → worker.js가 원본 배치표 엑셀 수식(표준점수 기준 모드)으로 환산하고
-// 스누코치가 다시 맞춘 합격선(data/lines.json·data/extra.json)으로 판정 → picks.js가 대학·군·계열 묶음 목록을 만듦
+// 스누코치가 다시 맞춘 합격선(data/lines.json·data/extra.json, 원자료 쪽 절반은 data/base.json)으로 판정 → picks.js가 대학·군·계열 묶음 목록을 만듦
 (function () {
   "use strict";
   const FORM = "https://smore.im/form/r7q2TCOBoc";
@@ -41,7 +41,8 @@
   const $ = (s, el = document) => el.querySelector(s);
   const esc = (x) => String(x).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const f = (n) => Number(n).toLocaleString("ko-KR");
-  const worker = new Worker("worker.js?v=20260930e"); // worker.js·data/lines.json·data/extra.json을 고치면 버전도 올림(브라우저 캐시)
+  const VER = "20260930f"; // worker.js·data/ 파일을 고치면 worker.js 의 DATA_V 와 함께 올림(브라우저 캐시)
+  const worker = new Worker("worker.js?v=" + VER);
   let reqId = 0, ready = false;
 
   // ── 2026 수능 기준 변환 ──
@@ -197,6 +198,7 @@
   function requestUpdate() {
     clearTimeout(convTimer);
     convTimer = setTimeout(() => {
+      saveLocalState(); // 결과를 본 뒤 고친 점수도 새로고침 때 남게
       if (!ready || !state.last) return; // 결과를 본 뒤에만 입력 변경을 바로 반영
       const err = validate();
       if (err) { $("#err").textContent = err; $("#result").classList.add("stale"); return; }
@@ -340,23 +342,31 @@
   }
   const targetList = () => [...state.targets.values()];
   const targetText = (ts) => "목표: " + ts.map((t) => `${t.univ} ${t.major}`).join(", ");
+  // 다시 계산해서 지금 목록(같은 구간)에 없는 목표는 줄을 긋고 한 번 알려 줌. 복사 문구에는 그대로 넣음(학생이 고른 목표라서)
+  const inList = (t) => !state.pk || !!findRow(t.band, t.univ);
   function renderTargetBar() {
     const bar = $("#tbar"), ts = targetList();
     document.body.classList.toggle("has-tbar", ts.length > 0);
     if (!ts.length) { bar.hidden = true; return; }
     bar.hidden = false;
+    const gone = ts.filter((t) => !inList(t));
     $("#tbar-n").textContent = `목표 대학 ${new Set(ts.map((t) => t.univ)).size}곳`;
-    $("#tbar-list").textContent = ts.map((t) => `${t.univ} ${t.major}`).join(", ");
+    $("#tbar-list").innerHTML = ts.map((t) => (inList(t) ? esc(`${t.univ} ${t.major}`) : `<s>${esc(`${t.univ} ${t.major}`)}</s>`)).join(", ");
+    $("#tbar-note").classList.toggle("warn", gone.length > 0);
+    $("#tbar-note").textContent = gone.length ? `줄 그은 ${gone.length}곳은 다시 계산한 목록에 없어요. 필요 없으면 지우기를 눌러 주세요.` : "누르면 목표 문구가 복사돼요. 상담 신청서에 붙여 넣어 주세요.";
   }
   // 복사: 클릭 처리 안에서 바로(새 탭이 열리기 전에) 복사한다. execCommand가 안 되면 Clipboard API
+  // 복사용 칸을 잠깐 선택하느라 옮겨 간 키보드 초점은 누른 버튼·링크로 되돌림
   function copyNow(text) {
     let ok = false;
+    const prev = document.activeElement;
     try {
       const ta = document.createElement("textarea");
       ta.value = text; ta.setAttribute("readonly", ""); ta.style.position = "fixed"; ta.style.top = "-1000px"; ta.style.opacity = "0";
       document.body.appendChild(ta); ta.select(); ta.setSelectionRange(0, text.length);
       ok = document.execCommand("copy"); ta.remove();
     } catch (_) { ok = false; }
+    try { if (prev && prev !== document.body && prev.focus) prev.focus({ preventScroll: true }); } catch (_) {}
     if (ok) return Promise.resolve(true);
     try { if (navigator.clipboard) return navigator.clipboard.writeText(text).then(() => true, () => false); } catch (_) {}
     return Promise.resolve(false);
@@ -365,11 +375,18 @@
     if (!text) return;
     copyNow(text).then((ok) => toast(ok ? "고른 목표를 복사했어요. 상담 신청서에 붙여 넣어 주세요." : `복사하지 못했어요. 상담 신청서에 이렇게 적어 주세요. ${text}`, 6000));
   }
-  const STATE_KEY = "jungsi_state_v2"; // 입력만 이 탭에 잠시 보관(새로고침해도 다시 넣지 않게). 스누코치로 보내지 않음
-  function saveLocalState() { try { sessionStorage.setItem(STATE_KEY, JSON.stringify({ sel: state.sel, raw: state.raw, ov: state.ov, delta: state.delta, track: state.track, trackAuto: state.trackAuto })); } catch (_) {} }
+  // 입력과 고른 목표만 이 탭에 잠시 보관(새로고침해도 다시 넣지 않게). 스누코치로 보내지 않음
+  const STATE_KEY = "jungsi_state_v2";
+  function saveLocalState() {
+    try { sessionStorage.setItem(STATE_KEY, JSON.stringify({ sel: state.sel, raw: state.raw, ov: state.ov, delta: state.delta, track: state.track, trackAuto: state.trackAuto,
+      targets: targetList().map((t) => ({ univ: t.univ, major: t.major, band: t.band })) })); } catch (_) {}
+  }
   function loadLocalState() {
     try { const v = JSON.parse(sessionStorage.getItem(STATE_KEY) || "null"); if (!v) return false;
       Object.assign(state.sel, v.sel); state.raw = v.raw || {}; state.ov = v.ov || {}; state.delta = v.delta || {}; state.track = v.track || "all"; state.trackAuto = v.trackAuto !== false;
+      for (const t of Array.isArray(v.targets) ? v.targets : []) {
+        if (t && typeof t.univ === "string" && typeof t.major === "string" && BAND_TXT[t.band]) state.targets.set(tkey(t.univ, t.band), { key: tkey(t.univ, t.band), univ: t.univ, major: t.major, band: t.band });
+      }
       return true; } catch (_) { return false; }
   }
 
@@ -418,7 +435,7 @@
     if (state.pending) setTimeout(show, Math.max(0, LOAD_MIN - (performance.now() - state.t0))); else show();
   };
   loadLocalState();
-  fetch("data/conv2026.json").then((r) => r.json()).then((c) => { state.conv = c; clampDeltas(); renderInputs(); renderGoals(); if (ready) { $("#loading").textContent = ""; $("#go").disabled = false; } })
+  fetch("data/conv2026.json?v=" + VER).then((r) => r.json()).then((c) => { state.conv = c; clampDeltas(); renderInputs(); renderGoals(); if (ready) { $("#loading").textContent = ""; $("#go").disabled = false; } })
     .catch(() => { $("#loading").textContent = "변환표를 불러오지 못했어요. 새로고침해 주세요."; });
 
   // ── 이벤트 ──
@@ -450,11 +467,12 @@
       const k = tkey(u, band), on = !state.targets.has(k);
       if (on) state.targets.set(k, targetOf(row, band)); else state.targets.delete(k);
       b.setAttribute("aria-pressed", on); b.textContent = on ? "★ 목표" : "☆ 목표";
-      b.closest(".urow").classList.toggle("picked", on); renderTargetBar();
+      b.closest(".urow").classList.toggle("picked", on); renderTargetBar(); saveLocalState();
     } else if (b.id === "tbar-go") copyGoal(targetText(targetList())); // 링크 기본 동작(상담 신청서 새 탭)은 그대로
     else if (b.matches("a.bigcta")) copyGoal(state.targets.size ? targetText(targetList()) : b.dataset.goal);
-    else if (b.id === "tbar-clear") { state.targets.clear(); renderTargetBar(); renderPicks(); }
-    else if (b.matches("#track button")) { state.track = b.dataset.t; state.trackAuto = false; syncTrack(); if (state.last) { summarize(state.last); renderPicks(); } }
+    else if (b.matches("a.nav-cta, a.drawer-cta")) { if (state.targets.size) copyGoal(targetText(targetList())); } // 헤더·메뉴의 상담 신청도 고른 목표가 있으면 복사
+    else if (b.id === "tbar-clear") { state.targets.clear(); renderTargetBar(); renderPicks(); saveLocalState(); }
+    else if (b.matches("#track button")) { state.track = b.dataset.t; state.trackAuto = false; syncTrack(); saveLocalState(); if (state.last) { summarize(state.last); renderPicks(); renderTargetBar(); } }
     else if (b.id === "share") {
       const data = { title: "대학 라인 잡기(정시) | 스누코치", url: location.href.split("#")[0] };
       if (navigator.share) navigator.share(data).catch(() => {}); else copyNow(data.url).then((ok) => toast(ok ? "주소를 복사했어요." : "주소창의 주소를 복사해 주세요."));
@@ -480,7 +498,12 @@
     const sp = document.createElement("span"); sp.className = "ini"; sp.textContent = t.dataset.ini; t.replaceWith(sp);
   }, true);
   let tt = null;
-  function toast(msg, ms) { const el = $("#toast"); el.textContent = msg; el.classList.add("on"); clearTimeout(tt); tt = setTimeout(() => el.classList.remove("on"), ms || 3600); }
+  // 목표 바가 떠 있으면 바 바로 위에 띄움(바 높이는 화면 폭·안내 줄 수에 따라 달라서 그때그때 잼. 못 재면 CSS 기본값)
+  function toast(msg, ms) {
+    const el = $("#toast"), bar = $("#tbar");
+    el.style.bottom = !bar.hidden && bar.getBoundingClientRect().height ? `${Math.round(window.innerHeight - bar.getBoundingClientRect().top + 8)}px` : "";
+    el.textContent = msg; el.classList.add("on"); clearTimeout(tt); tt = setTimeout(() => el.classList.remove("on"), ms || 3600);
+  }
 
   renderInputs(); renderGoals(); renderTargetBar();
 })();

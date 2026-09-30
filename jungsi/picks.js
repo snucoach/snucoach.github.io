@@ -18,8 +18,9 @@
   const GUN_MIN = 2; // 후보에 있는 군은 선택 행 중 최소 이만큼(후보가 적으면 가능한 만큼)
   const GOAL_BONUS = 0.5; // 목표 시나리오에서 지금보다 판정이 오른 행의 정렬 가산점(서열값 lv 단위)
   // 목록에서 빼는 규칙(mismatch)
-  //  (가) 환산점수 역행 식(lines w=1, 가천대 전형Ⅰ)으로만 판정한 묶음은 적정 구간에만 둔다. 이 식은 성적이 올라도 환산점수가 내려가는 구간이 있고
-  //      합격선은 단조로 맞춘 곡선으로 만들어서, 판정이 실제보다 어렵게만 틀린다(적정은 안전, 상향·소신은 이 역행 때문일 수 있음)
+  //  (가) 환산점수 역행 식(w=1, 가천대 전형Ⅰ — 새 기준점 학과·원본 기준점 학과·이 식을 빌린 추가 모집단위 모두)으로만 판정한 묶음은 적정 구간에만 둔다.
+  //      이 식은 성적이 올라도 환산점수가 내려가는 구간이 있고 합격선은 단조로 맞춘 곡선으로 만들어서, 판정이 실제보다 어렵게만 틀린다
+  //      (적정은 안전, 상향·소신은 이 역행 때문일 수 있음). 목표 시나리오에서는 이런 묶음의 판정을 '지금'보다 나쁘게 두지 않는다(목표 점수는 과목마다 지금 이상이라서)
   //  (나) 공통척도 점검: 합격선 파일에 없어 원본 기준점을 그대로 쓰는 학과로만 된 묶음에만 적용한다(opt.me = 학생 국·수·탐 표준점수 합).
   //  - 상향·소신인데 묶음 기준점(26수능 표준점수 합)이 학생보다 GAP + GAP_ENG×(영어 등급−1) 이상 낮음
   //  - 소신·적정인데 기준점이 학생보다 GAP 이상 높음
@@ -58,8 +59,9 @@
   const stdOf = (d) => (isNum(d.std26) ? d.std26 : isNum(d.pos) ? d.pos : isNum(d.ec) ? d.ec : null);
 
   // 0단계: 판정 항목. tier "f" = 원자료 환산식(학과 자기 식 또는 같은 대학 식을 빌림), "p" = 기준 영역 백분위 단순 비교
-  //  - 합격선 파일(lines)이 있는 학과: 새 기준점. 서열값 lv = lines.d[k].lv. w=1(성적이 올라도 환산점수가 내려가는 구간이 있는 식)은 같은 묶음에 다른 학과가 있으면 판정에서 뺌
-  //  - lines에 없는 학과: 원본 기준점 그대로. lv = lines.r[k]. eo·cz(원본 기준점 이상치)는 3개 이상 묶음에서 판정에서 빼고, nv(도달 불가)는 뺌
+  //  - 합격선(lines.d)이 있는 학과: 새 기준점. 서열값 lv = lines.d[k].lv. w=1(성적이 올라도 환산점수가 내려가는 구간이 있는 식, lines.w)은 같은 묶음에 다른 항목이 있으면 판정에서 뺌
+  //  - lines.d에 없는 학과: 원본 기준점 그대로. lv = lines.r[k]. eo·cz(원본 기준점 이상치)는 3개 이상 묶음에서 판정에서 뺌
+  //  - nv(원자료 식 척도 불일치, 강원대 삼척·도계)는 늘 뺀다. 같은 모집단위가 추가 모집단위(단순 비교)로 들어 있음
   //  - 합격선 파일이 없으면(옛 캐시·불러오기 실패) 전부 원본 기준점: lv = 26수능 표준점수 합, 추가 모집단위는 쓰지 않음
   function items(D, res, opt) {
     const R = rowsOf(res) || [], XR = extraOf(res);
@@ -70,23 +72,24 @@
     for (let i = 0; i < D.length; i++) {
       const d = D[i], r = R[i];
       if (d.sp || d.gy === EXCLUDED_GY || !trackOk(d, opt.track) || !valid(r)) continue;
+      if (d.nv) continue;
       const ln = L ? L.d[d.k] : null;
-      if (!ln && d.nv) continue;
       const lv = ln ? ln.lv : L ? L.r && L.r[d.k] : stdOf(d);
-      out.push({ src: "d", i, d, r, u: uOf(d), g: d.g, gy: gyOf(d), lv: isNum(lv) ? lv : null, tier: "f", old: !ln, w: !!(ln && ln.w),
+      out.push({ src: "d", i, d, r, u: uOf(d), g: d.g, gy: gyOf(d), lv: isNum(lv) ? lv : null, tier: "f", old: !ln, w: !!((L && L.w && L.w[d.k]) || (ln && ln.w)),
         odd: ln ? false : !!(d.eo || d.cz), cz: ln ? 0 : d.cz || 0, std: ln ? null : stdOf(d), lk: d.lk || d.u });
     }
     if (E && XR) E.units.forEach((x, j) => {
       const r = XR[j];
       if (!valid(r) || x.gy === EXCLUDED_GY || !trackOk(x, opt.track)) return;
-      out.push({ src: "x", j, x, r, u: x.u, g: x.g, gy: x.md || x.gy, lv: isNum(x.lv) ? x.lv : null, tier: x.m === "p" ? "p" : "f", old: false, w: false,
+      out.push({ src: "x", j, x, r, u: x.u, g: x.g, gy: x.md || x.gy, lv: isNum(x.lv) ? x.lv : null, tier: x.m === "p" ? "p" : "f", old: false, w: !!x.w,
         odd: false, cz: 0, std: null, lk: x.lk || null });
     });
     return out;
   }
 
   // 1단계: (대학, 군, 계열) 묶음. 환산식 항목(tier f)이 있으면 그것만으로 판정하고, 없을 때만 단순 비교(tier p)로 판정(pct=true)
-  // 판정 = 묶음 판정 중앙값. ref = 판정에 쓴 항목 중 하나라도 참고 판정(ref=1)이면 1(보수적)
+  // 판정 = 판정에 쓴 항목(pool)의 판정 중앙값(짝수면 보수적인 쪽). 서열값 lv = 같은 pool의 lv 중앙값(짝수면 높은 쪽 — 판정과 같은 쪽)
+  // ref = 판정에 쓴 항목 중 하나라도 참고 판정(ref=1)이면 1(보수적)
   function groups(D, res, opt) {
     const map = new Map();
     for (const it of items(D, res, opt)) {
@@ -102,7 +105,7 @@
       if (mem.length >= 3) { const c = pool.filter((x) => !x.odd); if (c.length) pool = c; } // 원본 기준점 이상치(eo·cz)는 3개 이상 묶음에서만 뺌
       const wOnly = pool.every((x) => x.w);
       const ad = medianAd(pool);
-      const lvs = mem.map((x) => x.lv).filter(isNum), lv = lvs.length ? median(lvs) : 0;
+      const lvs = pool.map((x) => x.lv).filter(isNum).sort((a, b) => a - b), lv = lvs.length ? lvs[Math.floor(lvs.length / 2)] : 0;
       const old = mem.every((x) => x.old);
       const stds = old ? mem.map((x) => x.std).filter(isNum) : [], std = stds.length ? median(stds) : null;
       const czs = old ? pool.reduce((s, x) => s + (x.cz || 0), 0) : 0, cz = Math.abs(czs) * 2 > pool.length ? Math.sign(czs) : 0;
@@ -114,6 +117,15 @@
       out.push({ key: G.key, u: G.u, g: G.g, gy: G.gy, ad, lv, n: mem.length, rep, med: isMedGy(G.gy), cz, ref, pct, old, std, lk, wOnly });
     }
     return out;
+  }
+
+  // 목표 시나리오 묶음: (가) 환산점수 역행 식으로만 판정한 묶음은 '지금' 판정보다 나쁘게 두지 않는다
+  //  (목표 점수는 과목마다 지금 이상이라 실제 위치가 나빠질 수 없는데, 이 식은 수학만 올려도 역행 구간에서 판정이 떨어짐). gsO = 지금 성적 묶음(key → 묶음)
+  function groupsFor(D, res, other, gopt) {
+    const gs = groups(D, res, gopt);
+    const gsO = other ? new Map(groups(D, other, gopt).map((G) => [G.key, G])) : null;
+    if (gsO) for (const G of gs) { const Gn = gsO.get(G.key); if (G.wOnly && Gn && Gn.ad < G.ad) { G.ad = Gn.ad; G.held = true; } }
+    return { gs, gsO };
   }
 
   const hasGun = (row, g) => row.chips.some((c) => c.g === g);
@@ -222,8 +234,7 @@
     const max = opt.max || 10;
     const track = opt.track || "all";
     const gopt = { track, data: opt.data };
-    const gs = groups(D, res, gopt);
-    const gsO = other ? new Map(groups(D, other, gopt).map((G) => [G.key, G])) : null;
+    const { gs, gsO } = groupsFor(D, res, other, gopt);
     const me = typeof opt.me === "number" && opt.me > 0 ? opt.me : null;
     const eng = typeof opt.eng === "number" && opt.eng >= 1 ? opt.eng : 1;
     const out = { counts: {}, track };
@@ -319,5 +330,5 @@
   const rowGys = (row) => gyLabel(row.chips.map((c) => c.gy));
   const rowGun = (row) => [...new Set(row.chips.map((c) => c.g))].sort((a, b) => GUN.indexOf(a) - GUN.indexOf(b)).join("·");
 
-  return { BANDS, GUN, MED_KINDS, build, say, SAY, SAY_REF, gyParts, gyLabel, chipGroups, rowGys, rowGun, trackOk, medKind, isMedGy };
+  return { BANDS, GUN, MED_KINDS, build, groupsFor, say, SAY, SAY_REF, gyParts, gyLabel, chipGroups, rowGys, rowGun, trackOk, medKind, isMedGy };
 });
