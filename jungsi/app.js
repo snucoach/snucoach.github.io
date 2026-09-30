@@ -30,6 +30,8 @@
     safe: { label: "적정", desc: "든든한 대학" },
   };
   const BANDS = PK.BANDS.map((b) => ({ ...b, ...BAND_TXT[b.key] }));
+  const sayRow = PK.sayRow || ((row, ad, ref, ok) => PK.say(ad, ref, ok)); // 옛 picks.js 캐시와 섞여도 멈추지 않게
+  const sayNow = PK.sayNow || ((row) => (row.o.ok ? sayRow(row, row.o.ad, row.o.ref) : "응시 조건 확인")); // 목표 시나리오의 '지금' 문구
   const MAX_ROWS = 10; // 구간마다 보여 줄 대학 수 상한
   // 의·치·한·약·수 카드 아이콘: 아스클레피오스의 지팡이(색으로만 구분)
   const ROD = '<path d="M12 2.4v19.2" fill="none" stroke="#fff" stroke-width="2.3" stroke-linecap="round"/><path d="M8.9 5.6c1.5-1.5 6.4-1.3 6.4 1.1 0 2.4-6.6 2.4-6.6 5.1 0 2.5 6.8 2.3 6.8 5 0 2.3-5.9 2.1-5.9 3.9" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="8.5" cy="5.9" r="1.45" fill="#fff"/>';
@@ -37,7 +39,7 @@
   const LOAD_MIN = 1600; // 계산 연출 최소 시간(ms)
 
   const state = { sel: { kor: null, math: null, t1: null, t2: null }, raw: {}, delta: {}, ov: {}, track: "all", trackAuto: true,
-    last: null, depts: null, data: null, conv: null, pk: null, pending: false, targets: new Map() };
+    last: null, depts: null, data: null, base: null, conv: null, pk: null, pending: false, targets: new Map() };
   const $ = (s, el = document) => el.querySelector(s);
   const esc = (x) => String(x).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const f = (n) => Number(n).toLocaleString("ko-KR");
@@ -247,7 +249,9 @@
   const gradeOfKey = (k, target) => { const s = SUBJ.find((x) => x.key === k); const v = scoreOf(s, target); return v ? v.grade : "-"; };
   const engOf = (target) => { const g = +gradeOfKey("eng", target); return g >= 1 && g <= 9 ? g : 1; };
   // data = {lines, extra}: 새 합격선·추가 모집단위(워커가 첫 계산 때 넘겨 줌). 없으면 picks.js가 원본 기준점으로 목록을 만듦
-  const pickOpt = (target) => ({ track: state.track, max: MAX_ROWS, data: state.data, me: stdSum(target), eng: engOf(target) });
+  // base = data/base.json(환산식 곡선, 워커와 같은 파일): 구간이 8곳이 안 될 때 이웃 판정 대학을 가까운 순으로 채우는 데 씀(없으면 채우기가 줄어듦)
+  const pickData = () => (state.data || state.base ? { ...(state.data || {}), base: state.base } : null);
+  const pickOpt = (target) => ({ track: state.track, max: MAX_ROWS, data: pickData(), me: stdSum(target), eng: engOf(target) });
   function summarize(out) {
     const D = state.depts;
     const sNow = stdSum(false), sGoal = stdSum(true);
@@ -303,24 +307,33 @@
     const rc = repChip(row);
     const chips = PK.chipGroups(row, state.pk.track).map((x) => chipHtml(x, row.chips.length > 1)).join("");
     const o = row.o;
-    const now = goal && o ? `<span class="now">지금 ${esc(o.ok ? PK.say(o.ad, o.ref) : "응시 조건 확인")} → 목표</span>` : "";
+    const now = goal && o ? `<span class="now">지금 ${esc(sayNow(row))} → 목표</span>` : "";
     const ref = row.pct ? ` <span class="ref" title="${REF_TIP}" role="note" aria-label="참고: ${REF_TIP}">참고</span>` : "";
     const on = isTarget(row.u, b.key);
     return `<li class="urow ${b.key}${on ? " picked" : ""}">${logoHtml(row)}
       <div class="ub"><div class="u">${esc(row.u)}${ref}</div><div class="chips">${chips}</div></div>
-      <div class="side"><div class="pr">${now}<b class="pv">${esc(PK.say(rc.ad, rc.ref))}</b></div>
+      <div class="side"><div class="pr">${now}<b class="pv">${esc(sayRow(row, rc.ad, rc.ref))}</b></div>
         <button type="button" class="settarget" data-band="${b.key}" data-u="${esc(row.u)}" aria-pressed="${on}" aria-label="${esc(row.u)} ${b.label} 목표 대학으로 설정">${on ? "★ 목표" : "☆ 목표"}</button></div></li>`;
   }
-  function bandHtml(b, rows, goal, cnt, few) {
+  // 구간 제목: 구간 판정 대학이 보여 준 수보다 많으면 '(해당 N곳 중)'. 8곳이 안 되면(이웃 판정으로 채워도 모자람) 이유를 한 줄로
+  function bandHtml(b, rows, goal, cnt) {
     const n = rows.length, cand = cnt ? cnt.cand : n;
-    const sub = !n ? "" : cand > n ? ` <span class="few">(해당 ${f(cand)}곳 중)</span>` : n < 8 ? ` <span class="few">(해당 대학 전부)</span>` : "";
+    const sub = n && !(cnt && cnt.fill) && cand > n ? ` <span class="few">(해당 ${f(cand)}곳 중)</span>` : "";
     const title = n ? `${b.label} ${n}곳${sub}` : b.label;
     const list = (rs) => `<ol class="ulist" role="list" style="--rows:${Math.ceil(rs.length / 2)}">${rs.map((r) => rowHtml(b, r, goal)).join("")}</ol>`;
     const gen = rows.filter((r) => !r.med), med = rows.filter((r) => r.med); // 의약 전용 행은 따로 모아 뒤에
-    const note = n < 8 && few ? `<p class="bnote">${few}</p>` : "";
+    const few = n < 8 ? fewText(b.key, goal, n) : "";
+    const note = n && few ? `<p class="bnote">${few}</p>` : "";
     const body = !n ? `<p class="bempty">이 구간에 드는 대학이 없어요.${few ? " " + few : ""}</p>`
       : note + (gen.length ? list(gen) : "") + (med.length ? (gen.length ? `<p class="subh">의·치·한·약·수</p>` : "") + list(med) : "");
     return `<div class="band ${b.key}"><h3><span class="tag" aria-hidden="true">${b.label}</span>${title} <small>${b.desc}</small></h3>${body}</div>`;
+  }
+  // 8곳이 안 되는 이유(이웃 판정까지 채워도 모자란 경우). 점수가 높을수록 위쪽 대학이 적고, 판정 경계 근처 대학도 적다
+  //  상향은 합격선이 조금 높은 대학(어려움은 추정 합격선에서 5점 안)만 넣으므로 '조금 높은'
+  function fewText(key, goal, n) {
+    const who = goal ? "목표 점수" : "지금 성적";
+    const what = key === "up" ? `합격선이 ${who}보다 조금 높은 대학이` : key === "mid" ? `합격선이 ${goal ? "목표 점수와" : "지금 성적과"} 비슷한 대학이` : "";
+    return !what ? "" : n ? `${what} 많지 않아서 ${n}곳만 나와요.` : `${what} 거의 없어요.`;
   }
   function renderPicks() {
     if (!state.last || !state.depts) return;
@@ -329,9 +342,7 @@
     state.pk = pk;
     const anyRef = BANDS.some((b) => pk[b.key].some((r) => r.pct));
     const legend = `<p class="plegend">오른쪽 문구는 ${goal ? "목표 점수" : "지금 성적"} 기준 판정이에요. 계열이 여러 개인 대학은 진하게 표시한 계열 기준이에요.${anyRef ? ` <span class="ref">참고</span> 표시는 ${REF_TIP}이에요.` : ""}</p>`;
-    // 상향 후보가 적으면(성적이 높은 학생) 상향·소신이 비는 이유를 상향 구간에 한 번 알려 줌
-    const topFew = pk.counts.up.cand < 8 ? `상향·소신에는 합격선이 ${goal ? "목표 점수" : "지금 성적"}보다 조금 높은 대학만 들어가요. 점수가 높을수록 그런 대학이 적어서 곳 수가 적게 나와요.` : "";
-    $("#picks").innerHTML = legend + BANDS.map((b) => bandHtml(b, pk[b.key], goal, pk.counts[b.key], b.key === "up" ? topFew : "")).join("");
+    $("#picks").innerHTML = legend + BANDS.map((b) => bandHtml(b, pk[b.key], goal, pk.counts[b.key])).join("");
     renderPlan(pk);
   }
 
@@ -399,10 +410,11 @@
       return `<tr><th>${s.name}</th><td>${r} → <b>${to}</b></td><td>${d ? `+${d}점` : "-"}</td><td>${g0}${g1 !== g0 ? ` → <b>${g1}</b>` : ""}등급</td></tr>`;
     }).join("");
     // 가장 높은 소신·상향 대학(없으면 적정 맨 위)의 '대학 계열'. 트랙에 맞는 의약이 아닌 행을 먼저 고르고, 없을 때만 나머지
+    // 구간 판정 행을 먼저 보고, 없으면 8곳을 채우려고 넣은 이웃 판정 행(상향의 '쉽지 않아요' 등)
     const byLv = (a) => a.slice().sort((x, y) => y.lv - x.lv);
     const good = (r) => !r.med && !r.cross;
-    const hi = byLv([...pk.up, ...pk.mid]);
-    const top = hi.find(good) || pk.safe.find(good) || hi[0] || pk.safe[0];
+    const hi = byLv([...pk.up, ...pk.mid].filter((r) => !r.fill)), hiF = byLv([...pk.up, ...pk.mid].filter((r) => r.fill));
+    const top = hi.find(good) || hiF.find(good) || pk.safe.find(good) || hi[0] || hiF[0] || pk.safe[0];
     const topU = top ? top.u : "", topM = top ? PK.gyLabel([repChip(top).gy]) : "";
     const name = top ? `${topU} ${topM}` : "목표 대학";
     $("#plan").innerHTML = `<span class="step">목표까지 가는 길</span>
@@ -420,11 +432,12 @@
 
   worker.onmessage = (ev) => {
     const m = ev.data;
-    if (m.type === "ready") { ready = true; if (state.conv) { $("#loading").textContent = ""; $("#go").disabled = false; } return; }
+    if (m.type === "ready") { ready = true; loadBase(); if (state.conv) { $("#loading").textContent = ""; $("#go").disabled = false; } return; }
     if (m.type === "error") { $("#loading").textContent = "데이터를 불러오지 못했어요. 새로고침해 주세요."; return; }
     if (m.type !== "placed") return;
     if (m.depts) state.depts = m.depts;
     if (m.data) state.data = m.data;
+    loadBase(); // ready 때 못 읽었으면 다시(이미 있으면 아무것도 안 함)
     if (m.id !== reqId || !m.out.now.rows || !state.depts) return; // 더 새 요청이 있으면 오래된 결과는 버림
     const show = () => {
       state.last = m.out; $("#result").classList.remove("stale");
@@ -437,6 +450,13 @@
   loadLocalState();
   fetch("data/conv2026.json?v=" + VER).then((r) => r.json()).then((c) => { state.conv = c; clampDeltas(); renderInputs(); renderGoals(); if (ready) { $("#loading").textContent = ""; $("#go").disabled = false; } })
     .catch(() => { $("#loading").textContent = "변환표를 불러오지 못했어요. 새로고침해 주세요."; });
+  // 환산식 곡선. 워커가 같은 주소로 다 읽은 뒤(ready)에 불러와 브라우저 캐시에서 받는다(두 번 내려받지 않게).
+  //  못 읽어도 계산은 되고, 8곳 채우기만 줄어듦
+  function loadBase() {
+    if (state.base || loadBase.busy) return;
+    loadBase.busy = true;
+    fetch("data/base.json?v=" + VER).then((r) => (r.ok ? r.json() : null)).then((b) => { if (b && b.bg && b.c && b.d) { state.base = b; if (state.last && state.depts) { summarize(state.last); renderPicks(); renderTargetBar(); } } }).catch(() => {}).finally(() => { loadBase.busy = false; });
+  }
 
   // ── 이벤트 ──
   function syncTrack() { document.querySelectorAll("#track button").forEach((x) => x.setAttribute("aria-pressed", x.dataset.t === state.track)); }
