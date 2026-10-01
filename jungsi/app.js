@@ -43,7 +43,7 @@
   const $ = (s, el = document) => el.querySelector(s);
   const esc = (x) => String(x).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const f = (n) => Number(n).toLocaleString("ko-KR");
-  const VER = "20261001a"; // worker.js·data/ 파일을 고치면 worker.js 의 DATA_V 와 함께 올림(브라우저 캐시)
+  const VER = "20261001b"; // worker.js·data/ 파일을 고치면 worker.js 의 DATA_V 와 함께 올림(브라우저 캐시)
   const worker = new Worker("worker.js?v=" + VER);
   let reqId = 0, ready = false;
 
@@ -262,7 +262,7 @@
       <div class="box"><div class="lab">지금 성적</div><div class="big">${sNow || "-"}<small> 점</small></div><div class="line">국·수·탐 표준점수 합 · 영어 ${gradeOfKey("eng", false)}등급 · 한국사 ${gradeOfKey("hist", false)}등급</div></div>
       <div class="box t"><div class="lab">목표 점수</div><div class="big">${sGoal || "-"}<small> 점${sGoal > sNow ? ` (+${Math.round((sGoal - sNow) * 10) / 10})` : ""}</small></div><div class="line">영어 ${gradeOfKey("eng", true)}등급 · 한국사 ${gradeOfKey("hist", true)}등급</div></div>`;
     $("#hook").innerHTML = !hasGoal()
-      ? "STEP 2에서 과목별로 올릴 수 있는 점수를 넉넉하게 올려 보세요. 그 목표 점수로 상향·소신·적정 대학을 다시 뽑아 드려요."
+      ? "STEP 2에서 과목별로 목표 점수를 설정해보세요. 그 목표 점수로 상향·소신·적정 대학을 다시 뽑아 드려요."
       : cntGoal > cntNow ? `목표 점수가 되면 적정 구간(든든한 대학)에 드는 대학이 <b>지금 ${f(cntNow)}곳 → 목표 ${f(cntGoal)}곳</b>으로 늘어나요.`
       : cntGoal < cntNow ? `이 목표로는 적정 구간(든든한 대학)에 드는 대학이 <b>지금 ${f(cntNow)}곳 → 목표 ${f(cntGoal)}곳</b>으로 줄어요.`
       : `이 목표로는 적정 구간(든든한 대학)에 드는 대학이 <b>${f(cntNow)}곳</b> 그대로예요. 과목별 점수를 조금 더 올려 보세요.`;
