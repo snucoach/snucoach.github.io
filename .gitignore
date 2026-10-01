@@ -1,1 +1,5 @@
 .DS_Store
+# 로컬 검증용 Supabase 실행 파일 (비밀값 포함)
+supabase/local/.env
+supabase/local/.run/
+supabase/local/node_modules/
