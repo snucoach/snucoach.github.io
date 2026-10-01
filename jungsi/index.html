@@ -19,7 +19,7 @@
 <meta name="twitter:image" content="https://snucoach.github.io/assets/img/og_image.png">
 <meta name="robots" content="index,follow">
 <meta name="theme-color" content="#0B0C10">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; font-src 'self'; script-src 'self' 'sha256-Du+OJKJSbdUgz5nrHeWWINvez6XKDDU/tyj/5c2uvwo='; worker-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; font-src 'self'; script-src 'self' 'sha256-Du+OJKJSbdUgz5nrHeWWINvez6XKDDU/tyj/5c2uvwo='; worker-src 'self'; connect-src 'self' https://*.supabase.co; object-src 'none'; base-uri 'self'; form-action 'none'">
 <script>document.documentElement.classList.add('js')</script>
 <link rel="icon" type="image/png" href="../assets/img/favicon.png">
 <link rel="apple-touch-icon" href="../assets/img/favicon.png">
@@ -322,6 +322,29 @@ ol.how span{display:block;margin-top:5px;font-size:13.5px;color:#C9D0F0;line-hei
 body.has-tbar .toast{bottom:calc(96px + env(safe-area-inset-bottom))}
 @media (max-width:520px){body.has-tbar .toast{bottom:calc(150px + env(safe-area-inset-bottom))}}
 @media (prefers-reduced-motion:reduce){.jc *{animation:none!important;transition:none!important}}
+/* ── 목표 대학 입시 정보 알림 ── */
+.tbar .talert{flex:0 0 auto;display:inline-flex;align-items:center;gap:6px;color:#fff;border:1px solid rgba(255,255,255,.28);font-weight:800;font-size:13.5px;border-radius:12px;padding:0 12px;min-height:44px;white-space:nowrap}
+.tbar .talert:hover{background:rgba(255,255,255,.1)}
+@media (max-width:520px){.tbar .talert{flex:1 1 auto;justify-content:center}}
+.adlg{margin:auto;max-height:calc(100% - 32px);overflow:auto;width:min(440px,calc(100% - 32px));border:0;border-radius:20px;padding:28px 24px 22px;color:var(--text,#16183C);box-shadow:0 24px 60px rgba(8,8,60,.3)}
+.adlg::backdrop{background:rgba(8,8,60,.45)}
+.adlg h2{margin:0 0 8px;font-size:20px;font-weight:800;letter-spacing:-.02em;color:#08083C}
+.adlg-sub{margin:0 0 16px;font-size:14.5px;line-height:1.65;color:#4A5070}
+.adlg-x{position:absolute;top:12px;right:12px;width:36px;height:36px;border:0;background:none;border-radius:10px;font-size:17px;color:#646C8E;cursor:pointer}
+.adlg-x:hover{background:#F2F4FA}
+.adlg-list{list-style:none;margin:0 0 12px;padding:0;display:flex;flex-wrap:wrap;gap:6px}
+.adlg-list li{padding:6px 11px;border-radius:999px;background:#EDF1FB;color:#0F0F70;font-size:13.5px;font-weight:700}
+.adlg-out{margin:0 0 12px;font-size:13px;line-height:1.6;color:#B3261E}
+.adlg-scope{margin:0 0 14px;padding:12px 14px;border-radius:12px;background:#F5F7FD;font-size:12.5px;line-height:1.7;color:#646C8E}
+.adlg-scope b{color:#16183C}
+.adlg-need{margin:0 0 14px;font-size:14px;line-height:1.6;color:#16183C;font-weight:600}
+.adlg-act{display:grid;gap:8px}
+.adlg-act a,.adlg-act button{display:flex;align-items:center;justify-content:center;min-height:50px;border-radius:12px;font:inherit;font-size:15.5px;font-weight:800;text-decoration:none;cursor:pointer;border:0}
+.adlg-act .pri{background:#0F0F70;color:#fff}
+.adlg-act .pri:hover{background:#1A1A86}
+.adlg-act .sec{background:#fff;color:#0F0F70;border:1px solid #CDD4EA}
+.adlg-act button:disabled{opacity:.55;cursor:default}
+.plegend .ahint{display:block;margin-top:4px}
 </style>
 <script type="application/ld+json">{"@context": "https://schema.org", "@type": "EducationalOrganization", "name": "스누코치", "alternateName": "SNUCOACH", "url": "https://snucoach.github.io/", "logo": "https://snucoach.github.io/assets/img/logo.png", "image": "https://snucoach.github.io/assets/img/og_image.png", "description": "중·고등학생 1:1 학습코칭 서비스. 화상 컨설팅과 매일 카카오톡 플래너 피드백으로 공부 습관과 성적을 관리합니다.", "founder": {"@type": "Person", "name": "유정원"}, "sameAs": ["https://blog.naver.com/snustudycoach", "https://www.instagram.com/snu_studycoach/", "https://pf.kakao.com/_wiwxmG"]}</script>
 </head>
@@ -424,10 +447,21 @@ body.has-tbar .toast{bottom:calc(96px + env(safe-area-inset-bottom))}
 
   <div class="tbar" id="tbar" role="region" aria-label="고른 목표 대학" hidden>
     <div class="tinfo"><b id="tbar-n">목표 대학 0곳</b><span id="tbar-list"></span><small id="tbar-note">누르면 목표 문구가 복사됩니다. 상담 신청서에 붙여 넣어 주세요.</small></div>
+    <button type="button" class="talert" id="tbar-alert"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M6 9a6 6 0 1 1 12 0c0 6 2.5 7.5 2.5 7.5h-17S6 15 6 9Z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg>입시 알림 받기</button>
     <a class="tgo" id="tbar-go" href="https://smore.im/form/r7q2TCOBoc?utm_source=jungsi_calc&amp;utm_medium=target" target="_blank" rel="noopener">이 목표로 무료 상담 받기</a>
     <button type="button" class="tclear" id="tbar-clear" aria-label="고른 목표 모두 지우기">지우기</button>
   </div>
   <div class="toast" id="toast" role="status"></div>
+  <dialog class="adlg" id="alertDlg" aria-labelledby="adlgT">
+    <button type="button" class="adlg-x" id="adlgClose" aria-label="닫기">✕</button>
+    <h2 id="adlgT">목표 대학 입시 정보 알림</h2>
+    <p class="adlg-sub">고른 목표 대학의 모집요강 발표, 원서 접수, 입시 결과 같은 입시 소식을 이메일로 보내 드립니다.</p>
+    <ul class="adlg-list" id="adlgList"></ul>
+    <p class="adlg-out" id="adlgOut" hidden></p>
+    <p class="adlg-scope">알림 대상은 <b>인서울 주요 대학 18곳</b>입니다.<br><span id="adlgScope"></span></p>
+    <p class="adlg-need" id="adlgNeed" hidden>알림은 스누코치 회원에게 보내 드립니다. 가입하거나 로그인하면 고른 대학이 바로 신청됩니다.</p>
+    <div class="adlg-act" id="adlgAct"></div>
+  </dialog>
 </main>
 
 <footer class="site-footer">
@@ -475,6 +509,6 @@ body.has-tbar .toast{bottom:calc(96px + env(safe-area-inset-bottom))}
 <script src="../assets/js/auth-config.js?v=a5" defer></script>
 <script src="../assets/js/site.js?v=v3f" defer></script>
 <script src="picks.js?v=20261001c"></script>
-<script src="app.js?v=20261001c"></script>
+<script src="app.js?v=20261001e"></script>
 </body>
 </html>

@@ -167,6 +167,42 @@ check('정리 작업: 오래 안 쓴 세션 삭제, 최근 갱신된 세션 유�
 check('정리 작업이 매일 예약되어 있음', sql(`select count(*) from cron.job where jobname = 'snucoach-purge-auth-logs' and command = 'select private.purge_auth_logs()'`) === '1');
 sql(`delete from auth.audit_log_entries where payload->>'test' = 'new-${stamp}'`);
 
+// 12) 목표 대학 입시 정보 알림
+{
+  const e = await adminCreate(mail('e'), fullMeta);
+  const f = await adminCreate(mail('f'), fullMeta);
+  const tokE = await login(mail('e')), tokF = await login(mail('f'));
+  const rep = { prefer: 'return=representation' };
+  r = await call('/rest/v1/target_alerts', { method: 'POST', token: tokE, body: [{ univ: '연세대', track: '자연' }, { univ: '고려대', track: '자연' }], headers: rep });
+  check('알림 신청(인서울 주요 대학) 저장', r.status === 201 && r.json.length === 2 && r.json[0].user_id === e.json.id, r);
+  r = await call('/rest/v1/target_alerts', { method: 'POST', token: tokE, body: { univ: '고려대(세종)' } });
+  check('대상 외 대학(고려대 세종) 거부', r.status === 400, r);
+  r = await call('/rest/v1/target_alerts', { method: 'POST', token: tokE, body: { univ: '부산대' } });
+  check('대상 외 대학(지방) 거부', r.status === 400, r);
+  r = await call('/rest/v1/target_alerts', { method: 'POST', token: tokE, body: { univ: '연세대' } });
+  check('같은 대학 중복 신청 거부(409)', r.status === 409, r);
+  r = await call('/rest/v1/target_alerts?on_conflict=user_id,univ', { method: 'POST', token: tokE, body: [{ univ: '연세대', track: '인문' }, { univ: '서울대', track: '자연' }], headers: { prefer: 'resolution=ignore-duplicates,return=representation' } });
+  check('이미 신청한 대학은 건너뛰고 새 대학만 추가', (r.status === 200 || r.status === 201) && r.json.length === 1 && r.json[0].univ === '서울대', r);
+  r = await call('/rest/v1/target_alerts?univ=eq.연세대', { method: 'PATCH', token: tokE, body: { track: '인문' } });
+  check('신청 내용 수정은 막힘(해제 후 다시 신청)', r.status === 401 || r.status === 403, r);
+  r = await call('/rest/v1/target_alerts', { method: 'POST', token: tokF, body: { univ: '서울대', user_id: e.json.id } });
+  check('남의 이름으로 신청 불가', r.status === 401 || r.status === 403, r);
+  r = await call('/rest/v1/target_alerts?select=univ', { token: tokF });
+  check('남의 알림은 안 보임', r.status === 200 && r.json.length === 0, r);
+  r = await call('/rest/v1/target_alerts?univ=eq.고려대', { method: 'DELETE', token: tokF, headers: rep });
+  check('남의 알림 삭제 불가(0행)', r.status === 200 && r.json.length === 0, r);
+  r = await call('/rest/v1/target_alerts?select=univ');
+  check('비로그인 조회 불가', r.status === 401 || r.status === 403, r);
+  r = await call('/rest/v1/rpc/admin_list_target_alerts', { method: 'POST', token: tokE, body: {} });
+  check('일반 회원은 알림 목록(관리자) 거부', r.status === 401 || r.status === 403, r);
+  r = await call('/rest/v1/rpc/admin_list_target_alerts', { method: 'POST', token: tokA, body: {} }); // A 는 위에서 관리자로 지정됨
+  check('관리자는 알림 신청 목록 조회', r.status === 200 && r.json.some((x) => x.email === mail('e') && x.univ === '연세대' && x.track === '자연'), r);
+  r = await call('/rest/v1/target_alerts?univ=eq.고려대', { method: 'DELETE', token: tokE, headers: rep });
+  check('본인 알림 해제', r.status === 200 && r.json.length === 1, r);
+  sql(`delete from auth.users where email='${mail('e')}'`);
+  check('탈퇴하면 알림도 삭제', sql(`select count(*) from public.target_alerts where user_id='${e.json.id}'`) === '0');
+}
+
 // 정리
 sql(`delete from auth.users where email like 'api-%-${stamp}@example.com'`);
 console.log(failed ? `\n${failed} FAILED` : '\nALL PASSED');

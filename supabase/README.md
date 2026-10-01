@@ -18,6 +18,7 @@
 | `assets/js/auth.js` | 회원 기능 로직 |
 | `assets/vendor/supabase-js-2.117.2.js` | Supabase 공식 라이브러리(외부 CDN 대신 사이트에 직접 보관) |
 | `supabase/migrations/20261001000000_members.sql` | 데이터베이스 설정(테이블·보안 규칙·탈퇴·관리자 기능) |
+| `supabase/migrations/20261001010000_target_alerts.sql` | 목표 대학 입시 정보 알림 신청 표(대학 라인 잡기) |
 | `supabase/templates/` | 한국어 인증·비밀번호 재설정 메일 |
 | `.github/workflows/supabase-keepalive.yml` | 무료 플랜 일시정지 방지(매일 1회 호출) |
 | `supabase/local/` | 개발용 로컬 테스트 환경(실제 서비스와 무관) |
@@ -40,7 +41,8 @@
 
 1. 왼쪽 메뉴 **SQL Editor** → **New query**
 2. `supabase/migrations/20261001000000_members.sql` 파일 내용을 **전부** 복사해 붙여 넣고 **Run**
-3. 결과가 `Success` 이면 끝. (여러 번 실행해도 같은 결과가 되도록 만들어 두었다)
+3. 결과가 `Success` 이면, **New query** 를 한 번 더 눌러 `supabase/migrations/20261001010000_target_alerts.sql` 도 같은 방법으로 Run
+4. 둘 다 `Success` 이면 끝. (여러 번 실행해도 같은 결과가 되도록 만들어 두었다)
 
 만들어지는 것: 회원 프로필 표, 본인 정보만 보이게 하는 보안 규칙(RLS), 회원 탈퇴 함수, 관리자 회원 목록 함수, 3개월 지난 로그인 기록 자동 삭제 작업.
 

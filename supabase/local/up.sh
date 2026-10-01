@@ -45,8 +45,9 @@ for i in $(seq 1 60); do curl -fsS http://127.0.0.1:9999/health >/dev/null 2>&1 
 curl -fsS http://127.0.0.1:9999/health >/dev/null
 
 # 5) 회원 기능 마이그레이션: 클라우드 SQL Editor 와 같은 postgres 역할로 적용
-PGPASSWORD="$POSTGRES_PASSWORD" psql -h 127.0.0.1 -p 54322 -U postgres -d postgres -v ON_ERROR_STOP=1 -q \
-  -f "$ROOT/supabase/migrations/20261001000000_members.sql"
+for f in "$ROOT"/supabase/migrations/*.sql; do
+  PGPASSWORD="$POSTGRES_PASSWORD" psql -h 127.0.0.1 -p 54322 -U postgres -d postgres -v ON_ERROR_STOP=1 -q -f "$f"
+done
 
 # 6) REST · 게이트웨이
 docker compose up -d rest

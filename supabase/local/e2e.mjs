@@ -129,7 +129,7 @@ try {
   check('숫자 없는 비밀번호 거부', (await text(page, '#suPwErr')).includes('영문과 숫자'));
   await page.fill('#suPw', 'abcd1234'); await page.fill('#suPw2', 'abcd1235');
   await page.click('#signupForm button[type="submit"]');
-  check('비밀번호 확인 불일치 거부', (await text(page, '#suPw2Err')).includes('서로 달라요'));
+  check('비밀번호 확인 불일치 거부', (await text(page, '#suPw2Err')).includes('서로 다릅니다'));
   await page.fill('#suPw2', 'abcd1234');
   await page.click('#signupForm button[type="submit"]');
   check('필수 동의 없으면 거부', (await text(page, '#suConsentErr')).length > 0);
@@ -179,7 +179,7 @@ try {
   await page.fill('#loginPw', 'wrong1234');
   await page.click('#loginForm button[type="submit"]');
   await page.waitForSelector('#authMsg:not([hidden])');
-  check('틀린 비밀번호 안내', (await text(page, '#authMsg')) === '이메일 또는 비밀번호가 맞지 않아요.');
+  check('틀린 비밀번호 안내', (await text(page, '#authMsg')) === '이메일 또는 비밀번호가 맞지 않습니다.');
   await page.fill('#loginPw', 'abcd1234');
   await page.click('#loginForm button[type="submit"]');
   await page.waitForURL('**/account.html');
@@ -201,7 +201,7 @@ try {
   await page.selectOption('#pfGrade', '고3');
   await page.click('#profileForm button[type="submit"]');
   await page.waitForSelector('#profileMsg:not([hidden])');
-  check('내 정보 저장', (await text(page, '#profileMsg')) === '저장했어요.' && (await text(page, '#acctName')) === '김스누2');
+  check('내 정보 저장', (await text(page, '#profileMsg')) === '저장했습니다.' && (await text(page, '#acctName')) === '김스누2');
   check('DB 반영', sql(`select name||','||grade from public.profiles p join auth.users u on u.id=p.id where u.email='${A}'`) === '김스누2,고3');
   await page.fill('#pfName', '');
   await page.click('#profileForm button[type="submit"]');
@@ -210,22 +210,71 @@ try {
 
   // ── 6. 마케팅 수신 ──────────────────────────────────────
   check('가입 때 마케팅 동의(전체 동의) 반영', await page.isChecked('#mktToggle'));
-  await page.uncheck('#mktToggle');
+  await page.uncheck('#mktToggle', { force: true });
   await page.waitForSelector('#mktMsg:not([hidden])');
   check('수신 거부 처리 결과 안내', (await text(page, '#mktMsg')).includes('수신 거부를 처리'));
   check('DB: 마케팅 철회 기록', sql(`select (not marketing_opt_in) and marketing_opt_in_at > now() - interval '1 minute' from public.profiles p join auth.users u on u.id=p.id where u.email='${A}'`) === 't');
 
   // ── 7. 비밀번호 변경 ────────────────────────────────────
+  await page.click('#pwCard summary');
   await page.fill('#curPw', 'nope12345');
   await page.fill('#chPw', 'newpass123');
   await page.fill('#chPw2', 'newpass123');
   await page.click('#pwForm button[type="submit"]');
   await page.waitForFunction(() => document.querySelector('#curPwErr').textContent.length > 0);
-  check('현재 비밀번호 틀리면 거부', (await text(page, '#curPwErr')) === '현재 비밀번호가 맞지 않아요.');
+  check('현재 비밀번호 틀리면 거부', (await text(page, '#curPwErr')) === '현재 비밀번호가 맞지 않습니다.');
   await page.fill('#curPw', 'abcd1234');
   await page.click('#pwForm button[type="submit"]');
   await page.waitForSelector('#pwMsg:not([hidden])');
-  check('비밀번호 변경 성공', (await text(page, '#pwMsg')).startsWith('비밀번호를 바꿨어요'), await text(page, '#pwMsg'));
+  check('비밀번호 변경 성공', (await text(page, '#pwMsg')).startsWith('비밀번호를 바꿨습니다'), await text(page, '#pwMsg'));
+
+  // ── 7-1. 대학 라인 잡기: 목표 대학 입시 정보 알림 ─────
+  {
+    const setTargets = (pg, targets) => pg.evaluate((t) => sessionStorage.setItem('jungsi_state_v2', JSON.stringify({ targets: t })), targets);
+    // 로그인 전: 안내 → 로그인 → 돌아오면 자동 신청
+    const actx = await newContext(browser);
+    const ap = await actx.newPage();
+    await ap.goto(`${SITE}/jungsi/`);
+    await setTargets(ap, [{ univ: '서울대', major: '자연', band: 'up' }, { univ: '부산대', major: '자연', band: 'safe' }]);
+    await ap.reload();
+    check('정시: 목표 고르면 알림 버튼 표시', await visible(ap, '#tbar-alert'));
+    await ap.click('#tbar-alert');
+    await ap.waitForSelector('#alertDlg[open]');
+    check('알림 창: 대상 대학만 표시 + 대상 아님 안내', (await text(ap, '#adlgList')) === '서울대' && (await text(ap, '#adlgOut')).includes('부산대'));
+    check('알림 창: 인서울 주요 대학 한정 안내', (await text(ap, '.adlg-scope')).includes('인서울 주요 대학'));
+    check('알림 창: 비회원은 가입·로그인 안내', await visible(ap, '#adlgNeed') && (await ap.getAttribute('#adlgAct a.pri', 'href')) === '../signup.html');
+    await ap.screenshot({ path: `${SHOTS}jungsi-alert.png` });
+    await ap.click('#adlgAct a.sec');
+    await ap.waitForURL('**/login.html?next=*');
+    await ap.fill('#loginEmail', A);
+    await ap.fill('#loginPw', 'newpass123');
+    await ap.click('#loginForm button[type="submit"]');
+    await ap.waitForURL('**/jungsi/');
+    let got = '';
+    for (let i = 0; i < 30 && !got; i += 1) { await sleep(200); got = sql(`select string_agg(univ||':'||coalesce(track,''), ',') from public.target_alerts a join auth.users u on u.id=a.user_id where u.email='${A}'`); }
+    check('로그인하고 돌아오면 고른 대학 알림 저장', got === '서울대:자연', got);
+    check('보류 신청 지움', await ap.evaluate(() => !localStorage.getItem('snucoach-alert-pending')));
+    // 로그인 상태: 바로 신청
+    await setTargets(ap, [{ univ: '연세대', major: '인문·사회', band: 'mid' }, { univ: '서울대', major: '자연', band: 'up' }]);
+    await ap.reload();
+    await ap.click('#tbar-alert');
+    await ap.waitForSelector('#alertDlg[open]');
+    check('회원: 신청 버튼', (await text(ap, '#adlgAct .pri')) === '2곳 알림 신청하기');
+    await ap.click('#adlgAct .pri');
+    await ap.waitForSelector('#alertDlg:not([open])', { state: 'attached' });
+    check('회원: 신청 저장(중복은 건너뜀)', sql(`select string_agg(univ, ',' order by univ) from public.target_alerts a join auth.users u on u.id=a.user_id where u.email='${A}'`) === '서울대,연세대');
+    // 마이페이지에서 확인·해제
+    await ap.goto(`${SITE}/account.html`);
+    await ap.waitForFunction(() => document.querySelectorAll('#alertList li').length === 2);
+    check('마이페이지: 알림 목록', (await text(ap, '#alertList')).includes('연세대'));
+    await ap.screenshot({ path: `${SHOTS}account-alerts.png`, fullPage: true });
+    await ap.locator('#alertList li', { hasText: '연세대' }).locator('button').click();
+    await ap.waitForFunction(() => document.querySelectorAll('#alertList li').length === 1);
+    check('마이페이지: 알림 해제', sql(`select string_agg(univ, ',') from public.target_alerts a join auth.users u on u.id=a.user_id where u.email='${A}'`) === '서울대');
+    ctx.violations.push(...actx.violations);
+    ctx.errors.push(...actx.errors);
+    await actx.close();
+  }
 
   // ── 8. 로그아웃 ─────────────────────────────────────────
   await page.click('#acct [data-sign-out]');
@@ -266,7 +315,7 @@ try {
   check('인증 전 로그인 → 안내 + 재발송 버튼', (await text(page, '#authMsg')).includes('이메일 인증이 아직'));
   const t1 = Date.now() - 500;
   await page.click('#authMsg .msg-actions button');
-  await page.waitForFunction(() => document.querySelector('#authMsg').textContent.includes('다시 보냈어요'));
+  await page.waitForFunction(() => document.querySelector('#authMsg').textContent.includes('다시 보냈습니다'));
   check('인증 메일 재발송', !!(await lastMail(B, { after: t1 })));
 
   // ── 11. 비밀번호 찾기(한국어 템플릿: token_hash) ───────
@@ -390,7 +439,7 @@ try {
     // ── 14. 관리자 화면 ──────────────────────────────────
     await kp.goto(`${SITE}/admin.html`);
     await kp.waitForSelector('#authMsg:not([hidden])');
-    check('일반 회원은 관리자 화면 거부', (await text(kp, '#authMsg')).startsWith('관리자만 볼 수 있는 페이지예요.'));
+    check('일반 회원은 관리자 화면 거부', (await text(kp, '#authMsg')).startsWith('관리자만 볼 수 있는 페이지입니다.'));
     sql(`update public.profiles set is_admin = true, name = '=HYPERLINK("x")' where id = (select id from auth.users where email='${C}')`);
     await kp.goto(`${SITE}/account.html`);
     await kp.waitForSelector('#acct:not([hidden])');
@@ -413,6 +462,14 @@ try {
     check('CSV: 엑셀용 BOM + 헤더', csv.charCodeAt(0) === 0xFEFF && csv.includes('"가입일시","이름","이메일"'));
     check('CSV: 수식 주입 무력화', csv.includes(`"'=HYPERLINK(""x"")"`), csv.split('\r\n').find((l) => l.includes('HYPERLINK')));
     check('관리자 화면: 이름은 글자로만 표시(HTML 해석 안 함)', (await kp.locator('#admRows a').count()) === 0);
+    await kp.waitForSelector('#admAlerts:not([hidden])');
+    const alTotal = Number(sql(`select count(*) from public.target_alerts`));
+    check('관리자: 알림 신청 목록', (await kp.locator('#alRows tr').count()) === Math.max(1, alTotal) && (await text(kp, '#alRows')).includes(A), alTotal);
+    await kp.selectOption('#alUniv', '서울대');
+    check('관리자: 대학별 필터', (await text(kp, '#alCount')).startsWith(`${sql(`select count(*) from public.target_alerts where univ='서울대'`)}건`));
+    const [dl2] = await Promise.all([kp.waitForEvent('download'), kp.click('#alCsv')]);
+    const csv2 = readFileSync(await dl2.path(), 'utf8');
+    check('관리자: 알림 CSV', csv2.charCodeAt(0) === 0xFEFF && csv2.includes('"대학","계열","이름","이메일"') && csv2.includes(A));
     await kctx.close();
   }
 
@@ -435,7 +492,7 @@ try {
   await page.fill('#loginPw', 'reset1234');
   await page.click('#loginForm button[type="submit"]');
   await page.waitForSelector('#authMsg:not([hidden])');
-  check('탈퇴한 계정 로그인 불가', (await text(page, '#authMsg')) === '이메일 또는 비밀번호가 맞지 않아요.');
+  check('탈퇴한 계정 로그인 불가', (await text(page, '#authMsg')) === '이메일 또는 비밀번호가 맞지 않습니다.');
 
   // ── 16. 화면 확인용 스크린샷 + 보안 정책 위반 없음 ─────
   for (const [w, h, tag] of [[390, 844, 'mobile'], [1280, 900, 'desktop']]) {

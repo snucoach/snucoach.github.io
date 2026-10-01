@@ -14,7 +14,7 @@
 <link rel="apple-touch-icon" href="assets/img/favicon.png">
 <link rel="stylesheet" href="assets/fonts/pretendardvariable-dynamic-subset.min.css">
 <link rel="stylesheet" href="assets/css/style.css?v=v3f">
-<link rel="stylesheet" href="assets/css/auth.css?v=a2">
+<link rel="stylesheet" href="assets/css/auth.css?v=a5">
 </head>
 <body class="p-auth p-account" data-auth-page="account">
 <header class="topnav" id="topnav">
@@ -45,8 +45,8 @@
 
     <section class="auth-card" id="onboard" aria-labelledby="onboardTitle" hidden>
       <p class="auth-eyebrow">가입 마무리</p>
-      <h1 class="auth-title" id="onboardTitle" tabindex="-1">거의 다 됐어요</h1>
-      <p class="auth-sub">서비스를 이용하려면 아래 정보 입력과 약관 동의가 필요해요.</p>
+      <h1 class="auth-title" id="onboardTitle" tabindex="-1">회원 정보 입력</h1>
+      <p class="auth-sub">서비스 이용을 위해 아래 정보를 입력하고 약관에 동의해 주세요.</p>
       <form class="auth-form" id="onboardForm" method="post" action="#" novalidate>
         <div class="field">
           <label for="obName">이름</label>
@@ -95,7 +95,7 @@
                 <details><summary>내용 보기</summary><div class="consent-detail">
                   <table>
                     <tr><th scope="row">목적</th><td>회원 식별과 가입 의사 확인, 로그인, 회원 서비스 제공, 공지 전달과 문의 응대, 부정 이용 방지</td></tr>
-                    <tr><th scope="row">항목</th><td>이메일, 비밀번호, 이름, 회원 구분, 학년(학부모는 자녀 학년)<br>구글·카카오로 가입하면 해당 계정의 이메일·이름(닉네임)<br>이용 중 자동 생성: 로그인 일시, 접속 IP 주소, 기기·브라우저 정보</td></tr>
+                    <tr><th scope="row">항목</th><td>이메일, 비밀번호, 이름, 회원 구분, 학년(학부모는 자녀 학년)<br>구글·카카오로 가입하면 해당 계정의 이메일·이름(닉네임), 동의한 경우 프로필 사진<br>이용 중 자동 생성: 로그인 일시, 접속 IP 주소, 기기·브라우저 정보</td></tr>
                     <tr><th scope="row">보유 기간</th><td><b>회원 탈퇴 시까지</b> (탈퇴하면 바로 삭제). 로그인 기록은 3개월</td></tr>
                   </table>
                   <p>동의를 거부할 수 있으나, 거부하면 회원가입을 할 수 없습니다. 자세한 내용은 <a href="privacy.html" target="_blank" rel="noopener">개인정보처리방침</a>을 확인해 주세요.</p>
@@ -119,29 +119,29 @@
         <div class="auth-msg" id="onboardMsg" role="alert" hidden></div>
         <button class="btn btn-primary auth-btn" type="submit">가입 완료</button>
       </form>
-      <p class="auth-links"><button class="btn btn-line btn-sm" type="button" data-sign-out>로그아웃</button></p>
+      <p class="auth-links"><button class="text-btn" type="button" data-sign-out>다른 계정으로 로그인</button></p>
     </section>
 
     <div id="acct" hidden>
-      <section class="auth-card">
+      <section class="auth-card acct-profile">
         <div class="acct-head">
           <span class="acct-avatar" id="acctAvatar" aria-hidden="true"></span>
-          <div>
+          <div class="acct-head-text">
             <h1 class="auth-title"><span id="acctName"></span>님</h1>
             <div class="acct-badges" id="acctBadges"></div>
           </div>
+          <a class="btn btn-line btn-sm acct-admin" id="adminLink" href="admin.html" hidden>회원 관리</a>
         </div>
-      </section>
-
-      <section class="auth-card" aria-labelledby="infoTitle">
-        <h2 id="infoTitle">내 정보</h2>
-        <p class="card-sub">이름·회원 구분·학년은 언제든 바꿀 수 있어요.</p>
         <dl class="acct-dl">
           <dt>이메일</dt><dd id="acctEmail"></dd>
           <dt>가입 방식</dt><dd id="acctProvider"></dd>
           <dt>가입일</dt><dd id="acctJoined"></dd>
         </dl>
-        <form class="auth-form" id="profileForm" method="post" action="#" novalidate style="margin-top:22px">
+      </section>
+
+      <section class="auth-card" aria-labelledby="infoTitle">
+        <h2 id="infoTitle">회원 정보</h2>
+        <form class="auth-form" id="profileForm" method="post" action="#" novalidate>
           <div class="field">
           <label for="pfName">이름</label>
           <input type="text" id="pfName" name="name" autocomplete="name" maxlength="20" required aria-describedby="pfNameErr">
@@ -178,54 +178,58 @@
       </section>
 
       <section class="auth-card" aria-labelledby="mktTitle">
-        <h2 id="mktTitle">마케팅 정보 수신</h2>
-        <p class="card-sub">학습 자료·이벤트·코칭 프로그램 소식을 이메일로 받아요. 언제든 바꿀 수 있어요.</p>
-        <label class="check"><input type="checkbox" id="mktToggle"> <span>이메일 수신에 동의합니다</span></label>
+        <div class="switch-row">
+          <div>
+            <h2 id="mktTitle">마케팅 정보 수신</h2>
+            <p class="card-sub">학습 자료·이벤트 소식을 이메일로 받습니다.</p>
+          </div>
+          <label class="switch"><input type="checkbox" id="mktToggle" aria-labelledby="mktTitle"><span aria-hidden="true"></span></label>
+        </div>
         <p class="consent-log" id="mktLog"></p>
-        <div class="auth-msg" id="mktMsg" role="status" hidden style="margin-top:12px"></div>
+        <div class="auth-msg" id="mktMsg" role="status" hidden style="margin:12px 0 0"></div>
       </section>
 
-      <section class="auth-card" id="pwCard" aria-labelledby="pwTitle" hidden>
-        <h2 id="pwTitle">비밀번호 변경</h2>
-        <p class="card-sub">지금 비밀번호를 확인한 뒤 바꿔요.</p>
-        <form class="auth-form" id="pwForm" method="post" action="#" novalidate>
-          <div class="field">
+      <section class="auth-card" aria-labelledby="alertTitle">
+        <h2 id="alertTitle">목표 대학 입시 정보 알림</h2>
+        <p class="card-sub">대학 라인 잡기(정시)에서 고른 목표 대학의 입시 소식을 이메일로 보내 드립니다. 인서울 주요 대학만 해당합니다.</p>
+        <ul class="alert-list" id="alertList"></ul>
+        <p class="alert-empty" id="alertEmpty" hidden>신청한 대학이 없습니다. <a href="jungsi/">대학 라인 잡기</a>에서 목표 대학을 고른 뒤 알림을 신청해 주세요.</p>
+        <div class="auth-msg" id="alertMsg" role="status" hidden style="margin:12px 0 0"></div>
+      </section>
+
+      <section class="auth-card acct-list" aria-label="계정 설정">
+        <details class="acct-item" id="pwCard" hidden>
+          <summary>비밀번호 변경</summary>
+          <form class="auth-form" id="pwForm" method="post" action="#" novalidate>
+            <div class="field">
           <label for="curPw">현재 비밀번호</label>
           <div class="pw-wrap"><input type="password" id="curPw" name="curPw" autocomplete="current-password" maxlength="72" required aria-describedby="curPwErr"><button class="pw-toggle" type="button" aria-controls="curPw" aria-pressed="false" aria-label="현재 비밀번호 표시">보기</button></div>
           <p class="field-err" id="curPwErr"></p>
         </div>
-          <div class="field">
+            <div class="field">
           <label for="chPw">새 비밀번호</label>
           <div class="pw-wrap"><input type="password" id="chPw" name="chPw" autocomplete="new-password" maxlength="72" required aria-describedby="chPwHint chPwErr"><button class="pw-toggle" type="button" aria-controls="chPw" aria-pressed="false" aria-label="새 비밀번호 표시">보기</button></div>
           <p class="field-hint" id="chPwHint">8자 이상, 영문과 숫자를 함께 써 주세요.</p><p class="field-err" id="chPwErr"></p>
         </div>
-          <div class="field">
+            <div class="field">
           <label for="chPw2">새 비밀번호 확인</label>
           <div class="pw-wrap"><input type="password" id="chPw2" name="chPw2" autocomplete="new-password" maxlength="72" required aria-describedby="chPw2Err"><button class="pw-toggle" type="button" aria-controls="chPw2" aria-pressed="false" aria-label="새 비밀번호 확인 표시">보기</button></div>
           <p class="field-err" id="chPw2Err"></p>
         </div>
-          <div class="auth-msg" id="pwMsg" role="status" hidden></div>
-          <button class="btn btn-primary auth-btn" type="submit">비밀번호 바꾸기</button>
-        </form>
-      </section>
-
-      <section class="auth-card" aria-labelledby="sessTitle">
-        <h2 id="sessTitle">로그인 관리</h2>
-        <p class="card-sub">휴대폰을 잃어버렸거나 다른 사람이 로그인한 것 같다면 ‘모든 기기에서 로그아웃’을 눌러 주세요.</p>
-        <div class="acct-row">
-          <button class="btn btn-line btn-sm" type="button" data-sign-out>로그아웃</button>
-          <button class="btn btn-line btn-sm" type="button" id="signOutAll">모든 기기에서 로그아웃</button>
-          <a class="btn btn-line btn-sm" id="adminLink" href="admin.html" hidden>회원 관리(관리자)</a>
+            <div class="auth-msg" id="pwMsg" role="status" hidden></div>
+            <button class="btn btn-primary auth-btn" type="submit">비밀번호 변경</button>
+          </form>
+        </details>
+        <div class="acct-item acct-actions">
+          <button class="text-btn" type="button" data-sign-out>로그아웃</button>
+          <button class="text-btn" type="button" id="signOutAll">모든 기기에서 로그아웃</button>
         </div>
-      </section>
-
-      <section class="auth-card">
-        <details class="danger-zone">
+        <details class="acct-item danger-zone">
           <summary>회원 탈퇴</summary>
           <ul>
-            <li>계정과 회원 정보(이름·회원 구분·학년·동의 기록)가 바로 삭제되며 되돌릴 수 없어요.</li>
+            <li>계정과 회원 정보(이름·회원 구분·학년·동의 기록)가 바로 삭제되며 되돌릴 수 없습니다.</li>
             <li>진행 중인 코칭의 환불은 탈퇴와 별개로 카카오톡 채널로 문의해 주세요.</li>
-            <li>같은 이메일로 언제든 다시 가입할 수 있어요.</li>
+            <li>같은 이메일로 다시 가입할 수 있습니다.</li>
           </ul>
           <div class="field">
             <label for="delConfirm">확인을 위해 ‘탈퇴’라고 입력해 주세요</label>
@@ -239,8 +243,8 @@
 
     <section class="auth-card auth-done" id="deletedCard" aria-labelledby="deletedTitle" hidden>
       <span class="done-ico"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span>
-      <h1 class="auth-title" id="deletedTitle" tabindex="-1">탈퇴가 완료되었어요</h1>
-      <p class="auth-sub">그동안 스누코치를 이용해 주셔서 감사합니다. 회원 정보는 모두 삭제되었어요.</p>
+      <h1 class="auth-title" id="deletedTitle" tabindex="-1">탈퇴가 완료되었습니다</h1>
+      <p class="auth-sub">그동안 스누코치를 이용해 주셔서 감사합니다. 회원 정보는 모두 삭제되었습니다.</p>
       <a class="btn btn-primary auth-btn" href="index.html">홈으로</a>
     </section>
   </div>
@@ -290,6 +294,6 @@
 <script src="assets/js/auth-config.js?v=a5" defer></script>
 <script src="assets/js/site.js?v=v3f" defer></script>
 <script src="assets/vendor/supabase-js-2.117.2.js" defer></script>
-<script src="assets/js/auth.js?v=a2" defer></script>
+<script src="assets/js/auth.js?v=a5" defer></script>
 </body>
 </html>

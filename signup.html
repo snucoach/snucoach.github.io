@@ -14,7 +14,7 @@
 <link rel="apple-touch-icon" href="assets/img/favicon.png">
 <link rel="stylesheet" href="assets/fonts/pretendardvariable-dynamic-subset.min.css">
 <link rel="stylesheet" href="assets/css/style.css?v=v3f">
-<link rel="stylesheet" href="assets/css/auth.css?v=a2">
+<link rel="stylesheet" href="assets/css/auth.css?v=a5">
 </head>
 <body class="p-auth p-signup" data-auth-page="signup">
 <header class="topnav" id="topnav">
@@ -41,9 +41,7 @@
 <main class="auth-main" id="main">
   <div class="auth-wrap">
     <section class="auth-card" id="signupCard" aria-labelledby="pageTitle">
-      <p class="auth-eyebrow">SNUCOACH 회원</p>
-      <h1 class="auth-title" id="pageTitle">회원가입</h1>
-      <p class="auth-sub">이메일로 가입하면 인증 메일을 보내 드려요.</p>
+      <h1 class="auth-title auth-title-lone" id="pageTitle">회원가입</h1>
       <div class="auth-msg" id="authMsg" role="alert" hidden></div>
       <div class="auth-social" data-auth-social hidden>
         <button class="btn btn-google" type="button" data-oauth="google" hidden><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true" focusable="false"><path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.92c1.7-1.57 2.68-3.88 2.68-6.62Z"/><path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.26c-.8.54-1.84.86-3.04.86-2.34 0-4.32-1.58-5.03-3.7H.96v2.33A9 9 0 0 0 9 18Z"/><path fill="#FBBC05" d="M3.97 10.72A5.4 5.4 0 0 1 3.68 9c0-.6.1-1.18.29-1.72V4.95H.96A9 9 0 0 0 0 9c0 1.45.35 2.83.96 4.05l3.01-2.33Z"/><path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.58A9 9 0 0 0 .96 4.95l3.01 2.33C4.68 5.16 6.66 3.58 9 3.58Z"/></svg><span>구글로 시작하기</span></button>
@@ -113,7 +111,7 @@
                 <details><summary>내용 보기</summary><div class="consent-detail">
                   <table>
                     <tr><th scope="row">목적</th><td>회원 식별과 가입 의사 확인, 로그인, 회원 서비스 제공, 공지 전달과 문의 응대, 부정 이용 방지</td></tr>
-                    <tr><th scope="row">항목</th><td>이메일, 비밀번호, 이름, 회원 구분, 학년(학부모는 자녀 학년)<br>구글·카카오로 가입하면 해당 계정의 이메일·이름(닉네임)<br>이용 중 자동 생성: 로그인 일시, 접속 IP 주소, 기기·브라우저 정보</td></tr>
+                    <tr><th scope="row">항목</th><td>이메일, 비밀번호, 이름, 회원 구분, 학년(학부모는 자녀 학년)<br>구글·카카오로 가입하면 해당 계정의 이메일·이름(닉네임), 동의한 경우 프로필 사진<br>이용 중 자동 생성: 로그인 일시, 접속 IP 주소, 기기·브라우저 정보</td></tr>
                     <tr><th scope="row">보유 기간</th><td><b>회원 탈퇴 시까지</b> (탈퇴하면 바로 삭제). 로그인 기록은 3개월</td></tr>
                   </table>
                   <p>동의를 거부할 수 있으나, 거부하면 회원가입을 할 수 없습니다. 자세한 내용은 <a href="privacy.html" target="_blank" rel="noopener">개인정보처리방침</a>을 확인해 주세요.</p>
@@ -140,11 +138,11 @@
     </section>
     <section class="auth-card auth-done" id="signupDone" aria-labelledby="doneTitle" hidden>
       <span class="done-ico"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3" y="5.5" width="18" height="13" rx="2.5"/><path d="m4 7.5 8 5.5 8-5.5"/></svg></span>
-      <h2 class="auth-title" id="doneTitle" tabindex="-1">인증 메일을 보냈어요</h2>
-      <p class="auth-sub"><b id="doneEmail"></b> 로 보낸 메일에서 <b>[이메일 인증하기]</b>를 누르면 가입이 끝나요. 링크는 1시간 동안 유효해요.</p>
+      <h2 class="auth-title" id="doneTitle" tabindex="-1">인증 메일을 보냈습니다</h2>
+      <p class="auth-sub"><b id="doneEmail"></b> 로 보낸 메일에서 <b>[이메일 인증하기]</b>를 누르면 가입이 끝납니다. 링크는 1시간 동안 유효합니다.</p>
       <div class="auth-msg" id="doneMsg" role="status" hidden></div>
       <button class="btn btn-line auth-btn" type="button" id="resendBtn">인증 메일 다시 보내기</button>
-      <p class="auth-note">메일이 보이지 않으면 스팸함도 확인해 주세요. 이미 가입한 이메일이라면 메일이 가지 않아요. <a href="login.html">로그인</a>하거나 <a href="reset-password.html">비밀번호를 찾아</a> 주세요.</p>
+      <p class="auth-note">메일이 보이지 않으면 스팸함도 확인해 주세요. 이미 가입한 이메일이라면 메일이 가지 않습니다. <a href="login.html">로그인</a>하거나 <a href="reset-password.html">비밀번호를 찾아</a> 주세요.</p>
     </section>
   </div>
 </main>
@@ -193,6 +191,6 @@
 <script src="assets/js/auth-config.js?v=a5" defer></script>
 <script src="assets/js/site.js?v=v3f" defer></script>
 <script src="assets/vendor/supabase-js-2.117.2.js" defer></script>
-<script src="assets/js/auth.js?v=a2" defer></script>
+<script src="assets/js/auth.js?v=a5" defer></script>
 </body>
 </html>
