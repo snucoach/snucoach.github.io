@@ -7,7 +7,7 @@
 //    (넣으면 누구나 모든 회원 정보를 읽고 지울 수 있게 된다. auth.js 가 감지하면 동작을 멈춘다.)
 // 값이 비어 있으면 로그인 메뉴가 숨겨지고, 회원 페이지에는 '준비 중' 안내가 나온다.
 window.SNUCOACH_AUTH = Object.freeze({
-  url: '',
-  key: '',
+  url: 'https://kjllkdorcgbfiqbjcfkd.supabase.co',
+  key: 'sb_publishable_7vz-nwkAYXDsOgSfrUuptg_Pzo2GXMq',
   kakao: false // 카카오 로그인 설정(가이드 5단계)을 마친 뒤 true
 });
