@@ -43,7 +43,7 @@
   const $ = (s, el = document) => el.querySelector(s);
   const esc = (x) => String(x).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const f = (n) => Number(n).toLocaleString("ko-KR");
-  const VER = "20260930f"; // worker.js·data/ 파일을 고치면 worker.js 의 DATA_V 와 함께 올림(브라우저 캐시)
+  const VER = "20261001a"; // worker.js·data/ 파일을 고치면 worker.js 의 DATA_V 와 함께 올림(브라우저 캐시)
   const worker = new Worker("worker.js?v=" + VER);
   let reqId = 0, ready = false;
 
@@ -305,14 +305,12 @@
   }
   function rowHtml(b, row, goal) {
     const rc = repChip(row);
-    const chips = PK.chipGroups(row, state.pk.track).map((x) => chipHtml(x, row.chips.length > 1)).join("");
-    const o = row.o;
-    const now = goal && o ? `<span class="now">지금 ${esc(sayNow(row))} → 목표</span>` : "";
+    const chips = PK.chipGroups(row, state.pk.track).map((x) => chipHtml(x, false)).join(""); // 행별 판정 문구를 없애서 기준 계열 강조도 하지 않음(2026-10-01)
     const ref = row.pct ? ` <span class="ref" title="${REF_TIP}" role="note" aria-label="참고: ${REF_TIP}">참고</span>` : "";
     const on = isTarget(row.u, b.key);
     return `<li class="urow ${b.key}${on ? " picked" : ""}">${logoHtml(row)}
       <div class="ub"><div class="u">${esc(row.u)}${ref}</div><div class="chips">${chips}</div></div>
-      <div class="side"><div class="pr">${now}<b class="pv">${esc(sayRow(row, rc.ad, rc.ref))}</b></div>
+      <div class="side">
         <button type="button" class="settarget" data-band="${b.key}" data-u="${esc(row.u)}" aria-pressed="${on}" aria-label="${esc(row.u)} ${b.label} 목표 대학으로 설정">${on ? "★ 목표" : "☆ 목표"}</button></div></li>`;
   }
   // 구간 제목: 구간 판정 대학이 보여 준 수보다 많으면 '(해당 N곳 중)'. 8곳이 안 되면(이웃 판정으로 채워도 모자람) 이유를 한 줄로
@@ -341,7 +339,7 @@
     const pk = PK.build(state.depts, res, other, pickOpt(goal));
     state.pk = pk;
     const anyRef = BANDS.some((b) => pk[b.key].some((r) => r.pct));
-    const legend = `<p class="plegend">오른쪽 문구는 ${goal ? "목표 점수" : "지금 성적"} 기준 판정이에요. 계열이 여러 개인 대학은 진하게 표시한 계열 기준이에요.${anyRef ? ` <span class="ref">참고</span> 표시는 ${REF_TIP}이에요.` : ""}</p>`;
+    const legend = `<p class="plegend">${goal ? "목표 점수" : "지금 성적"} 기준이에요.${anyRef ? ` <span class="ref">참고</span> 표시는 ${REF_TIP}이에요.` : ""}</p>`;
     $("#picks").innerHTML = legend + BANDS.map((b) => bandHtml(b, pk[b.key], goal, pk.counts[b.key])).join("");
     renderPlan(pk);
   }

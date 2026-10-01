@@ -3,7 +3,7 @@
 //  군 시트 R~V열(90·70·40·10·3% 기준점)에 넣고 엑셀 AD·P 수식으로 판정한다.
 // data/extra.json 모집단위(원본 배치표에 없는 곳)는 아래 judgeExtra 로 판정한다. 데이터 형식은 엔진 폴더의 INTEGRATION_CONTRACT.md
 // 파일 출처: model.json·depts.json·base.json = 원자료 파생(CC BY-SA 4.0), lines.json·extra.json = 스누코치가 맞춘 합격선(원자료 값 없음). 계산할 때만 합친다
-const DATA_V = "20260930f"; // data/ 파일이나 이 파일을 바꾸면 올림(브라우저 캐시). app.js 의 new Worker("worker.js?v=…")도 같이
+const DATA_V = "20261001a"; // data/ 파일이나 이 파일을 바꾸면 올림(브라우저 캐시). app.js 의 new Worker("worker.js?v=…")도 같이
 importScripts("xlcalc.js?v=" + DATA_V);
 let MODEL = null, DEPTS = null, LINES = null, BASE = null, EXTRA = null, VIEW = null, SHEET = {};
 let LSET = [], XU = [], LOK = []; // LSET: [시트, [R..V 주소], 기준점 5개], XU: extra 모집단위(빌릴 학과 번호·환산점수 기준점 붙임), LOK: 학과별 새 기준점 사용 여부
