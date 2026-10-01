@@ -1,0 +1,38 @@
+# Supabase 무료 플랜은 일주일 동안 DB 활동이 거의 없으면 프로젝트를 일시정지한다(로그인 불가).
+# 하루 한 번 데이터 없는 함수(ping)를 호출해 활동을 남긴다. 실패하면 GitHub 가 저장소 주인에게 메일로 알린다.
+# 설정(assets/js/auth-config.js)이 비어 있으면 아무것도 하지 않는다.
+name: Supabase keepalive
+
+on:
+  schedule:
+    - cron: "23 1 * * *" # 매일 10:23 (한국 시각)
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+      - name: Ping Supabase
+        run: |
+          read_cfg() { sed -nE "s/^[[:space:]]*$1:[[:space:]]*['\"]([^'\"]*)['\"].*/\1/p" assets/js/auth-config.js | head -n1; }
+          url="$(read_cfg url)"
+          key="$(read_cfg key)"
+          if [ -z "$url" ] || [ -z "$key" ]; then
+            echo "auth-config.js 에 Supabase 설정이 없어 건너뜁니다."
+            exit 0
+          fi
+          case "$key" in
+            sb_secret_*) echo "::error::auth-config.js 에 비밀 키(sb_secret_)가 들어 있습니다. 즉시 Supabase 에서 폐기·재발급하세요."; exit 1 ;;
+          esac
+          if echo "$key" | grep -q '\.' && echo "$key" | cut -d. -f2 | tr '_-' '/+' | base64 -d 2>/dev/null | grep -q '"service_role"'; then
+            echo "::error::auth-config.js 에 service_role 키가 들어 있습니다. 즉시 Supabase 에서 폐기·재발급하세요."
+            exit 1
+          fi
+          curl -fsS --retry 3 --retry-delay 10 -X POST "${url%/}/rest/v1/rpc/ping" \
+            -H "apikey: $key" -H "Content-Type: application/json" -d '{}'
+          echo

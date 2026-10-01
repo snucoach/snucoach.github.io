@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>회원가입 — 스누코치</title>
+<meta name="description" content="스누코치 회원가입">
+<link rel="canonical" href="https://snucoach.github.io/signup.html">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#0B0C10">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; font-src 'self'; script-src 'self' 'sha256-Du+OJKJSbdUgz5nrHeWWINvez6XKDDU/tyj/5c2uvwo='; connect-src 'self' https://*.supabase.co; object-src 'none'; base-uri 'self'; form-action 'none'; frame-src 'none'">
+<script>document.documentElement.classList.add('js')</script>
+<link rel="icon" type="image/png" href="assets/img/favicon.png">
+<link rel="apple-touch-icon" href="assets/img/favicon.png">
+<link rel="stylesheet" href="assets/fonts/pretendardvariable-dynamic-subset.min.css">
+<link rel="stylesheet" href="assets/css/style.css?v=v3f">
+<link rel="stylesheet" href="assets/css/auth.css?v=a1">
+</head>
+<body class="p-auth p-signup" data-auth-page="signup">
+<header class="topnav" id="topnav">
+  <div class="topnav-inner">
+    <a class="nav-logo" href="index.html" aria-label="스누코치 홈"><img src="assets/img/logo_black.png" alt="스누코치 SNUCOACH 로고" height="26"></a>
+    <nav class="nav-tabs" aria-label="주 메뉴"><div class="nav-item"><a href="index.html"><span class="nav-lb">홈</span></a></div><div class="nav-item"><a href="coaching.html"><span class="nav-lb"><sup class="nav-badge nb-best">BEST</sup>학습코칭 안내</span></a></div><div class="nav-item"><a href="reviews.html"><span class="nav-lb">후기</span></a></div><div class="nav-item"><a href="columns.html"><span class="nav-lb">자료·칼럼</span></a></div><div class="nav-item"><a href="event.html"><span class="nav-lb"><sup class="nav-badge nb-free">무료</sup>이벤트</span></a></div></nav><a class="nav-auth" href="login.html" data-auth-nav hidden><svg class="ico" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="8.2" r="3.7"/><path d="M4.8 19.6c1.3-3.4 4-5.1 7.2-5.1s5.9 1.7 7.2 5.1"/></svg><span class="nav-auth-lb" data-auth-label>로그인</span></a><a class="nav-cta" href="https://smore.im/form/r7q2TCOBoc" target="_blank" rel="noopener">무료 상담 신청</a>
+    <button class="nav-toggle" id="navToggle" type="button" aria-label="메뉴 열기" aria-expanded="false" aria-controls="navDrawer"><span></span><span></span><span></span></button>
+  </div>
+  <nav class="nav-compact" aria-label="주 메뉴(모바일)"><a class="ctab" href="index.html">홈</a><a class="ctab" href="coaching.html">학습코칭</a><a class="ctab" href="reviews.html">후기</a><a class="ctab" href="columns.html">칼럼</a><a class="ctab" href="event.html">이벤트</a></nav>
+  <div class="scroll-progress" id="scrollProgress" aria-hidden="true"></div>
+</header>
+<div class="nav-scrim" id="navScrim" hidden></div>
+<aside class="nav-drawer" id="navDrawer" aria-hidden="true" aria-label="모바일 메뉴">
+  <div class="drawer-head">
+    <span class="drawer-title">메뉴</span>
+    <button class="drawer-close" id="drawerClose" type="button" aria-label="메뉴 닫기">✕</button>
+  </div>
+  <a class="drawer-auth" href="login.html" data-auth-nav hidden><span data-auth-label>로그인 · 회원가입</span></a>
+  <nav class="drawer-links" aria-label="모바일 주 메뉴"><a href="index.html"><span class="nav-lb">홈</span></a><a href="coaching.html"><span class="nav-lb"><sup class="nav-badge nb-best">BEST</sup>학습코칭 안내</span></a><a href="reviews.html"><span class="nav-lb">후기</span></a><a href="columns.html"><span class="nav-lb">자료·칼럼</span></a><a href="event.html"><span class="nav-lb"><sup class="nav-badge nb-free">무료</sup>이벤트</span></a></nav>
+  <a class="drawer-cta" href="https://smore.im/form/r7q2TCOBoc" target="_blank" rel="noopener">무료 상담 신청</a>
+  <a class="drawer-kakao" href="https://pf.kakao.com/_wiwxmG/chat" target="_blank" rel="noopener">카톡으로 문의</a>
+</aside>
+
+<main class="auth-main" id="main">
+  <div class="auth-wrap">
+    <section class="auth-card" id="signupCard" aria-labelledby="pageTitle">
+      <p class="auth-eyebrow">SNUCOACH 회원</p>
+      <h1 class="auth-title" id="pageTitle">회원가입</h1>
+      <p class="auth-sub">이메일로 가입하면 인증 메일을 보내 드려요.</p>
+      <div class="auth-msg" id="authMsg" role="alert" hidden></div>
+      <div data-auth-kakao hidden>
+        <button class="btn btn-kakao" type="button" data-kakao-login><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true" focusable="false"><path fill="#000" d="M9 1.5C4.58 1.5 1 4.32 1 7.8c0 2.24 1.48 4.2 3.72 5.32l-.95 3.48c-.08.3.26.54.52.37l4.15-2.74c.18.02.37.02.56.02 4.42 0 8-2.82 8-6.3S13.42 1.5 9 1.5Z"/></svg><span>카카오로 시작하기</span></button>
+        <div class="auth-or">또는 이메일로 가입</div>
+      </div>
+      <form class="auth-form" id="signupForm" method="post" action="#" novalidate>
+        <div class="field">
+          <label for="suEmail">이메일</label>
+          <input type="email" id="suEmail" name="email" autocomplete="username" inputmode="email" required aria-describedby="suEmailErr">
+          <p class="field-err" id="suEmailErr"></p>
+        </div>
+        <div class="field">
+          <label for="suPw">비밀번호</label>
+          <div class="pw-wrap"><input type="password" id="suPw" name="suPw" autocomplete="new-password" maxlength="72" required aria-describedby="suPwHint suPwErr"><button class="pw-toggle" type="button" aria-controls="suPw" aria-pressed="false" aria-label="비밀번호 표시">보기</button></div>
+          <p class="field-hint" id="suPwHint">8자 이상, 영문과 숫자를 함께 써 주세요.</p><p class="field-err" id="suPwErr"></p>
+        </div>
+        <div class="field">
+          <label for="suPw2">비밀번호 확인</label>
+          <div class="pw-wrap"><input type="password" id="suPw2" name="suPw2" autocomplete="new-password" maxlength="72" required aria-describedby="suPw2Err"><button class="pw-toggle" type="button" aria-controls="suPw2" aria-pressed="false" aria-label="비밀번호 확인 표시">보기</button></div>
+          <p class="field-err" id="suPw2Err"></p>
+        </div>
+        <div class="field">
+          <label for="suName">이름</label>
+          <input type="text" id="suName" name="name" autocomplete="name" maxlength="20" required aria-describedby="suNameErr">
+          <p class="field-err" id="suNameErr"></p>
+        </div>
+        <div class="field">
+          <fieldset class="seg" id="suType" aria-describedby="suTypeErr">
+            <legend>회원 구분</legend>
+            <label><input type="radio" name="member_type" value="학생"><span>학생</span></label>
+            <label><input type="radio" name="member_type" value="학부모"><span>학부모</span></label>
+            <label><input type="radio" name="member_type" value="기타"><span>기타</span></label>
+          </fieldset>
+          <p class="field-err" id="suTypeErr"></p>
+        </div>
+        <div class="field">
+          <label for="suGrade" data-grade-label>학년</label>
+          <select id="suGrade" name="grade" required aria-describedby="suGradeErr">
+            <option value="">선택해 주세요</option>
+            <option value="초등">초등</option>
+            <option value="중1">중1</option>
+            <option value="중2">중2</option>
+            <option value="중3">중3</option>
+            <option value="고1">고1</option>
+            <option value="고2">고2</option>
+            <option value="고3">고3</option>
+            <option value="N수">N수</option>
+            <option value="기타">기타·해당 없음</option>
+          </select>
+          <p class="field-err" id="suGradeErr"></p>
+        </div>
+        <div class="field">
+          <div class="consent" id="suConsent" aria-describedby="suConsentErr">
+            <div class="consent-all"><label class="check"><input type="checkbox" data-agree-all> <span>전체 동의 <span class="sel">(선택 항목 포함)</span></span></label></div>
+            <ul class="consent-list">
+              <li>
+                <label class="check"><input type="checkbox" data-agree="age"> <span><span class="req">[필수]</span> 만 14세 이상입니다.</span></label>
+                <p class="field-hint" style="margin:4px 0 0 30px">만 14세 미만 학생은 보호자가 ‘학부모’로 가입해 주세요.</p>
+              </li>
+              <li>
+                <label class="check"><input type="checkbox" data-agree="terms"> <span><span class="req">[필수]</span> 이용약관 동의</span></label>
+                <details><summary>내용 보기</summary><div class="consent-detail"><p style="margin:0">스누코치 회원 서비스의 이용 조건과 절차, 회원과 스누코치의 권리·의무를 정한 약관입니다.</p><p><a href="terms.html" target="_blank" rel="noopener">이용약관 전문 보기</a></p></div></details>
+              </li>
+              <li>
+                <label class="check"><input type="checkbox" data-agree="privacy"> <span><span class="req">[필수]</span> 개인정보 수집·이용 동의</span></label>
+                <details><summary>내용 보기</summary><div class="consent-detail">
+                  <table>
+                    <tr><th scope="row">목적</th><td>회원 식별과 가입 의사 확인, 로그인, 회원 서비스 제공, 공지 전달과 문의 응대, 부정 이용 방지</td></tr>
+                    <tr><th scope="row">항목</th><td>이메일, 비밀번호, 이름, 회원 구분, 학년(학부모는 자녀 학년)<br>카카오로 가입하면 카카오 계정 이메일·닉네임<br>이용 중 자동 생성: 로그인 일시, 접속 IP 주소, 기기·브라우저 정보</td></tr>
+                    <tr><th scope="row">보유 기간</th><td><b>회원 탈퇴 시까지</b> (탈퇴하면 바로 삭제). 로그인 기록은 3개월</td></tr>
+                  </table>
+                  <p>동의를 거부할 수 있으나, 거부하면 회원가입을 할 수 없습니다. 자세한 내용은 <a href="privacy.html" target="_blank" rel="noopener">개인정보처리방침</a>을 확인해 주세요.</p>
+                </div></details>
+              </li>
+              <li>
+                <label class="check"><input type="checkbox" data-agree="marketing"> <span><span class="sel">[선택]</span> 마케팅 정보 수신 동의(이메일)</span></label>
+                <details><summary>내용 보기</summary><div class="consent-detail">
+                  <table>
+                    <tr><th scope="row">목적</th><td>학습 자료, 이벤트, 코칭 프로그램 안내(광고성 정보 포함) 이메일 발송</td></tr>
+                    <tr><th scope="row">항목</th><td>이메일, 이름</td></tr>
+                    <tr><th scope="row">보유 기간</th><td>동의 철회 또는 회원 탈퇴 시까지</td></tr>
+                  </table>
+                  <p>동의하지 않아도 가입과 이용에 제한이 없고, 마이페이지에서 언제든 바꿀 수 있습니다.</p>
+                </div></details>
+              </li>
+            </ul>
+          </div>
+          <p class="field-err" id="suConsentErr"></p>
+        </div>
+        <button class="btn btn-primary auth-btn" type="submit">가입하고 인증 메일 받기</button>
+      </form>
+      <p class="auth-links"><span>이미 회원이신가요?</span><a href="login.html">로그인</a></p>
+    </section>
+    <section class="auth-card auth-done" id="signupDone" aria-labelledby="doneTitle" hidden>
+      <span class="done-ico"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3" y="5.5" width="18" height="13" rx="2.5"/><path d="m4 7.5 8 5.5 8-5.5"/></svg></span>
+      <h2 class="auth-title" id="doneTitle" tabindex="-1">인증 메일을 보냈어요</h2>
+      <p class="auth-sub"><b id="doneEmail"></b> 로 보낸 메일에서 <b>[이메일 인증하기]</b>를 누르면 가입이 끝나요. 링크는 1시간 동안 유효해요.</p>
+      <div class="auth-msg" id="doneMsg" role="status" hidden></div>
+      <button class="btn btn-line auth-btn" type="button" id="resendBtn">인증 메일 다시 보내기</button>
+      <p class="auth-note">메일이 보이지 않으면 스팸함도 확인해 주세요. 이미 가입한 이메일이라면 메일이 가지 않아요. <a href="login.html">로그인</a>하거나 <a href="reset-password.html">비밀번호를 찾아</a> 주세요.</p>
+    </section>
+  </div>
+</main>
+<footer class="site-footer">
+  <div class="footer-inner">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <a class="footer-logo" href="index.html" aria-label="스누코치 홈">
+          <img src="assets/img/logo_black.png" alt="스누코치 로고"></a>
+        <p class="footer-tagline">서울대 대표가 직접 하는 1:1 학습코칭</p>
+      </div>
+      <div class="footer-cols">
+        <div class="footer-col">
+          <div class="ft-h">메뉴</div>
+          <a href="index.html">홈</a>
+          <a href="coaching.html">학습코칭 안내</a>
+          <a href="saenggibu.html">생기부 컨설팅 안내</a>
+          <a href="event.html">이벤트</a>
+          <a href="reviews.html">후기</a>
+          <a href="columns.html">자료·칼럼</a>
+        </div>
+        <div class="footer-col">
+          <div class="ft-h">바로가기</div>
+          <a href="https://smore.im/form/r7q2TCOBoc" target="_blank" rel="noopener">무료 상담 신청</a>
+          <a href="https://forms.gle/Q4ZR3V8CfJSbZuyPA" target="_blank" rel="noopener">무료 생기부 진단</a>
+          <a href="https://pf.kakao.com/_wiwxmG/chat" target="_blank" rel="noopener">카카오톡 문의</a>
+          <a href="notice.html">유의사항·환불</a>
+          <a href="https://blog.naver.com/snustudycoach/223313413829" target="_blank" rel="noopener">대표 소개글</a>
+        </div>
+        <div class="footer-col">
+          <div class="ft-h">SNS</div>
+          <a href="https://blog.naver.com/snustudycoach" target="_blank" rel="noopener">네이버 블로그</a>
+          <a href="https://www.instagram.com/snu_studycoach/" target="_blank" rel="noopener">인스타그램</a>
+          <a href="https://pf.kakao.com/_wiwxmG" target="_blank" rel="noopener">카카오톡 채널</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-info">
+      <div class="biz">스누코치&ensp;|&ensp;대표 : 유정원&ensp;|&ensp;사업자등록번호 : 849-37-01282</div>
+      <div class="footer-legal"><a href="terms.html">이용약관</a><a href="privacy.html"><b>개인정보처리방침</b></a></div>
+      <div class="footer-copy">© 2025. snucoach Inc. All rights reserved.</div>
+    </div>
+  </div>
+</footer>
+
+<script src="assets/js/auth-config.js?v=a2" defer></script>
+<script src="assets/js/site.js?v=v3f" defer></script>
+<script src="assets/vendor/supabase-js-2.117.2.js" defer></script>
+<script src="assets/js/auth.js?v=a1" defer></script>
+</body>
+</html>
