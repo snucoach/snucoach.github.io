@@ -228,6 +228,54 @@ try {
   await page.waitForSelector('#pwMsg:not([hidden])');
   check('비밀번호 변경 성공', (await text(page, '#pwMsg')).startsWith('비밀번호를 바꿨습니다'), await text(page, '#pwMsg'));
 
+  // ── 7-1. 대학 라인 잡기: 목표 대학 입시 정보 알림 ─────
+  {
+    const setTargets = (pg, targets) => pg.evaluate((t) => sessionStorage.setItem('jungsi_state_v2', JSON.stringify({ targets: t })), targets);
+    // 로그인 전: 안내 → 로그인 → 돌아오면 자동 신청
+    const actx = await newContext(browser);
+    const ap = await actx.newPage();
+    await ap.goto(`${SITE}/jungsi/`);
+    await setTargets(ap, [{ univ: '서울대', major: '자연', band: 'up' }, { univ: '부산대', major: '자연', band: 'safe' }]);
+    await ap.reload();
+    check('정시: 목표 고르면 알림 버튼 표시', await visible(ap, '#tbar-alert'));
+    await ap.click('#tbar-alert');
+    await ap.waitForSelector('#alertDlg[open]');
+    check('알림 창: 대상 대학만 표시 + 대상 아님 안내', (await text(ap, '#adlgList')) === '서울대' && (await text(ap, '#adlgOut')).includes('부산대'));
+    check('알림 창: 인서울 주요 대학 한정 안내', (await text(ap, '.adlg-scope')).includes('인서울 주요 대학'));
+    check('알림 창: 비회원은 가입·로그인 안내', await visible(ap, '#adlgNeed') && (await ap.getAttribute('#adlgAct a.pri', 'href')) === '../signup.html');
+    await ap.screenshot({ path: `${SHOTS}jungsi-alert.png` });
+    await ap.click('#adlgAct a.sec');
+    await ap.waitForURL('**/login.html?next=*');
+    await ap.fill('#loginEmail', A);
+    await ap.fill('#loginPw', 'newpass123');
+    await ap.click('#loginForm button[type="submit"]');
+    await ap.waitForURL('**/jungsi/');
+    let got = '';
+    for (let i = 0; i < 30 && !got; i += 1) { await sleep(200); got = sql(`select string_agg(univ||':'||coalesce(track,''), ',') from public.target_alerts a join auth.users u on u.id=a.user_id where u.email='${A}'`); }
+    check('로그인하고 돌아오면 고른 대학 알림 저장', got === '서울대:자연', got);
+    check('보류 신청 지움', await ap.evaluate(() => !localStorage.getItem('snucoach-alert-pending')));
+    // 로그인 상태: 바로 신청
+    await setTargets(ap, [{ univ: '연세대', major: '인문·사회', band: 'mid' }, { univ: '서울대', major: '자연', band: 'up' }]);
+    await ap.reload();
+    await ap.click('#tbar-alert');
+    await ap.waitForSelector('#alertDlg[open]');
+    check('회원: 신청 버튼', (await text(ap, '#adlgAct .pri')) === '2곳 알림 신청하기');
+    await ap.click('#adlgAct .pri');
+    await ap.waitForSelector('#alertDlg:not([open])', { state: 'attached' });
+    check('회원: 신청 저장(중복은 건너뜀)', sql(`select string_agg(univ, ',' order by univ) from public.target_alerts a join auth.users u on u.id=a.user_id where u.email='${A}'`) === '서울대,연세대');
+    // 마이페이지에서 확인·해제
+    await ap.goto(`${SITE}/account.html`);
+    await ap.waitForFunction(() => document.querySelectorAll('#alertList li').length === 2);
+    check('마이페이지: 알림 목록', (await text(ap, '#alertList')).includes('연세대'));
+    await ap.screenshot({ path: `${SHOTS}account-alerts.png`, fullPage: true });
+    await ap.locator('#alertList li', { hasText: '연세대' }).locator('button').click();
+    await ap.waitForFunction(() => document.querySelectorAll('#alertList li').length === 1);
+    check('마이페이지: 알림 해제', sql(`select string_agg(univ, ',') from public.target_alerts a join auth.users u on u.id=a.user_id where u.email='${A}'`) === '서울대');
+    ctx.violations.push(...actx.violations);
+    ctx.errors.push(...actx.errors);
+    await actx.close();
+  }
+
   // ── 8. 로그아웃 ─────────────────────────────────────────
   await page.click('#acct [data-sign-out]');
   await page.waitForURL('**/index.html');
@@ -414,6 +462,14 @@ try {
     check('CSV: 엑셀용 BOM + 헤더', csv.charCodeAt(0) === 0xFEFF && csv.includes('"가입일시","이름","이메일"'));
     check('CSV: 수식 주입 무력화', csv.includes(`"'=HYPERLINK(""x"")"`), csv.split('\r\n').find((l) => l.includes('HYPERLINK')));
     check('관리자 화면: 이름은 글자로만 표시(HTML 해석 안 함)', (await kp.locator('#admRows a').count()) === 0);
+    await kp.waitForSelector('#admAlerts:not([hidden])');
+    const alTotal = Number(sql(`select count(*) from public.target_alerts`));
+    check('관리자: 알림 신청 목록', (await kp.locator('#alRows tr').count()) === Math.max(1, alTotal) && (await text(kp, '#alRows')).includes(A), alTotal);
+    await kp.selectOption('#alUniv', '서울대');
+    check('관리자: 대학별 필터', (await text(kp, '#alCount')).startsWith(`${sql(`select count(*) from public.target_alerts where univ='서울대'`)}건`));
+    const [dl2] = await Promise.all([kp.waitForEvent('download'), kp.click('#alCsv')]);
+    const csv2 = readFileSync(await dl2.path(), 'utf8');
+    check('관리자: 알림 CSV', csv2.charCodeAt(0) === 0xFEFF && csv2.includes('"대학","계열","이름","이메일"') && csv2.includes(A));
     await kctx.close();
   }
 

@@ -14,7 +14,7 @@
 <link rel="apple-touch-icon" href="assets/img/favicon.png">
 <link rel="stylesheet" href="assets/fonts/pretendardvariable-dynamic-subset.min.css">
 <link rel="stylesheet" href="assets/css/style.css?v=v3f">
-<link rel="stylesheet" href="assets/css/auth.css?v=a3">
+<link rel="stylesheet" href="assets/css/auth.css?v=a5">
 </head>
 <body class="p-auth p-admin" data-auth-page="admin">
 <header class="topnav" id="topnav">
@@ -60,6 +60,21 @@
           </table>
         </div>
         <p class="auth-note" id="admCount" aria-live="polite"></p>
+      </div>
+      <div class="adm-section" id="admAlerts" hidden>
+        <h2 class="adm-h2">목표 대학 입시 정보 알림 신청</h2>
+        <div class="auth-msg" id="alMsg" role="alert" hidden></div>
+        <div class="adm-tools">
+          <div class="field"><label for="alUniv" class="sr-only">대학 선택</label><select id="alUniv"><option value="">전체 대학</option></select></div>
+          <button class="btn btn-line btn-sm" type="button" id="alCsv">CSV 내려받기</button>
+        </div>
+        <div class="adm-table-wrap">
+          <table class="adm-table">
+            <thead><tr><th scope="col">대학</th><th scope="col">계열</th><th scope="col">이름</th><th scope="col">이메일</th><th scope="col">구분</th><th scope="col">학년</th><th scope="col">신청일</th></tr></thead>
+            <tbody id="alRows"></tbody>
+          </table>
+        </div>
+        <p class="auth-note" id="alCount" aria-live="polite"></p>
       </div>
     </section>
   </div>
@@ -109,6 +124,6 @@
 <script src="assets/js/auth-config.js?v=a5" defer></script>
 <script src="assets/js/site.js?v=v3f" defer></script>
 <script src="assets/vendor/supabase-js-2.117.2.js" defer></script>
-<script src="assets/js/auth.js?v=a3" defer></script>
+<script src="assets/js/auth.js?v=a5" defer></script>
 </body>
 </html>

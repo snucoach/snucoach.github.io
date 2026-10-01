@@ -15,7 +15,7 @@
 
   // ── 다른 사이트의 프레임 안에서 열리면(클릭재킹) 회원 화면을 띄우지 않는다 ──
   // GitHub Pages 는 X-Frame-Options 헤더를 붙일 수 없어 스크립트로 막는다.
-  if (window.top !== window.self) {
+  if (PAGE && window.top !== window.self) {
     const main = document.querySelector("main");
     if (main) main.replaceChildren(Object.assign(document.createElement("p"), {
       className: "auth-loading",
@@ -689,6 +689,39 @@
       });
     }
 
+    // 목표 대학 입시 정보 알림: 로그인 전에 고른 대학이 있으면 저장하고, 신청 목록을 보여 준다
+    (async () => {
+      const aout = $("#alertMsg");
+      const saved = await alerts.flushPending();
+      if (saved.length) msg(aout, `${saved.join("·")} 입시 정보 알림을 신청했습니다.`, "ok");
+      const draw = async () => {
+        const { data, error } = await alerts.list();
+        const box = $("#alertList");
+        if (error) { msg(aout, errText(error)); return; }
+        box.replaceChildren(...(data || []).map((a) => {
+          const li = document.createElement("li");
+          const t = document.createElement("span");
+          t.className = "al-name";
+          t.textContent = a.univ + (a.track ? ` · ${a.track}` : "");
+          const b = document.createElement("button");
+          b.type = "button";
+          b.className = "text-btn";
+          b.textContent = "해제";
+          b.setAttribute("aria-label", `${a.univ} 알림 해제`);
+          b.addEventListener("click", () => busy(b, "해제 중…", async () => {
+            const { error: e } = await alerts.remove(a.univ);
+            if (e) { msg(aout, errText(e)); return; }
+            msg(aout, `${a.univ} 알림을 해제했습니다.`, "ok");
+            await draw();
+          }));
+          li.append(t, b);
+          return li;
+        }));
+        show($("#alertEmpty"), !(data || []).length);
+      };
+      await draw();
+    })();
+
     // 모든 기기에서 로그아웃
     $("#signOutAll").addEventListener("click", async (e) => {
       if (!window.confirm("이 기기를 포함해 로그인된 모든 기기에서 로그아웃하시겠습니까?")) return;
@@ -803,29 +836,90 @@
     onlyMkt.addEventListener("change", render);
     render();
 
-    // CSV: 엑셀 수식으로 해석될 수 있는 값(=, +, -, @ 로 시작)은 앞에 ' 를 붙여 무력화한다
-    $("#admCsv").addEventListener("click", () => {
-      const cell = (v) => {
-        let s = v == null ? "" : String(v);
-        if (/^[=+\-@\t\r]/.test(s)) s = "'" + s;
-        return `"${s.replace(/"/g, '""')}"`;
-      };
-      const head = ["가입일시", "이름", "이메일", "회원 구분", "학년", "마케팅 수신 동의", "마케팅 동의·거부 일시", "가입 방식", "이메일 인증", "가입 마무리", "최근 로그인"];
-      const lines = [head.map(cell).join(",")].concat(shown.map((r) => [
+    $("#admCsv").addEventListener("click", () => downloadCsv("snucoach-members",
+      ["가입일시", "이름", "이메일", "회원 구분", "학년", "마케팅 수신 동의", "마케팅 동의·거부 일시", "가입 방식", "이메일 인증", "가입 마무리", "최근 로그인"],
+      shown.map((r) => [
         fmtDateTime(r.created_at), r.name, r.email, r.member_type, r.grade, r.marketing_opt_in ? "동의" : "미동의",
         r.marketing_opt_in_at ? fmtDateTime(r.marketing_opt_in_at) : "", provider(r), r.email_confirmed ? "완료" : "전",
         r.profile_completed ? "완료" : "전", r.last_sign_in_at ? fmtDateTime(r.last_sign_in_at) : "",
-      ].map(cell).join(",")));
-      const blob = new Blob(["﻿" + lines.join("\r\n")], { type: "text/csv;charset=utf-8" });
-      const a = document.createElement("a");
-      const d = new Date();
-      a.href = URL.createObjectURL(blob);
-      a.download = `snucoach-members-${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, "0")}${String(d.getDate()).padStart(2, "0")}.csv`;
-      document.body.append(a);
-      a.click();
-      a.remove();
-      setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+      ])));
+
+    adminAlerts();
+  }
+
+  // 관리자: 목표 대학 입시 정보 알림 신청
+  async function adminAlerts() {
+    const box = $("#admAlerts");
+    if (!box) return;
+    const { data, error } = await sb().rpc("admin_list_target_alerts");
+    show(box);
+    if (error) {
+      msg($("#alMsg"), error.code === "PGRST202"
+        ? "알림 기능용 데이터베이스 설정(20261001010000_target_alerts.sql)이 아직 적용되지 않았습니다."
+        : `알림 신청 목록을 불러오지 못했습니다. (${error.code || ""} ${error.message || ""})`);
+      return;
+    }
+    const rows = data || [];
+    const sel = $("#alUniv");
+    const counts = {};
+    rows.forEach((r) => { counts[r.univ] = (counts[r.univ] || 0) + 1; });
+    ALERT_UNIVS.filter((u) => counts[u]).forEach((u) => {
+      const o = document.createElement("option");
+      o.value = u;
+      o.textContent = `${u} (${counts[u]})`;
+      sel.append(o);
     });
+    const body = $("#alRows");
+    let shown = rows;
+    function render() {
+      shown = rows.filter((r) => !sel.value || r.univ === sel.value);
+      body.replaceChildren(...shown.map((r) => {
+        const tr = document.createElement("tr");
+        [r.univ, r.track || "-", r.name || "-", r.email || "-", r.member_type || "-", r.grade || "-", fmtDate(r.created_at)]
+          .forEach((v) => {
+            const td = document.createElement("td");
+            td.textContent = v;
+            if (v === "-") td.className = "muted";
+            tr.append(td);
+          });
+        return tr;
+      }));
+      if (!shown.length) {
+        const tr = document.createElement("tr");
+        const td = document.createElement("td");
+        td.colSpan = 7;
+        td.className = "adm-empty";
+        td.textContent = "아직 알림 신청이 없습니다.";
+        tr.append(td);
+        body.append(tr);
+      }
+      const people = new Set(rows.map((r) => r.email)).size;
+      $("#alCount").textContent = `${shown.length.toLocaleString("ko-KR")}건 표시 중 (전체 ${rows.length.toLocaleString("ko-KR")}건 · ${people.toLocaleString("ko-KR")}명)`;
+    }
+    sel.addEventListener("change", render);
+    render();
+    $("#alCsv").addEventListener("click", () => downloadCsv("snucoach-target-alerts",
+      ["대학", "계열", "이름", "이메일", "회원 구분", "학년", "신청일시"],
+      shown.map((r) => [r.univ, r.track, r.name, r.email, r.member_type, r.grade, fmtDateTime(r.created_at)])));
+  }
+
+  // CSV: 엑셀 수식으로 해석될 수 있는 값(=, +, -, @ 로 시작)은 앞에 ' 를 붙여 무력화한다
+  function downloadCsv(name, head, rows) {
+    const cell = (v) => {
+      let s = v == null ? "" : String(v);
+      if (/^[=+\-@\t\r]/.test(s)) s = "'" + s;
+      return `"${s.replace(/"/g, '""')}"`;
+    };
+    const lines = [head, ...rows].map((r) => r.map(cell).join(","));
+    const blob = new Blob(["\ufeff" + lines.join("\r\n")], { type: "text/csv;charset=utf-8" });
+    const a = document.createElement("a");
+    const d = new Date();
+    a.href = URL.createObjectURL(blob);
+    a.download = `${name}-${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, "0")}${String(d.getDate()).padStart(2, "0")}.csv`;
+    document.body.append(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
   }
 
   // ─────────────────────────────────────────────────────────
@@ -836,13 +930,48 @@
     $$("form input, form select, form button, [data-oauth]").forEach((el) => { el.disabled = true; });
   }
   const problem = configProblem();
+  const libOk = !!(window.supabase && typeof window.supabase.createClient === "function");
+
+  // ── 목표 대학 입시 정보 알림 (대학 라인 잡기·마이페이지 공용) ──
+  // 인서울 주요 대학만 대상(DB 의 target_alerts.univ 허용 목록과 같아야 함)
+  const ALERT_UNIVS = ["서울대", "연세대", "고려대", "서강대", "성균관대", "한양대", "중앙대", "경희대", "한국외국어대",
+    "서울시립대", "이화여대", "건국대", "동국대", "홍익대", "국민대", "숭실대", "세종대", "광운대"];
+  const PENDING_KEY = "snucoach-alert-pending"; // 로그인 전에 고른 알림 대학(로그인 뒤 저장하고 지움)
+  const alerts = {
+    UNIVS: ALERT_UNIVS,
+    eligible: (u) => ALERT_UNIVS.includes(u),
+    setPending(list) { tryDo(() => localStorage.setItem(PENDING_KEY, JSON.stringify(list))); },
+    getPending() { return tryDo(() => JSON.parse(localStorage.getItem(PENDING_KEY) || "[]"), []) || []; },
+    clearPending() { tryDo(() => localStorage.removeItem(PENDING_KEY)); },
+    async signedIn() { const { data } = await sb().auth.getSession(); return !!data.session; },
+    async save(list) { // [{univ, track}] → 이미 신청한 대학은 건너뜀
+      const rows = list.filter((x) => x && ALERT_UNIVS.includes(x.univ))
+        .map((x) => ({ univ: x.univ, track: x.track ? String(x.track).slice(0, 40) : null }));
+      if (!rows.length) return { error: null, count: 0 };
+      const { error } = await sb().from("target_alerts").upsert(rows, { onConflict: "user_id,univ", ignoreDuplicates: true });
+      return { error, count: error ? 0 : rows.length };
+    },
+    async flushPending() { // 로그인돼 있으면 보류된 신청을 저장. 저장한 대학 이름 목록을 돌려줌
+      const list = alerts.getPending();
+      if (!list.length || !(await alerts.signedIn())) return [];
+      const { error } = await alerts.save(list);
+      if (error) return [];
+      alerts.clearPending();
+      return list.map((x) => x.univ).filter((u) => ALERT_UNIVS.includes(u));
+    },
+    async list() { return sb().from("target_alerts").select("univ, track, created_at").order("created_at"); },
+    async remove(univ) { return sb().from("target_alerts").delete().eq("univ", univ); },
+  };
+  window.SnucoachAuth = { ok: !problem && libOk, alerts };
+  if (!PAGE) return; // 회원 페이지가 아니면(대학 라인 잡기 등) 도구만 내놓고 끝
+
   if (problem === "missing") { stop("회원 기능을 준비하고 있습니다. 문의는 카카오톡 채널로 부탁드립니다.", "info"); return; }
   if (problem === "secret") {
     console.error("[스누코치] auth-config.js 에 비밀 키가 들어 있습니다. Supabase 에서 즉시 키를 폐기·재발급하고 Publishable key 로 바꾸세요.");
     stop("보안 설정 오류로 회원 기능을 멈췄습니다. 관리자에게 알려 주세요.");
     return;
   }
-  if (!window.supabase || typeof window.supabase.createClient !== "function") {
+  if (!libOk) {
     stop("회원 기능을 불러오지 못했습니다. 새로고침해 주세요.");
     return;
   }

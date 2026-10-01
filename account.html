@@ -14,7 +14,7 @@
 <link rel="apple-touch-icon" href="assets/img/favicon.png">
 <link rel="stylesheet" href="assets/fonts/pretendardvariable-dynamic-subset.min.css">
 <link rel="stylesheet" href="assets/css/style.css?v=v3f">
-<link rel="stylesheet" href="assets/css/auth.css?v=a3">
+<link rel="stylesheet" href="assets/css/auth.css?v=a5">
 </head>
 <body class="p-auth p-account" data-auth-page="account">
 <header class="topnav" id="topnav">
@@ -189,6 +189,14 @@
         <div class="auth-msg" id="mktMsg" role="status" hidden style="margin:12px 0 0"></div>
       </section>
 
+      <section class="auth-card" aria-labelledby="alertTitle">
+        <h2 id="alertTitle">목표 대학 입시 정보 알림</h2>
+        <p class="card-sub">대학 라인 잡기(정시)에서 고른 목표 대학의 입시 소식을 이메일로 보내 드립니다. 인서울 주요 대학만 해당합니다.</p>
+        <ul class="alert-list" id="alertList"></ul>
+        <p class="alert-empty" id="alertEmpty" hidden>신청한 대학이 없습니다. <a href="jungsi/">대학 라인 잡기</a>에서 목표 대학을 고른 뒤 알림을 신청해 주세요.</p>
+        <div class="auth-msg" id="alertMsg" role="status" hidden style="margin:12px 0 0"></div>
+      </section>
+
       <section class="auth-card acct-list" aria-label="계정 설정">
         <details class="acct-item" id="pwCard" hidden>
           <summary>비밀번호 변경</summary>
@@ -286,6 +294,6 @@
 <script src="assets/js/auth-config.js?v=a5" defer></script>
 <script src="assets/js/site.js?v=v3f" defer></script>
 <script src="assets/vendor/supabase-js-2.117.2.js" defer></script>
-<script src="assets/js/auth.js?v=a3" defer></script>
+<script src="assets/js/auth.js?v=a5" defer></script>
 </body>
 </html>
