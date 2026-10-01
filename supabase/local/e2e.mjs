@@ -129,7 +129,7 @@ try {
   check('숫자 없는 비밀번호 거부', (await text(page, '#suPwErr')).includes('영문과 숫자'));
   await page.fill('#suPw', 'abcd1234'); await page.fill('#suPw2', 'abcd1235');
   await page.click('#signupForm button[type="submit"]');
-  check('비밀번호 확인 불일치 거부', (await text(page, '#suPw2Err')).includes('서로 달라요'));
+  check('비밀번호 확인 불일치 거부', (await text(page, '#suPw2Err')).includes('서로 다릅니다'));
   await page.fill('#suPw2', 'abcd1234');
   await page.click('#signupForm button[type="submit"]');
   check('필수 동의 없으면 거부', (await text(page, '#suConsentErr')).length > 0);
@@ -179,7 +179,7 @@ try {
   await page.fill('#loginPw', 'wrong1234');
   await page.click('#loginForm button[type="submit"]');
   await page.waitForSelector('#authMsg:not([hidden])');
-  check('틀린 비밀번호 안내', (await text(page, '#authMsg')) === '이메일 또는 비밀번호가 맞지 않아요.');
+  check('틀린 비밀번호 안내', (await text(page, '#authMsg')) === '이메일 또는 비밀번호가 맞지 않습니다.');
   await page.fill('#loginPw', 'abcd1234');
   await page.click('#loginForm button[type="submit"]');
   await page.waitForURL('**/account.html');
@@ -201,7 +201,7 @@ try {
   await page.selectOption('#pfGrade', '고3');
   await page.click('#profileForm button[type="submit"]');
   await page.waitForSelector('#profileMsg:not([hidden])');
-  check('내 정보 저장', (await text(page, '#profileMsg')) === '저장했어요.' && (await text(page, '#acctName')) === '김스누2');
+  check('내 정보 저장', (await text(page, '#profileMsg')) === '저장했습니다.' && (await text(page, '#acctName')) === '김스누2');
   check('DB 반영', sql(`select name||','||grade from public.profiles p join auth.users u on u.id=p.id where u.email='${A}'`) === '김스누2,고3');
   await page.fill('#pfName', '');
   await page.click('#profileForm button[type="submit"]');
@@ -210,22 +210,23 @@ try {
 
   // ── 6. 마케팅 수신 ──────────────────────────────────────
   check('가입 때 마케팅 동의(전체 동의) 반영', await page.isChecked('#mktToggle'));
-  await page.uncheck('#mktToggle');
+  await page.uncheck('#mktToggle', { force: true });
   await page.waitForSelector('#mktMsg:not([hidden])');
   check('수신 거부 처리 결과 안내', (await text(page, '#mktMsg')).includes('수신 거부를 처리'));
   check('DB: 마케팅 철회 기록', sql(`select (not marketing_opt_in) and marketing_opt_in_at > now() - interval '1 minute' from public.profiles p join auth.users u on u.id=p.id where u.email='${A}'`) === 't');
 
   // ── 7. 비밀번호 변경 ────────────────────────────────────
+  await page.click('#pwCard summary');
   await page.fill('#curPw', 'nope12345');
   await page.fill('#chPw', 'newpass123');
   await page.fill('#chPw2', 'newpass123');
   await page.click('#pwForm button[type="submit"]');
   await page.waitForFunction(() => document.querySelector('#curPwErr').textContent.length > 0);
-  check('현재 비밀번호 틀리면 거부', (await text(page, '#curPwErr')) === '현재 비밀번호가 맞지 않아요.');
+  check('현재 비밀번호 틀리면 거부', (await text(page, '#curPwErr')) === '현재 비밀번호가 맞지 않습니다.');
   await page.fill('#curPw', 'abcd1234');
   await page.click('#pwForm button[type="submit"]');
   await page.waitForSelector('#pwMsg:not([hidden])');
-  check('비밀번호 변경 성공', (await text(page, '#pwMsg')).startsWith('비밀번호를 바꿨어요'), await text(page, '#pwMsg'));
+  check('비밀번호 변경 성공', (await text(page, '#pwMsg')).startsWith('비밀번호를 바꿨습니다'), await text(page, '#pwMsg'));
 
   // ── 8. 로그아웃 ─────────────────────────────────────────
   await page.click('#acct [data-sign-out]');
@@ -266,7 +267,7 @@ try {
   check('인증 전 로그인 → 안내 + 재발송 버튼', (await text(page, '#authMsg')).includes('이메일 인증이 아직'));
   const t1 = Date.now() - 500;
   await page.click('#authMsg .msg-actions button');
-  await page.waitForFunction(() => document.querySelector('#authMsg').textContent.includes('다시 보냈어요'));
+  await page.waitForFunction(() => document.querySelector('#authMsg').textContent.includes('다시 보냈습니다'));
   check('인증 메일 재발송', !!(await lastMail(B, { after: t1 })));
 
   // ── 11. 비밀번호 찾기(한국어 템플릿: token_hash) ───────
@@ -390,7 +391,7 @@ try {
     // ── 14. 관리자 화면 ──────────────────────────────────
     await kp.goto(`${SITE}/admin.html`);
     await kp.waitForSelector('#authMsg:not([hidden])');
-    check('일반 회원은 관리자 화면 거부', (await text(kp, '#authMsg')).startsWith('관리자만 볼 수 있는 페이지예요.'));
+    check('일반 회원은 관리자 화면 거부', (await text(kp, '#authMsg')).startsWith('관리자만 볼 수 있는 페이지입니다.'));
     sql(`update public.profiles set is_admin = true, name = '=HYPERLINK("x")' where id = (select id from auth.users where email='${C}')`);
     await kp.goto(`${SITE}/account.html`);
     await kp.waitForSelector('#acct:not([hidden])');
@@ -435,7 +436,7 @@ try {
   await page.fill('#loginPw', 'reset1234');
   await page.click('#loginForm button[type="submit"]');
   await page.waitForSelector('#authMsg:not([hidden])');
-  check('탈퇴한 계정 로그인 불가', (await text(page, '#authMsg')) === '이메일 또는 비밀번호가 맞지 않아요.');
+  check('탈퇴한 계정 로그인 불가', (await text(page, '#authMsg')) === '이메일 또는 비밀번호가 맞지 않습니다.');
 
   // ── 16. 화면 확인용 스크린샷 + 보안 정책 위반 없음 ─────
   for (const [w, h, tag] of [[390, 844, 'mobile'], [1280, 900, 'desktop']]) {

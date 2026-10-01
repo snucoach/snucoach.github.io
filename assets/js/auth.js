@@ -77,40 +77,40 @@
 
   // ── 오류 문구 ──
   const ERR = {
-    invalid_credentials: "이메일 또는 비밀번호가 맞지 않아요.",
-    email_not_confirmed: "이메일 인증이 아직 끝나지 않았어요. 가입할 때 받은 메일의 [이메일 인증하기]를 눌러 주세요.",
-    user_already_exists: "이미 가입한 이메일이에요. 로그인하거나 비밀번호를 찾아 주세요.",
-    email_exists: "이미 가입한 이메일이에요. 로그인하거나 비밀번호를 찾아 주세요.",
-    weak_password: "비밀번호가 너무 쉬워요. 8자 이상, 영문과 숫자를 섞어 주세요.",
+    invalid_credentials: "이메일 또는 비밀번호가 맞지 않습니다.",
+    email_not_confirmed: "이메일 인증이 아직 끝나지 않았습니다. 가입할 때 받은 메일의 [이메일 인증하기]를 눌러 주세요.",
+    user_already_exists: "이미 가입한 이메일입니다. 로그인하거나 비밀번호를 찾아 주세요.",
+    email_exists: "이미 가입한 이메일입니다. 로그인하거나 비밀번호를 찾아 주세요.",
+    weak_password: "비밀번호가 너무 쉽습니다. 8자 이상, 영문과 숫자를 섞어 주세요.",
     same_password: "지금 쓰는 비밀번호와 다른 비밀번호를 정해 주세요.",
     current_password_required: "현재 비밀번호를 입력해 주세요.",
-    current_password_mismatch: "현재 비밀번호가 맞지 않아요.",
-    over_email_send_rate_limit: "메일을 너무 자주 요청했어요. 잠시 뒤 다시 시도해 주세요.",
-    over_request_rate_limit: "요청이 너무 많아요. 잠시 뒤 다시 시도해 주세요.",
-    email_address_invalid: "사용할 수 없는 이메일 주소예요. 다른 주소를 입력해 주세요.",
-    email_address_not_authorized: "지금은 메일을 보낼 수 없어요. 카카오톡 채널로 문의해 주세요.",
-    signup_disabled: "지금은 회원가입을 받지 않고 있어요.",
-    email_provider_disabled: "지금은 이메일 가입·로그인을 받지 않고 있어요.",
-    otp_expired: "링크가 만료되었거나 이미 사용되었어요. 다시 요청해 주세요.",
-    flow_state_expired: "링크가 만료되었어요. 다시 요청해 주세요.",
-    flow_state_not_found: "링크가 만료되었거나 이미 사용되었어요. 다시 요청해 주세요.",
+    current_password_mismatch: "현재 비밀번호가 맞지 않습니다.",
+    over_email_send_rate_limit: "메일을 너무 자주 요청했습니다. 잠시 뒤 다시 시도해 주세요.",
+    over_request_rate_limit: "요청이 너무 많습니다. 잠시 뒤 다시 시도해 주세요.",
+    email_address_invalid: "사용할 수 없는 이메일 주소입니다. 다른 주소를 입력해 주세요.",
+    email_address_not_authorized: "지금은 메일을 보낼 수 없습니다. 카카오톡 채널로 문의해 주세요.",
+    signup_disabled: "지금은 회원가입을 받지 않고 있습니다.",
+    email_provider_disabled: "지금은 이메일 가입·로그인을 받지 않고 있습니다.",
+    otp_expired: "링크가 만료되었거나 이미 사용되었습니다. 다시 요청해 주세요.",
+    flow_state_expired: "링크가 만료되었습니다. 다시 요청해 주세요.",
+    flow_state_not_found: "링크가 만료되었거나 이미 사용되었습니다. 다시 요청해 주세요.",
     bad_code_verifier: "메일을 요청한 브라우저에서 링크를 열어 주세요.",
-    session_not_found: "로그인이 만료되었어요. 다시 로그인해 주세요.",
-    refresh_token_not_found: "로그인이 만료되었어요. 다시 로그인해 주세요.",
-    user_not_found: "계정을 찾을 수 없어요.",
-    user_banned: "이용이 제한된 계정이에요. 카카오톡 채널로 문의해 주세요.",
+    session_not_found: "로그인이 만료되었습니다. 다시 로그인해 주세요.",
+    refresh_token_not_found: "로그인이 만료되었습니다. 다시 로그인해 주세요.",
+    user_not_found: "계정을 찾을 수 없습니다.",
+    user_banned: "이용이 제한된 계정입니다. 카카오톡 채널로 문의해 주세요.",
     validation_failed: "입력한 내용을 다시 확인해 주세요.",
-    "42501": "권한이 없어요. 다시 로그인해 주세요.",
+    "42501": "권한이 없습니다. 다시 로그인해 주세요.",
   };
   function errText(error) {
     if (!error) return "";
     const code = error.code || (error.details && error.details.code);
     if (code && ERR[code]) return ERR[code];
     if (error.name === "AuthRetryableFetchError" || error.name === "TypeError" || /fetch|network|load failed/i.test(error.message || "")) {
-      return "서버에 연결하지 못했어요. 인터넷 연결을 확인하고 다시 시도해 주세요.";
+      return "서버에 연결하지 못했습니다. 인터넷 연결을 확인하고 다시 시도해 주세요.";
     }
     if (error.status === 429) return ERR.over_request_rate_limit;
-    return "문제가 생겼어요. 잠시 뒤 다시 시도해 주세요." + (code || error.message ? ` (${code || error.message})` : "");
+    return "문제가 생겼습니다. 잠시 뒤 다시 시도해 주세요." + (code || error.message ? ` (${code || error.message})` : "");
   }
   const isNetworkError = (e) => !!e && (e.name === "AuthRetryableFetchError" || e.status === 0 || /fetch|network|load failed/i.test(e.message || ""));
 
@@ -192,7 +192,7 @@
   function checkNewPassword(pwInput, pw2Input) {
     const e1 = pwProblem(pwInput.value);
     const ok1 = setErr(pwInput, document.getElementById(pwInput.id + "Err"), e1);
-    const e2 = pw2Input.value !== pwInput.value ? "비밀번호가 서로 달라요." : "";
+    const e2 = pw2Input.value !== pwInput.value ? "비밀번호가 서로 다릅니다." : "";
     const ok2 = setErr(pw2Input, document.getElementById(pw2Input.id + "Err"), e2);
     if (!ok1) return pwInput;
     if (!ok2) return pw2Input;
@@ -291,7 +291,7 @@
   async function resendSignup(email, out, btn) {
     const { error } = await sb().auth.resend({ type: "signup", email, options: { emailRedirectTo: site("account.html") } });
     if (error) { msg(out, errText(error)); return; }
-    msg(out, "인증 메일을 다시 보냈어요. 메일함을 확인해 주세요.", "ok");
+    msg(out, "인증 메일을 다시 보냈습니다. 메일함을 확인해 주세요.", "ok");
     if (btn) cooldown(btn, 60);
   }
 
@@ -303,9 +303,9 @@
     const rememberBox = $("#loginRemember");
     const q = new URLSearchParams(location.search);
     const notice = {
-      expired: ["로그인이 만료되었어요. 다시 로그인해 주세요.", "info"],
-      verified: ["인증 링크를 확인했어요. 로그인해 주세요.", "ok"],
-      "signed-out-all": ["모든 기기에서 로그아웃했어요.", "ok"],
+      expired: ["로그인이 만료되었습니다. 다시 로그인해 주세요.", "info"],
+      verified: ["인증 링크를 확인했습니다. 로그인해 주세요.", "ok"],
+      "signed-out-all": ["모든 기기에서 로그아웃했습니다.", "ok"],
     }[q.get("m")];
     if (notice) msg(out, ...notice);
 
@@ -434,7 +434,7 @@
     if (tokenHash && q.get("type") === "recovery") {
       cleanUrl();
       const { error } = await sb().auth.verifyOtp({ token_hash: tokenHash, type: "recovery" });
-      if (error) { showRequest("링크가 만료되었거나 이미 사용되었어요. 아래에서 다시 요청해 주세요."); return; }
+      if (error) { showRequest("링크가 만료되었거나 이미 사용되었습니다. 아래에서 다시 요청해 주세요."); return; }
       showNew();
       return;
     }
@@ -443,11 +443,11 @@
     const urlError = q.get("error_description") || h.get("error_description");
     const { error: initError } = await sb().auth.initialize();
     if (hadCode || urlError) cleanUrl();
-    if (urlError || initError) { showRequest("링크가 만료되었거나 이미 사용되었어요. 아래에서 다시 요청해 주세요."); return; }
+    if (urlError || initError) { showRequest("링크가 만료되었거나 이미 사용되었습니다. 아래에서 다시 요청해 주세요."); return; }
     await new Promise((r) => setTimeout(r, 0)); // PASSWORD_RECOVERY 알림은 초기화 직후에 온다
     const { data: { session } } = await sb().auth.getSession();
     if (session && (recovery || hadCode)) { showNew(); return; }
-    if (hadCode) { showRequest("재설정 링크는 메일을 요청한 브라우저에서 열어야 해요. 여기서 다시 요청해 주세요."); return; }
+    if (hadCode) { showRequest("재설정 링크는 메일을 요청한 브라우저에서 열어야 합니다. 여기서 다시 요청해 주세요."); return; }
     showRequest();
   }
 
@@ -475,7 +475,7 @@
         const again = $("#reqResendBtn");
         cooldown(again, 60);
         again.onclick = () => busy(again, "보내는 중…", async () => {
-          if (await send(email, $("#reqDoneMsg"))) { msg($("#reqDoneMsg"), "메일을 다시 보냈어요.", "ok"); cooldown(again, 60); }
+          if (await send(email, $("#reqDoneMsg"))) { msg($("#reqDoneMsg"), "메일을 다시 보냈습니다.", "ok"); cooldown(again, 60); }
         });
       });
     });
@@ -507,7 +507,7 @@
     const loading = $("#pageLoading");
     const q = new URLSearchParams(location.search);
     const h = new URLSearchParams(location.hash.slice(1));
-    let notice = q.get("welcome") ? ["가입이 완료되었어요. 스누코치 회원이 되신 걸 환영해요!", "ok"] : null;
+    let notice = q.get("welcome") ? ["가입이 완료되었습니다. 스누코치 회원이 되신 걸 환영합니다!", "ok"] : null;
     const linkFail = (text) => {
       show(loading, false);
       msg(out, text);
@@ -527,8 +527,8 @@
     if (tokenHash && type) {
       cleanUrl();
       const { error } = await sb().auth.verifyOtp({ token_hash: tokenHash, type: type === "signup" ? "email" : type });
-      if (error) { linkFail("인증 링크가 만료되었거나 이미 사용되었어요. 이미 인증을 마쳤다면 로그인해 주세요. 로그인이 안 되면 로그인 화면에서 인증 메일을 다시 받을 수 있어요."); return; }
-      notice = ["이메일 인증이 완료되었어요. 스누코치 회원이 되신 걸 환영해요!", "ok"];
+      if (error) { linkFail("인증 링크가 만료되었거나 이미 사용되었습니다. 이미 인증을 마쳤다면 로그인해 주세요. 로그인이 안 되면 로그인 화면에서 인증 메일을 다시 받을 수 있습니다."); return; }
+      notice = ["이메일 인증이 완료되었습니다. 스누코치 회원이 되신 걸 환영합니다!", "ok"];
     }
 
     // ② 기본 메일 템플릿·카카오 로그인 복귀: ?code=… / 실패 시 ?error=…
@@ -538,7 +538,7 @@
     if (hadCode || urlError || q.has("welcome")) cleanUrl();
     if (urlError || initError) {
       const code = (initError && (initError.code || (initError.details && initError.details.code))) || q.get("error_code") || h.get("error_code");
-      linkFail(code === "otp_expired" ? ERR.otp_expired : `로그인을 마치지 못했어요. 다시 시도해 주세요.${code ? ` (${code})` : ""}`);
+      linkFail(code === "otp_expired" ? ERR.otp_expired : `로그인을 마치지 못했습니다. 다시 시도해 주세요.${code ? ` (${code})` : ""}`);
       return;
     }
 
@@ -593,9 +593,9 @@
         const { data, error } = await sb().from("profiles")
           .update({ ...p, marketing_opt_in: c.marketing, terms_agreed_at: now, privacy_agreed_at: now, age_confirmed_at: now })
           .eq("id", user.id).select().maybeSingle();
-        if (error || !data) { msg(out, error ? errText(error) : "회원 정보를 찾지 못했어요. 카카오톡 채널로 문의해 주세요."); return; }
+        if (error || !data) { msg(out, error ? errText(error) : "회원 정보를 찾지 못했습니다. 카카오톡 채널로 문의해 주세요."); return; }
         show(card, false);
-        renderAccount(user, data, ["가입이 완료되었어요. 스누코치 회원이 되신 걸 환영해요!", "ok"]);
+        renderAccount(user, data, ["가입이 완료되었습니다. 스누코치 회원이 되신 걸 환영합니다!", "ok"]);
       });
     });
   }
@@ -635,10 +635,10 @@
       if (bad) { focusEl(bad); return; }
       await busy($('button[type="submit"]', pform), "저장하는 중…", async () => {
         const { data, error } = await sb().from("profiles").update(prof.read()).eq("id", user.id).select().maybeSingle();
-        if (error || !data) { msg(pout, error ? errText(error) : "저장하지 못했어요. 다시 로그인해 주세요."); return; }
+        if (error || !data) { msg(pout, error ? errText(error) : "저장하지 못했습니다. 다시 로그인해 주세요."); return; }
         profile = data;
         head(data);
-        msg(pout, "저장했어요.", "ok");
+        msg(pout, "저장했습니다.", "ok");
       });
     });
 
@@ -647,7 +647,7 @@
     const mktLog = $("#mktLog");
     const logText = (p) => (p.marketing_opt_in_at
       ? `${fmtDate(p.marketing_opt_in_at)} 수신 ${p.marketing_opt_in ? "동의" : "거부"} 처리됨`
-      : "아직 수신에 동의하지 않았어요.");
+      : "아직 수신에 동의하지 않았습니다.");
     mkt.checked = !!profile.marketing_opt_in;
     mktLog.textContent = logText(profile);
     mkt.addEventListener("change", async () => {
@@ -656,10 +656,10 @@
       mkt.disabled = true;
       const { data, error } = await sb().from("profiles").update({ marketing_opt_in: want }).eq("id", user.id).select().maybeSingle();
       mkt.disabled = false;
-      if (error || !data) { mkt.checked = !want; msg(mout, error ? errText(error) : "저장하지 못했어요."); return; }
+      if (error || !data) { mkt.checked = !want; msg(mout, error ? errText(error) : "저장하지 못했습니다."); return; }
       profile = data;
       mktLog.textContent = logText(data);
-      msg(mout, `스누코치는 ${fmtDate(data.marketing_opt_in_at)}에 회원님의 마케팅 정보(이메일) 수신 ${want ? "동의" : "거부"}를 처리했어요.`, "ok");
+      msg(mout, `스누코치는 ${fmtDate(data.marketing_opt_in_at)}에 회원님의 마케팅 정보(이메일) 수신 ${want ? "동의" : "거부"}를 처리했습니다.`, "ok");
     });
 
     // 비밀번호 변경 (이메일로 가입한 회원만)
@@ -677,21 +677,21 @@
         await busy($('button[type="submit"]', f), "바꾸는 중…", async () => {
           const check = await sb().auth.signInWithPassword({ email: user.email, password: cur.value });
           if (check.error) {
-            if (check.error.code === "invalid_credentials") { setErr(cur, $("#curPwErr"), "현재 비밀번호가 맞지 않아요."); focusEl(cur); }
+            if (check.error.code === "invalid_credentials") { setErr(cur, $("#curPwErr"), "현재 비밀번호가 맞지 않습니다."); focusEl(cur); }
             else msg(pout, errText(check.error));
             return;
           }
           const { error } = await sb().auth.updateUser({ password: $("#chPw").value, current_password: cur.value });
           if (error) { msg(pout, errText(error)); return; }
           f.reset();
-          msg(pout, "비밀번호를 바꿨어요. 다른 기기에서도 새 비밀번호로 로그인해 주세요.", "ok");
+          msg(pout, "비밀번호를 바꿨습니다. 다른 기기에서도 새 비밀번호로 로그인해 주세요.", "ok");
         });
       });
     }
 
     // 모든 기기에서 로그아웃
     $("#signOutAll").addEventListener("click", async (e) => {
-      if (!window.confirm("이 기기를 포함해 로그인된 모든 기기에서 로그아웃할까요?")) return;
+      if (!window.confirm("이 기기를 포함해 로그인된 모든 기기에서 로그아웃하시겠습니까?")) return;
       await busy(e.currentTarget, "로그아웃 중…", async () => {
         const { error } = await sb().auth.signOut({ scope: "global" });
         if (error && !isNetworkError(error)) await sb().auth.signOut({ scope: "local" });
@@ -705,7 +705,7 @@
     const delBtn = $("#delBtn");
     delInput.addEventListener("input", () => { delBtn.disabled = delInput.value.trim() !== "탈퇴"; });
     delBtn.addEventListener("click", async () => {
-      if (!window.confirm("정말 탈퇴할까요? 회원 정보가 바로 삭제되며 되돌릴 수 없어요.")) return;
+      if (!window.confirm("정말 탈퇴하시겠습니까? 회원 정보가 바로 삭제되며 되돌릴 수 없습니다.")) return;
       await busy(delBtn, "탈퇴 처리 중…", async () => {
         const { error } = await sb().rpc("delete_my_account");
         if (error) { msg($("#delMsg"), errText(error)); return; }
@@ -736,8 +736,8 @@
         show(loading, false);
         // 관리자 확인에서 거절된 경우와 그 밖의 권한 오류를 구분해 보여 준다(원인 파악용)
         msg(out, error.code === "42501" && /관리자만/.test(error.message || "")
-          ? "관리자만 볼 수 있는 페이지예요. 관리자로 지정한 계정으로 로그인했는지 확인해 주세요."
-          : `회원 목록을 불러오지 못했어요. (${error.code || ""} ${error.message || ""})`);
+          ? "관리자만 볼 수 있는 페이지입니다. 관리자로 지정한 계정으로 로그인했는지 확인해 주세요."
+          : `회원 목록을 불러오지 못했습니다. (${error.code || ""} ${error.message || ""})`);
         return;
       }
       rows.push(...data);
@@ -793,7 +793,7 @@
         const td = document.createElement("td");
         td.colSpan = 8;
         td.className = "adm-empty";
-        td.textContent = rows.length ? "조건에 맞는 회원이 없어요." : "아직 회원이 없어요.";
+        td.textContent = rows.length ? "조건에 맞는 회원이 없습니다." : "아직 회원이 없습니다.";
         tr.append(td);
         body.append(tr);
       }
@@ -836,14 +836,14 @@
     $$("form input, form select, form button, [data-oauth]").forEach((el) => { el.disabled = true; });
   }
   const problem = configProblem();
-  if (problem === "missing") { stop("회원 기능을 준비하고 있어요. 문의는 카카오톡 채널로 부탁드려요.", "info"); return; }
+  if (problem === "missing") { stop("회원 기능을 준비하고 있습니다. 문의는 카카오톡 채널로 부탁드립니다.", "info"); return; }
   if (problem === "secret") {
     console.error("[스누코치] auth-config.js 에 비밀 키가 들어 있습니다. Supabase 에서 즉시 키를 폐기·재발급하고 Publishable key 로 바꾸세요.");
-    stop("보안 설정 오류로 회원 기능을 멈췄어요. 관리자에게 알려 주세요.");
+    stop("보안 설정 오류로 회원 기능을 멈췄습니다. 관리자에게 알려 주세요.");
     return;
   }
   if (!window.supabase || typeof window.supabase.createClient !== "function") {
-    stop("회원 기능을 불러오지 못했어요. 새로고침해 주세요.");
+    stop("회원 기능을 불러오지 못했습니다. 새로고침해 주세요.");
     return;
   }
   const pages = { login: pageLogin, signup: pageSignup, reset: pageReset, account: pageAccount, admin: pageAdmin };
