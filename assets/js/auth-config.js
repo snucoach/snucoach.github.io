@@ -9,5 +9,6 @@
 window.SNUCOACH_AUTH = Object.freeze({
   url: 'https://kjllkdorcgbfiqbjcfkd.supabase.co',
   key: 'sb_publishable_7vz-nwkAYXDsOgSfrUuptg_Pzo2GXMq',
-  kakao: false // 카카오 로그인 설정(가이드 5단계)을 마친 뒤 true
+  google: false, // 구글 로그인 설정(가이드 6단계)을 마친 뒤 true
+  kakao: false   // 카카오 로그인 설정(가이드 7단계)을 마친 뒤 true
 });

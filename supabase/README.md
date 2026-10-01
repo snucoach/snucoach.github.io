@@ -115,7 +115,30 @@ where id = (select id from auth.users where email = '관리자@이메일.com');
 
 3. 마이페이지에 ‘회원 관리(관리자)’ 버튼이 생긴다. 회원 목록·검색·CSV 내려받기를 할 수 있다.
 
-## 6. (선택) 카카오 로그인
+## 6. (선택) 구글 로그인
+
+구글은 사업자 인증 없이 바로 쓸 수 있다. 약 10분.
+
+1. https://console.cloud.google.com → 위쪽 프로젝트 선택 → **새 프로젝트** (이름 `snucoach`)
+2. 왼쪽 메뉴 **Google 인증 플랫폼(Google Auth Platform)** → **시작하기**
+   - 앱 이름 `스누코치`, 사용자 지원 이메일: 스누코치 Gmail
+   - 대상: **외부(External)**, 연락처 이메일: 스누코치 Gmail → 만들기
+3. **클라이언트** → **클라이언트 만들기**
+   - 애플리케이션 유형: **웹 애플리케이션**, 이름 `snucoach-web`
+   - 승인된 JavaScript 원본: `https://snucoach.github.io`
+   - 승인된 리디렉션 URI: `https://<프로젝트 주소>.supabase.co/auth/v1/callback`
+   - 만들기 → **클라이언트 ID**와 **클라이언트 보안 비밀번호** 복사
+4. **대상(Audience)** → 게시 상태 **앱 게시(프로덕션으로 푸시)**. 테스트 상태로 두면 테스트 사용자로 등록한 사람만 로그인된다.
+   (이메일·이름만 받으므로 구글 심사는 필요 없다.)
+5. Supabase → Authentication → Sign In / Providers → **Google** → Enable
+   - Client IDs: 3번의 클라이언트 ID / Client Secret: 3번의 보안 비밀번호 → Save
+6. `assets/js/auth-config.js` 의 `google` 을 `true` 로 바꾼다.
+
+> 구글 동의 화면에는 `….supabase.co(으)로 이동` 처럼 Supabase 주소가 보인다. `snucoach` 주소로 보이게 하려면 도메인 구입 + Supabase 유료 커스텀 도메인이 필요하다.
+
+구글로 처음 로그인한 회원도 마이페이지에서 ‘가입 마무리’(회원 구분·학년·약관 동의)를 먼저 한다.
+
+## 7. (선택) 카카오 로그인
 
 카카오에서 이메일을 받으려면 **비즈 앱 전환(사업자 정보 등록)** 이 필요하다. Supabase 카카오 연동은 이메일이 있어야 동작한다.
 
@@ -133,7 +156,7 @@ where id = (select id from auth.users where email = '관리자@이메일.com');
 
 카카오로 처음 로그인한 회원은 마이페이지에서 ‘가입 마무리’(이름·회원 구분·학년·약관 동의)를 먼저 하게 된다.
 
-## 7. 일시정지 방지와 유지 관리
+## 8. 일시정지 방지와 유지 관리
 
 - 무료 플랜은 일주일 동안 DB 활동이 거의 없으면 **일시정지**된다(데이터는 보존, 로그인 불가).
   `.github/workflows/supabase-keepalive.yml` 이 매일 한 번 데이터 없는 함수(`ping`)를 호출해 이를 막는다.
@@ -141,7 +164,7 @@ where id = (select id from auth.users where email = '관리자@이메일.com');
 - 그래도 일시정지되면 Supabase 대시보드에서 **Restore** 를 누른다.
 - 회원 기능이 매출에 중요해지면 Pro 플랜(월 25달러, 일시정지 없음·자동 백업)을 검토한다.
 
-## 8. 공개 전 확인할 것 (법적 사항)
+## 9. 공개 전 확인할 것 (법적 사항)
 
 아래는 코드로 해결할 수 없는 부분이라 직접 확인이 필요하다. 전문가 검토를 권장한다.
 
@@ -152,7 +175,7 @@ where id = (select id from auth.users where email = '관리자@이메일.com');
 - [ ] 마케팅 메일을 실제로 보낼 때: 제목 앞 `(광고)` 표기, 수신거부 방법 안내, 수신 동의 회원에게 **2년마다 동의 여부 재확인** 안내(정보통신망법)
 - [ ] 개인정보보호위원회 ‘개인정보 처리방침 만들기’(privacy.go.kr)로 한 번 대조
 
-## 9. 문제 해결
+## 10. 문제 해결
 
 | 증상 | 원인과 조치 |
 |---|---|

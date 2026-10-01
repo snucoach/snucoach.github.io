@@ -108,6 +108,14 @@
   color: rgba(0,0,0,.85); background: #FEE500; font-weight: 700;
 }
 .btn-kakao:hover { background: #F5DC00; }
+.btn-google {
+  width: 100%; justify-content: center; gap: 10px; font-size: 16px; padding: 14px 20px;
+  color: #1F1F1F; background: #fff; border: 1px solid #DADCE0; font-weight: 700;
+}
+.btn-google:hover { background: #F8F9FA; border-color: #C6CAD0; }
+.btn-google svg { flex-shrink: 0; }
+.auth-social { display: grid; gap: 10px; }
+.auth-social .auth-or { margin: 8px 0 18px; }
 .btn-kakao svg { flex-shrink: 0; }
 .auth-or { display: flex; align-items: center; gap: 12px; margin: 18px 0; font-size: 13px; color: var(--text-faint); }
 .auth-or::before, .auth-or::after { content: ''; flex: 1; height: 1px; background: var(--line-solid, #E3E8F5); }

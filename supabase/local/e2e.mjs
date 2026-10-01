@@ -354,11 +354,21 @@ try {
       body: JSON.stringify({ email: C, password: 'abcd1234', email_confirm: true, user_metadata: { name: '카카오닉네임' } }),
     });
     check('동의 없는 회원 생성(카카오 가입 흉내)', r.status === 200);
-    const kctx = await newContext(browser, { config: CONFIG({ kakao: true }) });
+    const kctx = await newContext(browser, { config: CONFIG({ kakao: true, google: true }) });
     const kp = await kctx.newPage();
     kp.on('dialog', (d) => d.accept());
     await kp.goto(`${SITE}/login.html`);
-    check('kakao:true 이면 카카오 버튼 표시', await visible(kp, '[data-kakao-login]'));
+    check('google·kakao:true 이면 두 버튼 표시', await visible(kp, '[data-oauth="kakao"]') && await visible(kp, '[data-oauth="google"]'));
+    const gp = await kctx.newPage();
+    await gp.goto(`${SITE}/login.html`);
+    const [authReq] = await Promise.all([
+      gp.waitForRequest((r) => r.url().includes('/auth/v1/authorize')),
+      gp.click('[data-oauth="google"]'),
+    ]);
+    const au = new URL(authReq.url());
+    check('구글 버튼 → 구글 인증 시작(PKCE, 마이페이지로 복귀)', au.searchParams.get('provider') === 'google'
+      && !!au.searchParams.get('code_challenge') && (au.searchParams.get('redirect_to') || '').startsWith(`${SITE}/account.html`), authReq.url());
+    await gp.close();
     await kp.screenshot({ path: `${SHOTS}login-kakao.png` });
     await kp.fill('#loginEmail', C);
     await kp.fill('#loginPw', 'abcd1234');
@@ -380,7 +390,7 @@ try {
     // ── 14. 관리자 화면 ──────────────────────────────────
     await kp.goto(`${SITE}/admin.html`);
     await kp.waitForSelector('#authMsg:not([hidden])');
-    check('일반 회원은 관리자 화면 거부', (await text(kp, '#authMsg')) === '관리자만 볼 수 있는 페이지예요.');
+    check('일반 회원은 관리자 화면 거부', (await text(kp, '#authMsg')).startsWith('관리자만 볼 수 있는 페이지예요.'));
     sql(`update public.profiles set is_admin = true, name = '=HYPERLINK("x")' where id = (select id from auth.users where email='${C}')`);
     await kp.goto(`${SITE}/account.html`);
     await kp.waitForSelector('#acct:not([hidden])');

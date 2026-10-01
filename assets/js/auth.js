@@ -267,17 +267,25 @@
     };
   }
 
-  // 카카오 로그인 버튼
-  function wireKakao(beforeRedirect) {
-    if (!CFG.kakao) return;
-    $$("[data-auth-kakao]").forEach((el) => show(el));
-    $$("[data-kakao-login]").forEach((btn) => btn.addEventListener("click", async () => {
-      if (beforeRedirect) beforeRedirect();
-      await busy(btn, "카카오로 이동 중…", async () => {
-        const { error } = await sb().auth.signInWithOAuth({ provider: "kakao", options: { redirectTo: site("account.html") } });
-        if (error) msg($("#authMsg"), errText(error));
+  // 구글·카카오 로그인 버튼 (auth-config.js 에서 켠 것만 보인다)
+  const PROVIDER_NAMES = { email: "이메일", google: "구글", kakao: "카카오" };
+  const oauthEnabled = () => ["google", "kakao"].filter((p) => CFG[p]);
+  function wireOAuth(beforeRedirect) {
+    const enabled = oauthEnabled();
+    if (!enabled.length) return;
+    $$("[data-auth-social]").forEach((el) => show(el));
+    $$("[data-oauth]").forEach((btn) => {
+      const provider = btn.dataset.oauth;
+      if (!enabled.includes(provider)) return;
+      show(btn);
+      btn.addEventListener("click", async () => {
+        if (beforeRedirect) beforeRedirect();
+        await busy(btn, `${PROVIDER_NAMES[provider]}로 이동 중…`, async () => {
+          const { error } = await sb().auth.signInWithOAuth({ provider, options: { redirectTo: site("account.html") } });
+          if (error) msg($("#authMsg"), errText(error));
+        });
       });
-    }));
+    });
   }
 
   async function resendSignup(email, out, btn) {
@@ -302,7 +310,7 @@
     if (notice) msg(out, ...notice);
 
     rememberBox.checked = remember.get();
-    wireKakao(() => remember.set(rememberBox.checked));
+    wireOAuth(() => remember.set(rememberBox.checked));
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
       const email = $("#loginEmail").value.trim();
@@ -342,7 +350,7 @@
   async function pageSignup() {
     const form = $("#signupForm");
     const out = $("#authMsg");
-    wireKakao(() => remember.set(true));
+    wireOAuth(() => remember.set(true));
     const prof = profileForm(form, "su");
     const consent = consentBox($("#suConsent"), "su");
     const email = $("#suEmail");
@@ -446,7 +454,7 @@
   function wireRequest() {
     if (wireRequest.done) return;
     wireRequest.done = true;
-    if (CFG.kakao) $$("[data-auth-kakao]").forEach((el) => show(el));
+    if (oauthEnabled().length) $$("[data-auth-social]").forEach((el) => show(el));
     const form = $("#reqForm");
     const out = $("#authMsg");
     const send = async (email, outEl) => {
@@ -610,7 +618,7 @@
     };
     head(profile);
     $("#acctEmail").textContent = user.email || "-";
-    $("#acctProvider").textContent = providers.map((x) => ({ email: "이메일", kakao: "카카오" }[x] || x)).join(", ") || "-";
+    $("#acctProvider").textContent = providers.map((x) => PROVIDER_NAMES[x] || x).join(", ") || "-";
     $("#acctJoined").textContent = fmtDate(user.created_at);
     show($("#adminLink"), !!profile.is_admin);
     show($("#acct"));
@@ -726,7 +734,10 @@
       const { data, error } = await sb().rpc("admin_list_members").range(from, from + 999);
       if (error) {
         show(loading, false);
-        msg(out, error.code === "42501" ? "관리자만 볼 수 있는 페이지예요." : errText(error));
+        // 관리자 확인에서 거절된 경우와 그 밖의 권한 오류를 구분해 보여 준다(원인 파악용)
+        msg(out, error.code === "42501" && /관리자만/.test(error.message || "")
+          ? "관리자만 볼 수 있는 페이지예요. 관리자로 지정한 계정으로 로그인했는지 확인해 주세요."
+          : `회원 목록을 불러오지 못했어요. (${error.code || ""} ${error.message || ""})`);
         return;
       }
       rows.push(...data);
@@ -758,7 +769,7 @@
     const search = $("#admSearch");
     const onlyMkt = $("#admMkt");
     const body = $("#admRows");
-    const provider = (r) => ({ email: "이메일", kakao: "카카오" }[r.provider] || r.provider);
+    const provider = (r) => PROVIDER_NAMES[r.provider] || r.provider;
     const status = (r) => (!r.email_confirmed ? "메일 인증 전" : !r.profile_completed ? "가입 마무리 전" : "");
     let shown = rows;
     function render() {
@@ -822,7 +833,7 @@
     msg($("#authMsg"), text, kind);
     show($("#pageLoading"), false);
     if (PAGE === "reset") show($("#reqCard"));
-    $$("form input, form select, form button, [data-kakao-login]").forEach((el) => { el.disabled = true; });
+    $$("form input, form select, form button, [data-oauth]").forEach((el) => { el.disabled = true; });
   }
   const problem = configProblem();
   if (problem === "missing") { stop("회원 기능을 준비하고 있어요. 문의는 카카오톡 채널로 부탁드려요.", "info"); return; }
