@@ -16,7 +16,7 @@
     { key: "t1", name: "탐구 1", pick: true, max: 50, kind: "rel" },
     { key: "t2", name: "탐구 2", pick: true, max: 50, kind: "rel" },
     { key: "l2", name: "제2외국어·한문", col: "D", abs: [45, 40, 35, 30, 25, 20, 15, 10], max: 50, kind: "abs", optional: true,
-      note: "서울대 인문계열(경영대학·간호대학 포함)은 자유전공학부를 빼면 제2외국어·한문 응시가 지원 조건이에요. 응시했거나 응시할 예정이면 넣어 주세요(선택)." },
+      note: "서울대 인문계열(경영대학·간호대학 포함)은 자유전공학부를 빼면 제2외국어·한문 응시가 지원 조건입니다. 응시했거나 응시할 예정이면 넣어 주세요(선택)." },
   ];
   const MAIN = SUBJ.filter((s) => !s.optional);
   const PK = window.JungsiPicks; // picks.js: (대학, 군, 계열) 묶음 → 구간별 대학 목록
@@ -43,7 +43,7 @@
   const $ = (s, el = document) => el.querySelector(s);
   const esc = (x) => String(x).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const f = (n) => Number(n).toLocaleString("ko-KR");
-  const VER = "20261001b"; // worker.js·data/ 파일을 고치면 worker.js 의 DATA_V 와 함께 올림(브라우저 캐시)
+  const VER = "20261001c"; // worker.js·data/ 파일을 고치면 worker.js 의 DATA_V 와 함께 올림(브라우저 캐시)
   const worker = new Worker("worker.js?v=" + VER);
   let reqId = 0, ready = false;
 
@@ -136,7 +136,7 @@
     const v = scoreOf(s, false), ov = state.ov[s.key] || {};
     if (v) { el.innerHTML = fields(s, v, ov); return; }
     // 원점수가 2026 변환표에 없으면 표준점수·백분위를 직접 받는다
-    el.innerHTML = !empty(s.key) && colOf(s) ? `<span class="warn">2026 수능 변환표에 없는 원점수예요. 표준점수·백분위를 직접 넣어 주세요.</span>` + fields(s, {}, ov) : "";
+    el.innerHTML = !empty(s.key) && colOf(s) ? `<span class="warn">2026 수능 변환표에 없는 원점수입니다. 표준점수·백분위를 직접 넣어 주세요.</span>` + fields(s, {}, ov) : "";
   }
   function fields(s, v, ov) {
     const user = ov.std != null || ov.pct != null;
@@ -148,7 +148,7 @@
   }
   // 직접 넣은 백분위가 소수면 정수로 반올림해 계산한다는 안내(배치표 변환표준점수 표는 정수 백분위만 있음)
   // 0~100 밖이면 반올림 안내 대신 validate()의 범위 오류만 보이게 함
-  const pctNote = (ov) => (typeof ov.pct === "number" && Number.isFinite(ov.pct) && !Number.isInteger(ov.pct) && ov.pct >= 0 && ov.pct <= 100 ? `백분위는 정수로 반올림해 계산해요(${ov.pct} → ${Math.round(ov.pct)}).` : "");
+  const pctNote = (ov) => (typeof ov.pct === "number" && Number.isFinite(ov.pct) && !Number.isInteger(ov.pct) && ov.pct >= 0 && ov.pct <= 100 ? `백분위는 정수로 반올림해 계산합니다(${ov.pct} → ${Math.round(ov.pct)}).` : "");
   function nextCut(s) { // 다음 등급까지 필요한 원점수(2026 수능 기준)
     if (empty(s.key) || (!colOf(s) && s.kind === "rel")) return null;
     const cur = scoreOf(s, true); if (!cur || cur.grade == null || cur.grade <= 1) return null;
@@ -177,19 +177,19 @@
     const unsel = SUBJ.filter((s) => (s.opts || s.pick) && !state.sel[s.key]).map((s) => s.name);
     if (unsel.length) return `${unsel.join("·")} 과목을 골라 주세요.`;
     const need = MAIN.filter((s) => empty(s.key)).map((s) => s.name);
-    if (need.length) return `${need.join("·")} 원점수를 넣어 주세요. 배치표는 국어·수학·영어·한국사와 탐구 2과목이 모두 있어야 지원 가능 여부를 계산해요.`;
-    if (state.sel.t1 === state.sel.t2) return "탐구 1과 탐구 2에 같은 과목을 고를 수 없어요.";
+    if (need.length) return `${need.join("·")} 원점수를 넣어 주세요. 배치표는 국어·수학·영어·한국사와 탐구 2과목이 모두 있어야 지원 가능 여부를 계산합니다.`;
+    if (state.sel.t1 === state.sel.t2) return "탐구 1과 탐구 2에 같은 과목을 고를 수 없습니다.";
     for (const s of SUBJ) {
       if (empty(s.key)) continue; const r = String(state.raw[s.key]).trim();
       if (!/^\d+$/.test(r) || +r < 0 || +r > s.max) return `${s.name} 원점수는 0~${s.max}점 사이 정수로 넣어 주세요.`;
       if (s.kind === "rel") {
         const v = scoreOf(s, false); const ov = state.ov[s.key] || {};
-        if (!v || v.std == null || v.pct == null) return `${s.name} 표준점수·백분위를 계산할 수 없어요. 직접 넣어 주세요.`;
+        if (!v || v.std == null || v.pct == null) return `${s.name} 표준점수·백분위를 계산할 수 없습니다. 직접 넣어 주세요.`;
         if (ov.std != null && (ov.std < 0 || ov.std > 200)) return `${s.name} 표준점수를 다시 확인해 주세요.`;
         if (ov.pct != null && (ov.pct < 0 || ov.pct > 100)) return `${s.name} 백분위는 0~100 사이로 넣어 주세요.`;
         // 목표 점수도 계산돼야 함(빠지면 목표 결과가 조용히 틀어짐)
         const g = scoreOf(s, true);
-        if (!s.optional && (!g || g.std == null || g.pct == null)) return `${s.name} 목표 점수를 계산할 수 없어요. 목표 점수를 다시 맞춰 주세요.`;
+        if (!s.optional && (!g || g.std == null || g.pct == null)) return `${s.name} 목표 점수를 계산할 수 없습니다. 목표 점수를 다시 맞춰 주세요.`;
       }
     }
     return "";
@@ -262,10 +262,10 @@
       <div class="box"><div class="lab">지금 성적</div><div class="big">${sNow || "-"}<small> 점</small></div><div class="line">국·수·탐 표준점수 합 · 영어 ${gradeOfKey("eng", false)}등급 · 한국사 ${gradeOfKey("hist", false)}등급</div></div>
       <div class="box t"><div class="lab">목표 점수</div><div class="big">${sGoal || "-"}<small> 점${sGoal > sNow ? ` (+${Math.round((sGoal - sNow) * 10) / 10})` : ""}</small></div><div class="line">영어 ${gradeOfKey("eng", true)}등급 · 한국사 ${gradeOfKey("hist", true)}등급</div></div>`;
     $("#hook").innerHTML = !hasGoal()
-      ? "STEP 2에서 과목별로 목표 점수를 설정해보세요. 그 목표 점수로 상향·소신·적정 대학을 다시 뽑아 드려요."
-      : cntGoal > cntNow ? `목표 점수가 되면 적정 구간(든든한 대학)에 드는 대학이 <b>지금 ${f(cntNow)}곳 → 목표 ${f(cntGoal)}곳</b>으로 늘어나요.`
-      : cntGoal < cntNow ? `이 목표로는 적정 구간(든든한 대학)에 드는 대학이 <b>지금 ${f(cntNow)}곳 → 목표 ${f(cntGoal)}곳</b>으로 줄어요.`
-      : `이 목표로는 적정 구간(든든한 대학)에 드는 대학이 <b>${f(cntNow)}곳</b> 그대로예요. 과목별 점수를 조금 더 올려 보세요.`;
+      ? "STEP 2에서 과목별로 목표 점수를 설정해보세요. 그 목표 점수로 상향·소신·적정 대학을 다시 뽑아 드립니다."
+      : cntGoal > cntNow ? `목표 점수가 되면 적정 구간(든든한 대학)에 드는 대학이 <b>지금 ${f(cntNow)}곳 → 목표 ${f(cntGoal)}곳</b>으로 늘어납니다.`
+      : cntGoal < cntNow ? `이 목표로는 적정 구간(든든한 대학)에 드는 대학이 <b>지금 ${f(cntNow)}곳 → 목표 ${f(cntGoal)}곳</b>으로 줄어듭니다.`
+      : `이 목표로는 적정 구간(든든한 대학)에 드는 대학이 <b>${f(cntNow)}곳</b> 그대로입니다. 과목별 점수를 조금 더 올려 보세요.`;
     $("#cnote").textContent = calcNote();
   }
   // 배치표가 계산하지 못하는 점수 범위 안내(원자료 엑셀도 같은 한계): 탐구 백분위 10 미만은 변환표준점수 표(백분위 10~100) 밖이라 변표 0점,
@@ -276,8 +276,8 @@
       if (x.kind !== "rel" || !x.pick) continue;
       for (const t of sc) { const v = scoreOf(x, t); if (!v || typeof v.pct !== "number") continue; if (v.pct <= 0) zero = true; else if (v.pct < 10) low = true; }
     }
-    return [zero ? "탐구 백분위가 0이면 배치표가 응시하지 않은 과목으로 봐서, 대부분 대학이 지원 불가로 나와요." : "",
-      low ? "탐구 백분위가 10 미만이면 배치표에 변환표준점수가 없어서, 변환표준점수를 쓰는 대학에서는 그 과목이 0점으로 계산돼요." : ""].filter(Boolean).join(" ");
+    return [zero ? "탐구 백분위가 0이면 배치표가 응시하지 않은 과목으로 봐서, 대부분 대학이 지원 불가로 나옵니다." : "",
+      low ? "탐구 백분위가 10 미만이면 배치표에 변환표준점수가 없어서, 변환표준점수를 쓰는 대학에서는 그 과목이 0점으로 계산됩니다." : ""].filter(Boolean).join(" ");
   }
 
   // ── 결과: 상향·소신·적정 대학 목록 (대학·군·계열 묶음, 구간마다 최대 10곳) ──
@@ -322,7 +322,7 @@
     const gen = rows.filter((r) => !r.med), med = rows.filter((r) => r.med); // 의약 전용 행은 따로 모아 뒤에
     const few = n < 8 ? fewText(b.key, goal, n) : "";
     const note = n && few ? `<p class="bnote">${few}</p>` : "";
-    const body = !n ? `<p class="bempty">이 구간에 드는 대학이 없어요.${few ? " " + few : ""}</p>`
+    const body = !n ? `<p class="bempty">이 구간에 드는 대학이 없습니다.${few ? " " + few : ""}</p>`
       : note + (gen.length ? list(gen) : "") + (med.length ? (gen.length ? `<p class="subh">의·치·한·약·수</p>` : "") + list(med) : "");
     return `<div class="band ${b.key}"><h3><span class="tag" aria-hidden="true">${b.label}</span>${title} <small>${b.desc}</small></h3>${body}</div>`;
   }
@@ -331,7 +331,7 @@
   function fewText(key, goal, n) {
     const who = goal ? "목표 점수" : "지금 성적";
     const what = key === "up" ? `합격선이 ${who}보다 조금 높은 대학이` : key === "mid" ? `합격선이 ${goal ? "목표 점수와" : "지금 성적과"} 비슷한 대학이` : "";
-    return !what ? "" : n ? `${what} 많지 않아서 ${n}곳만 나와요.` : `${what} 거의 없어요.`;
+    return !what ? "" : n ? `${what} 많지 않아서 ${n}곳만 나옵니다.` : `${what} 거의 없습니다.`;
   }
   function renderPicks() {
     if (!state.last || !state.depts) return;
@@ -339,7 +339,7 @@
     const pk = PK.build(state.depts, res, other, pickOpt(goal));
     state.pk = pk;
     const anyRef = BANDS.some((b) => pk[b.key].some((r) => r.pct));
-    const legend = `<p class="plegend">${goal ? "목표 점수" : "지금 성적"} 기준이에요.${anyRef ? ` <span class="ref">참고</span> 표시는 ${REF_TIP}이에요.` : ""}</p>`;
+    const legend = `<p class="plegend">${goal ? "목표 점수" : "지금 성적"} 기준입니다.${anyRef ? ` <span class="ref">참고</span> 표시는 ${REF_TIP}입니다.` : ""}</p>`;
     $("#picks").innerHTML = legend + BANDS.map((b) => bandHtml(b, pk[b.key], goal, pk.counts[b.key])).join("");
     renderPlan(pk);
   }
@@ -362,7 +362,7 @@
     $("#tbar-n").textContent = `목표 대학 ${new Set(ts.map((t) => t.univ)).size}곳`;
     $("#tbar-list").innerHTML = ts.map((t) => (inList(t) ? esc(`${t.univ} ${t.major}`) : `<s>${esc(`${t.univ} ${t.major}`)}</s>`)).join(", ");
     $("#tbar-note").classList.toggle("warn", gone.length > 0);
-    $("#tbar-note").textContent = gone.length ? `줄 그은 ${gone.length}곳은 다시 계산한 목록에 없어요. 필요 없으면 지우기를 눌러 주세요.` : "누르면 목표 문구가 복사돼요. 상담 신청서에 붙여 넣어 주세요.";
+    $("#tbar-note").textContent = gone.length ? `줄 그은 ${gone.length}곳은 다시 계산한 목록에 없습니다. 필요 없으면 지우기를 눌러 주세요.` : "누르면 목표 문구가 복사됩니다. 상담 신청서에 붙여 넣어 주세요.";
   }
   // 복사: 클릭 처리 안에서 바로(새 탭이 열리기 전에) 복사한다. execCommand가 안 되면 Clipboard API
   // 복사용 칸을 잠깐 선택하느라 옮겨 간 키보드 초점은 누른 버튼·링크로 되돌림
@@ -382,7 +382,7 @@
   }
   function copyGoal(text) {
     if (!text) return;
-    copyNow(text).then((ok) => toast(ok ? "고른 목표를 복사했어요. 상담 신청서에 붙여 넣어 주세요." : `복사하지 못했어요. 상담 신청서에 이렇게 적어 주세요. ${text}`, 6000));
+    copyNow(text).then((ok) => toast(ok ? "고른 목표를 복사했습니다. 상담 신청서에 붙여 넣어 주세요." : `복사하지 못했습니다. 상담 신청서에 이렇게 적어 주세요. ${text}`, 6000));
   }
   // 입력과 고른 목표만 이 탭에 잠시 보관(새로고침해도 다시 넣지 않게). 스누코치로 보내지 않음
   const STATE_KEY = "jungsi_state_v2";
@@ -408,7 +408,7 @@
       return `<tr><th>${s.name}</th><td>${r} → <b>${to}</b></td><td>${d ? `+${d}점` : "-"}</td><td>${g0}${g1 !== g0 ? ` → <b>${g1}</b>` : ""}등급</td></tr>`;
     }).join("");
     // 가장 높은 소신·상향 대학(없으면 적정 맨 위)의 '대학 계열'. 트랙에 맞는 의약이 아닌 행을 먼저 고르고, 없을 때만 나머지
-    // 구간 판정 행을 먼저 보고, 없으면 8곳을 채우려고 넣은 이웃 판정 행(상향의 '쉽지 않아요' 등)
+    // 구간 판정 행을 먼저 보고, 없으면 8곳을 채우려고 넣은 이웃 판정 행(상향의 '쉽지 않습니다' 등)
     const byLv = (a) => a.slice().sort((x, y) => y.lv - x.lv);
     const good = (r) => !r.med && !r.cross;
     const hi = byLv([...pk.up, ...pk.mid].filter((r) => !r.fill)), hiF = byLv([...pk.up, ...pk.mid].filter((r) => r.fill));
@@ -416,22 +416,22 @@
     const topU = top ? top.u : "", topM = top ? PK.gyLabel([repChip(top).gy]) : "";
     const name = top ? `${topU} ${topM}` : "목표 대학";
     $("#plan").innerHTML = `<span class="step">목표까지 가는 길</span>
-      <h2>목표 대학까지는 <em>매일 무엇을 얼마나</em> 하느냐가 관건이에요</h2>
-      <p class="lead">${hasGoal() ? "위 목록은 아래처럼 점수를 올렸을 때 기준이에요." : "STEP 2에서 목표 점수를 올리면 과목별로 얼마나 올려야 하는지 정리해 드려요."}</p>
+      <h2>목표 대학까지는 <em>매일 무엇을 얼마나</em> 하느냐가 관건입니다</h2>
+      <p class="lead">${hasGoal() ? "위 목록은 아래처럼 점수를 올렸을 때 기준입니다." : "STEP 2에서 목표 점수를 올리면 과목별로 얼마나 올려야 하는지 정리해 드립니다."}</p>
       <table class="gap"><thead><tr><th>과목</th><th>원점수</th><th>올릴 점수</th><th>등급</th></tr></thead><tbody>${rows}</tbody></table>
       <ol class="how">
-        <li><b>목표 대학 기준으로 과목별 목표 점수와 커리큘럼을 세워요.</b><span>${esc(name)}처럼 목표가 정해지면, 과목마다 몇 점을 어느 시기까지 올릴지 거꾸로 계산해 공부 순서를 짜요.</span></li>
-        <li><b>목표 수준에 맞는 공부 페이스와 공부량을 매일 점검해요.</b><span>매일 카톡 플래너 피드백으로 계획대로 했는지, 양과 방법이 목표에 맞는지 확인해요.</span></li>
-        <li><b>목표에 못 미치면 무엇을 고칠지 짚고, 계속 조정해요.</b><span>모의고사와 매일 기록을 보고 부족한 과목과 공부법을 바로 고치고, 지치지 않게 격려하며 끝까지 함께 가요.</span></li>
+        <li><b>목표 대학 기준으로 과목별 목표 점수와 커리큘럼을 세웁니다.</b><span>${esc(name)}처럼 목표가 정해지면, 과목마다 몇 점을 어느 시기까지 올릴지 거꾸로 계산해 공부 순서를 짭니다.</span></li>
+        <li><b>목표 수준에 맞는 공부 페이스와 공부량을 매일 점검합니다.</b><span>매일 카톡 플래너 피드백으로 계획대로 했는지, 양과 방법이 목표에 맞는지 확인합니다.</span></li>
+        <li><b>목표에 못 미치면 무엇을 고칠지 짚고, 계속 조정합니다.</b><span>모의고사와 매일 기록을 보고 부족한 과목과 공부법을 바로 고치고, 지치지 않게 격려하며 끝까지 함께 갑니다.</span></li>
       </ol>
       <a class="bigcta" href="${FORM}?utm_source=jungsi_calc&amp;utm_medium=plan" target="_blank" rel="noopener" data-goal="${esc(top ? `목표: ${name}` : "")}">이 목표로 무료 학습 상담 신청하기</a>
-      <p class="sub">서울대 치의학과 대표가 직접, 1:1 화상 컨설팅과 매일 카톡 플래너 피드백으로 관리해요. 첫 상담은 무료예요.${top || state.targets.size ? " 누르면 목표 문구가 복사돼요. 상담 신청서에 붙여 넣어 주세요." : ""}</p>`;
+      <p class="sub">서울대 치의학과 대표가 직접, 1:1 화상 컨설팅과 매일 카톡 플래너 피드백으로 관리합니다. 첫 상담은 무료입니다.${top || state.targets.size ? " 누르면 목표 문구가 복사됩니다. 상담 신청서에 붙여 넣어 주세요." : ""}</p>`;
   }
 
   worker.onmessage = (ev) => {
     const m = ev.data;
     if (m.type === "ready") { ready = true; loadBase(); if (state.conv) { $("#loading").textContent = ""; $("#go").disabled = false; } return; }
-    if (m.type === "error") { $("#loading").textContent = "데이터를 불러오지 못했어요. 새로고침해 주세요."; return; }
+    if (m.type === "error") { $("#loading").textContent = "데이터를 불러오지 못했습니다. 새로고침해 주세요."; return; }
     if (m.type !== "placed") return;
     if (m.depts) state.depts = m.depts;
     if (m.data) state.data = m.data;
@@ -447,7 +447,7 @@
   };
   loadLocalState();
   fetch("data/conv2026.json?v=" + VER).then((r) => r.json()).then((c) => { state.conv = c; clampDeltas(); renderInputs(); renderGoals(); if (ready) { $("#loading").textContent = ""; $("#go").disabled = false; } })
-    .catch(() => { $("#loading").textContent = "변환표를 불러오지 못했어요. 새로고침해 주세요."; });
+    .catch(() => { $("#loading").textContent = "변환표를 불러오지 못했습니다. 새로고침해 주세요."; });
   // 환산식 곡선. 워커가 같은 주소로 다 읽은 뒤(ready)에 불러와 브라우저 캐시에서 받는다(두 번 내려받지 않게).
   //  못 읽어도 계산은 되고, 8곳 채우기만 줄어듦
   function loadBase() {
@@ -493,7 +493,7 @@
     else if (b.matches("#track button")) { state.track = b.dataset.t; state.trackAuto = false; syncTrack(); saveLocalState(); if (state.last) { summarize(state.last); renderPicks(); renderTargetBar(); } }
     else if (b.id === "share") {
       const data = { title: "대학 라인 잡기(정시) | 스누코치", url: location.href.split("#")[0] };
-      if (navigator.share) navigator.share(data).catch(() => {}); else copyNow(data.url).then((ok) => toast(ok ? "주소를 복사했어요." : "주소창의 주소를 복사해 주세요."));
+      if (navigator.share) navigator.share(data).catch(() => {}); else copyNow(data.url).then((ok) => toast(ok ? "주소를 복사했습니다." : "주소창의 주소를 복사해 주세요."));
     }
   });
   document.addEventListener("input", (e) => {
