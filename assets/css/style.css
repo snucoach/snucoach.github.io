@@ -2245,3 +2245,38 @@ body { color: var(--text); }
 .ev-card .ev-btn:focus-visible { outline: none; }
 .ev-card .ev-btn:focus-visible::after { outline: 3px solid var(--blue); outline-offset: 3px; }
 .p-event .ev-sec .plan-foot { max-width: 560px; }
+
+/* ============================================================
+   회원 메뉴 — 상단 '로그인 ↔ 마이페이지', 드로어 바로가기, 푸터 약관 링크
+   (설정 전에는 hidden 으로 숨겨져 있고 site.js 가 보여 준다)
+   ============================================================ */
+.nav-auth {
+  flex-shrink: 0; display: inline-flex; align-items: center; gap: 6px; min-height: 44px;
+  margin-left: 8px; padding: 8px 10px; border-radius: 10px;
+  font-size: 14.5px; font-weight: 650; color: var(--text); text-decoration: none; white-space: nowrap;
+  transition: color .18s ease, background .18s ease;
+}
+.nav-auth[hidden] { display: none; }
+.nav-auth:hover { color: var(--navy); background: rgba(15,15,112,.05); }
+.nav-auth:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+.nav-auth .ico { flex-shrink: 0; }
+@media (max-width: 640px) {
+  .nav-auth { margin-left: auto; width: 42px; height: 42px; min-height: 0; padding: 0; justify-content: center; }
+  .nav-auth .nav-auth-lb {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+  }
+  .nav-auth:not([hidden]) ~ .nav-toggle { margin-left: 2px; }
+}
+.drawer-auth {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  margin-top: 4px; padding: 14px 16px; border-radius: 12px;
+  background: var(--sky-2); color: var(--navy); font-size: 15.5px; font-weight: 750; text-decoration: none;
+}
+.drawer-auth[hidden] { display: none; }
+.drawer-auth::after { content: '›'; font-size: 19px; font-weight: 700; }
+.drawer-auth:focus-visible { outline: 2px solid var(--navy); outline-offset: 2px; }
+.footer-legal { display: flex; flex-wrap: wrap; gap: 4px 16px; margin-top: 4px; }
+.footer-legal a { color: rgba(235,240,250,.62); font-size: 13px; text-decoration: none; }
+.footer-legal a:hover { color: #fff; text-decoration: underline; }
+.footer-legal a b { color: rgba(235,240,250,.86); font-weight: 750; }

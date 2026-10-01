@@ -1,34 +1,22 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<base href="/">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>페이지를 찾을 수 없습니다 | 스누코치</title>
-<meta name="description" content="요청하신 페이지를 찾을 수 없습니다. 스누코치 홈에서 학습코칭 안내와 후기를 확인하세요.">
-<link rel="canonical" href="https://snucoach.github.io/404.html">
-<meta property="og:type" content="website">
-<meta property="og:site_name" content="스누코치 학습코칭">
-<meta property="og:title" content="페이지를 찾을 수 없습니다 | 스누코치">
-<meta property="og:description" content="요청하신 페이지를 찾을 수 없습니다. 스누코치 홈에서 학습코칭 안내와 후기를 확인하세요.">
-<meta property="og:image" content="https://snucoach.github.io/assets/img/og_image.png">
-<meta property="og:url" content="https://snucoach.github.io/404.html">
-<meta property="og:locale" content="ko_KR">
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="페이지를 찾을 수 없습니다 | 스누코치">
-<meta name="twitter:description" content="요청하신 페이지를 찾을 수 없습니다. 스누코치 홈에서 학습코칭 안내와 후기를 확인하세요.">
-<meta name="twitter:image" content="https://snucoach.github.io/assets/img/og_image.png">
-<meta name="robots" content="noindex">
+<title>회원 관리 — 스누코치</title>
+<meta name="description" content="스누코치 회원 관리">
+<link rel="canonical" href="https://snucoach.github.io/admin.html">
+<meta name="robots" content="noindex,nofollow">
 <meta name="theme-color" content="#0B0C10">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; script-src 'self' 'sha256-Du+OJKJSbdUgz5nrHeWWINvez6XKDDU/tyj/5c2uvwo='; object-src 'none'; base-uri 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; font-src 'self'; script-src 'self' 'sha256-Du+OJKJSbdUgz5nrHeWWINvez6XKDDU/tyj/5c2uvwo='; connect-src 'self' https://*.supabase.co; object-src 'none'; base-uri 'self'; form-action 'none'; frame-src 'none'">
 <script>document.documentElement.classList.add('js')</script>
 <link rel="icon" type="image/png" href="assets/img/favicon.png">
 <link rel="apple-touch-icon" href="assets/img/favicon.png">
 <link rel="stylesheet" href="assets/fonts/pretendardvariable-dynamic-subset.min.css">
 <link rel="stylesheet" href="assets/css/style.css?v=v3f">
-<script type="application/ld+json">{"@context": "https://schema.org", "@type": "EducationalOrganization", "name": "스누코치", "alternateName": "SNUCOACH", "url": "https://snucoach.github.io/", "logo": "https://snucoach.github.io/assets/img/logo.png", "image": "https://snucoach.github.io/assets/img/og_image.png", "description": "중·고등학생 1:1 학습코칭 서비스. 화상 컨설팅과 매일 카카오톡 플래너 피드백으로 공부 습관과 성적을 관리합니다.", "founder": {"@type": "Person", "name": "유정원"}, "sameAs": ["https://blog.naver.com/snustudycoach", "https://www.instagram.com/snu_studycoach/", "https://pf.kakao.com/_wiwxmG"]}</script>
+<link rel="stylesheet" href="assets/css/auth.css?v=a1">
 </head>
-<body class="p-404">
+<body class="p-auth p-admin" data-auth-page="admin">
 <header class="topnav" id="topnav">
   <div class="topnav-inner">
     <a class="nav-logo" href="index.html" aria-label="스누코치 홈"><img src="assets/img/logo_black.png" alt="스누코치 SNUCOACH 로고" height="26"></a>
@@ -50,21 +38,31 @@
   <a class="drawer-kakao" href="https://pf.kakao.com/_wiwxmG/chat" target="_blank" rel="noopener">카톡으로 문의</a>
 </aside>
 
-<h1 class="sr-only">404 — 페이지를 찾을 수 없습니다</h1>
-<main>
-<section class="hero hero-404">
-  <div class="hero-inner">
-    <span class="e404-code" data-rv>404</span>
-    <h2 class="hero-title" data-rv style="--rv-delay:.06s">찾으시는 페이지가<br><span class="grad">사라졌어요</span></h2>
-    <p class="hero-sub" data-rv style="--rv-delay:.14s">주소가 바뀌었거나 삭제된 페이지일 수 있어요.<br>필요한 곳으로 바로 이동하세요.</p>
-    <div class="e404-links" data-rv style="--rv-delay:.2s">
-      <a class="btn btn-primary btn-lg" href="index.html">홈으로</a>
-      <a class="btn btn-soft" href="coaching.html">학습코칭 안내</a>
-      <a class="btn btn-soft" href="reviews.html">후기 보기</a>
-    </div>
+<main class="auth-main" id="main">
+  <div class="auth-wrap xwide">
+    <section class="auth-card" aria-labelledby="pageTitle">
+      <p class="auth-eyebrow">관리자</p>
+      <h1 class="auth-title" id="pageTitle">회원 관리</h1>
+      <p class="auth-sub">회원 정보는 개인정보예요. 업무에 필요한 만큼만 보고, 내려받은 파일은 쓴 뒤 바로 지워 주세요.</p>
+      <div class="auth-msg" id="authMsg" role="alert" hidden></div>
+      <div class="auth-loading" id="pageLoading">불러오는 중…</div>
+      <div id="admBody" hidden>
+        <div class="stat-grid" id="admStats"></div>
+        <div class="adm-tools">
+          <div class="field"><label for="admSearch" class="sr-only">이름 또는 이메일 검색</label><input type="text" id="admSearch" placeholder="이름 또는 이메일 검색" autocomplete="off"></div>
+          <label class="check"><input type="checkbox" id="admMkt"> <span>마케팅 수신 동의 회원만</span></label>
+          <button class="btn btn-line btn-sm" type="button" id="admCsv">CSV 내려받기</button>
+        </div>
+        <div class="adm-table-wrap">
+          <table class="adm-table">
+            <thead><tr><th scope="col">가입일</th><th scope="col">이름</th><th scope="col">이메일</th><th scope="col">구분</th><th scope="col">학년</th><th scope="col">마케팅 수신</th><th scope="col">가입 방식</th><th scope="col">최근 로그인</th></tr></thead>
+            <tbody id="admRows"></tbody>
+          </table>
+        </div>
+        <p class="auth-note" id="admCount" aria-live="polite"></p>
+      </div>
+    </section>
   </div>
-</section>
-
 </main>
 <footer class="site-footer">
   <div class="footer-inner">
@@ -108,14 +106,9 @@
   </div>
 </footer>
 
-<div class="action-dock">
-  <a class="dock-kakao" href="https://pf.kakao.com/_wiwxmG" target="_blank" rel="noopener" aria-label="스누코치 카카오톡 채널 문의">
-    <img src="assets/img/kakao_channel.png" alt="" width="26" height="26"><span class="dk-label">카톡 문의</span></a>
-  <a class="dock-cta" href="https://smore.im/form/r7q2TCOBoc" target="_blank" rel="noopener">무료 상담 신청 <span class="arr">→</span></a>
-</div>
-<button class="goto-top" id="gotoTop" aria-label="맨 위로"><svg width="12" height="8" viewBox="0 0 12 8"><path d="M6 0 12 8H0z" fill="currentColor"/></svg><span>TOP</span></button>
-
 <script src="assets/js/auth-config.js?v=a1" defer></script>
 <script src="assets/js/site.js?v=v3f" defer></script>
+<script src="assets/vendor/supabase-js-2.117.2.js" defer></script>
+<script src="assets/js/auth.js?v=a1" defer></script>
 </body>
 </html>

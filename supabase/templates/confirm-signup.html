@@ -1,0 +1,18 @@
+<!-- Supabase 대시보드 > Authentication > Emails > Confirm signup 의 Body 에 그대로 붙여 넣는다.
+     Subject: [스누코치] 이메일 인증을 완료해 주세요 -->
+<div style="margin:0;padding:32px 16px;background:#F5F7FD;font-family:'Apple SD Gothic Neo','Malgun Gothic',sans-serif;color:#16183C;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:480px;margin:0 auto;background:#FFFFFF;border:1px solid #E3E8F5;border-radius:16px;">
+    <tr><td style="padding:32px 28px 8px;">
+      <p style="margin:0 0 20px;font-size:15px;font-weight:800;letter-spacing:.04em;color:#0F0F70;">SNUCOACH 스누코치</p>
+      <h1 style="margin:0 0 14px;font-size:21px;line-height:1.4;color:#08083C;">이메일 인증을 완료해 주세요</h1>
+      <p style="margin:0 0 24px;font-size:15px;line-height:1.7;color:#4A5070;">스누코치 회원가입을 신청해 주셔서 감사합니다.<br>아래 버튼을 누르면 인증이 끝나고 바로 로그인됩니다.</p>
+      <p style="margin:0 0 24px;"><a href="{{ .SiteURL }}/account.html?token_hash={{ .TokenHash }}&amp;type=email" style="display:inline-block;padding:14px 26px;border-radius:12px;background:#0F0F70;color:#FFFFFF;font-size:15px;font-weight:700;text-decoration:none;">이메일 인증하기</a></p>
+      <p style="margin:0 0 6px;font-size:13px;line-height:1.7;color:#646C8E;">버튼이 눌리지 않으면 아래 주소를 복사해 브라우저 주소창에 붙여 넣어 주세요.</p>
+      <p style="margin:0 0 24px;font-size:12px;line-height:1.6;word-break:break-all;color:#2D4BC8;">{{ .SiteURL }}/account.html?token_hash={{ .TokenHash }}&amp;type=email</p>
+    </td></tr>
+    <tr><td style="padding:16px 28px 28px;border-top:1px solid #E3E8F5;">
+      <p style="margin:0;font-size:12.5px;line-height:1.7;color:#646C8E;">이 링크는 발송 후 1시간 동안, 한 번만 쓸 수 있습니다.<br>본인이 가입하지 않았다면 이 메일을 무시해 주세요. 계정은 만들어지지 않습니다.</p>
+    </td></tr>
+  </table>
+  <p style="max-width:480px;margin:16px auto 0;font-size:11.5px;line-height:1.6;color:#8A90AC;text-align:center;">스누코치 | 대표 유정원 | 사업자등록번호 849-37-01282</p>
+</div>

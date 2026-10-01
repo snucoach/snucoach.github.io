@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>마이페이지 — 스누코치</title>
+<meta name="description" content="스누코치 마이페이지">
+<link rel="canonical" href="https://snucoach.github.io/account.html">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#0B0C10">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; font-src 'self'; script-src 'self' 'sha256-Du+OJKJSbdUgz5nrHeWWINvez6XKDDU/tyj/5c2uvwo='; connect-src 'self' https://*.supabase.co; object-src 'none'; base-uri 'self'; form-action 'none'; frame-src 'none'">
+<script>document.documentElement.classList.add('js')</script>
+<link rel="icon" type="image/png" href="assets/img/favicon.png">
+<link rel="apple-touch-icon" href="assets/img/favicon.png">
+<link rel="stylesheet" href="assets/fonts/pretendardvariable-dynamic-subset.min.css">
+<link rel="stylesheet" href="assets/css/style.css?v=v3f">
+<link rel="stylesheet" href="assets/css/auth.css?v=a1">
+</head>
+<body class="p-auth p-account" data-auth-page="account">
+<header class="topnav" id="topnav">
+  <div class="topnav-inner">
+    <a class="nav-logo" href="index.html" aria-label="스누코치 홈"><img src="assets/img/logo_black.png" alt="스누코치 SNUCOACH 로고" height="26"></a>
+    <nav class="nav-tabs" aria-label="주 메뉴"><div class="nav-item"><a href="index.html"><span class="nav-lb">홈</span></a></div><div class="nav-item"><a href="coaching.html"><span class="nav-lb"><sup class="nav-badge nb-best">BEST</sup>학습코칭 안내</span></a></div><div class="nav-item"><a href="reviews.html"><span class="nav-lb">후기</span></a></div><div class="nav-item"><a href="columns.html"><span class="nav-lb">자료·칼럼</span></a></div><div class="nav-item"><a href="event.html"><span class="nav-lb"><sup class="nav-badge nb-free">무료</sup>이벤트</span></a></div></nav><a class="nav-auth" href="login.html" data-auth-nav hidden><svg class="ico" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="8.2" r="3.7"/><path d="M4.8 19.6c1.3-3.4 4-5.1 7.2-5.1s5.9 1.7 7.2 5.1"/></svg><span class="nav-auth-lb" data-auth-label>로그인</span></a><a class="nav-cta" href="https://smore.im/form/r7q2TCOBoc" target="_blank" rel="noopener">무료 상담 신청</a>
+    <button class="nav-toggle" id="navToggle" type="button" aria-label="메뉴 열기" aria-expanded="false" aria-controls="navDrawer"><span></span><span></span><span></span></button>
+  </div>
+  <nav class="nav-compact" aria-label="주 메뉴(모바일)"><a class="ctab" href="index.html">홈</a><a class="ctab" href="coaching.html">학습코칭</a><a class="ctab" href="reviews.html">후기</a><a class="ctab" href="columns.html">칼럼</a><a class="ctab" href="event.html">이벤트</a></nav>
+  <div class="scroll-progress" id="scrollProgress" aria-hidden="true"></div>
+</header>
+<div class="nav-scrim" id="navScrim" hidden></div>
+<aside class="nav-drawer" id="navDrawer" aria-hidden="true" aria-label="모바일 메뉴">
+  <div class="drawer-head">
+    <span class="drawer-title">메뉴</span>
+    <button class="drawer-close" id="drawerClose" type="button" aria-label="메뉴 닫기">✕</button>
+  </div>
+  <a class="drawer-auth" href="login.html" data-auth-nav hidden><span data-auth-label>로그인 · 회원가입</span></a>
+  <nav class="drawer-links" aria-label="모바일 주 메뉴"><a href="index.html"><span class="nav-lb">홈</span></a><a href="coaching.html"><span class="nav-lb"><sup class="nav-badge nb-best">BEST</sup>학습코칭 안내</span></a><a href="reviews.html"><span class="nav-lb">후기</span></a><a href="columns.html"><span class="nav-lb">자료·칼럼</span></a><a href="event.html"><span class="nav-lb"><sup class="nav-badge nb-free">무료</sup>이벤트</span></a></nav>
+  <a class="drawer-cta" href="https://smore.im/form/r7q2TCOBoc" target="_blank" rel="noopener">무료 상담 신청</a>
+  <a class="drawer-kakao" href="https://pf.kakao.com/_wiwxmG/chat" target="_blank" rel="noopener">카톡으로 문의</a>
+</aside>
+
+<main class="auth-main" id="main">
+  <div class="auth-wrap wide">
+    <div class="auth-msg" id="authMsg" role="alert" hidden></div>
+    <div class="auth-loading" id="pageLoading">불러오는 중…</div>
+
+    <section class="auth-card" id="onboard" aria-labelledby="onboardTitle" hidden>
+      <p class="auth-eyebrow">가입 마무리</p>
+      <h1 class="auth-title" id="onboardTitle" tabindex="-1">거의 다 됐어요</h1>
+      <p class="auth-sub">서비스를 이용하려면 아래 정보 입력과 약관 동의가 필요해요.</p>
+      <form class="auth-form" id="onboardForm" method="post" action="#" novalidate>
+        <div class="field">
+          <label for="obName">이름</label>
+          <input type="text" id="obName" name="name" autocomplete="name" maxlength="20" required aria-describedby="obNameErr">
+          <p class="field-err" id="obNameErr"></p>
+        </div>
+        <div class="field">
+          <fieldset class="seg" id="obType" aria-describedby="obTypeErr">
+            <legend>회원 구분</legend>
+            <label><input type="radio" name="member_type" value="학생"><span>학생</span></label>
+            <label><input type="radio" name="member_type" value="학부모"><span>학부모</span></label>
+            <label><input type="radio" name="member_type" value="기타"><span>기타</span></label>
+          </fieldset>
+          <p class="field-err" id="obTypeErr"></p>
+        </div>
+        <div class="field">
+          <label for="obGrade" data-grade-label>학년</label>
+          <select id="obGrade" name="grade" required aria-describedby="obGradeErr">
+            <option value="">선택해 주세요</option>
+            <option value="초등">초등</option>
+            <option value="중1">중1</option>
+            <option value="중2">중2</option>
+            <option value="중3">중3</option>
+            <option value="고1">고1</option>
+            <option value="고2">고2</option>
+            <option value="고3">고3</option>
+            <option value="N수">N수</option>
+            <option value="기타">기타·해당 없음</option>
+          </select>
+          <p class="field-err" id="obGradeErr"></p>
+        </div>
+        <div class="field">
+          <div class="consent" id="obConsent" aria-describedby="obConsentErr">
+            <div class="consent-all"><label class="check"><input type="checkbox" data-agree-all> <span>전체 동의 <span class="sel">(선택 항목 포함)</span></span></label></div>
+            <ul class="consent-list">
+              <li>
+                <label class="check"><input type="checkbox" data-agree="age"> <span><span class="req">[필수]</span> 만 14세 이상입니다.</span></label>
+                <p class="field-hint" style="margin:4px 0 0 30px">만 14세 미만 학생은 보호자가 ‘학부모’로 가입해 주세요.</p>
+              </li>
+              <li>
+                <label class="check"><input type="checkbox" data-agree="terms"> <span><span class="req">[필수]</span> 이용약관 동의</span></label>
+                <details><summary>내용 보기</summary><div class="consent-detail"><p style="margin:0">스누코치 회원 서비스의 이용 조건과 절차, 회원과 스누코치의 권리·의무를 정한 약관입니다.</p><p><a href="terms.html" target="_blank" rel="noopener">이용약관 전문 보기</a></p></div></details>
+              </li>
+              <li>
+                <label class="check"><input type="checkbox" data-agree="privacy"> <span><span class="req">[필수]</span> 개인정보 수집·이용 동의</span></label>
+                <details><summary>내용 보기</summary><div class="consent-detail">
+                  <table>
+                    <tr><th scope="row">목적</th><td>회원 식별과 가입 의사 확인, 로그인, 회원 서비스 제공, 공지 전달과 문의 응대, 부정 이용 방지</td></tr>
+                    <tr><th scope="row">항목</th><td>이메일, 비밀번호, 이름, 회원 구분, 학년(학부모는 자녀 학년)<br>카카오로 가입하면 카카오 계정 이메일·닉네임<br>이용 중 자동 생성: 로그인 일시, 접속 IP 주소, 기기·브라우저 정보</td></tr>
+                    <tr><th scope="row">보유 기간</th><td><b>회원 탈퇴 시까지</b> (탈퇴하면 바로 삭제). 로그인 기록은 3개월</td></tr>
+                  </table>
+                  <p>동의를 거부할 수 있으나, 거부하면 회원가입을 할 수 없습니다. 자세한 내용은 <a href="privacy.html" target="_blank" rel="noopener">개인정보처리방침</a>을 확인해 주세요.</p>
+                </div></details>
+              </li>
+              <li>
+                <label class="check"><input type="checkbox" data-agree="marketing"> <span><span class="sel">[선택]</span> 마케팅 정보 수신 동의(이메일)</span></label>
+                <details><summary>내용 보기</summary><div class="consent-detail">
+                  <table>
+                    <tr><th scope="row">목적</th><td>학습 자료, 이벤트, 코칭 프로그램 안내(광고성 정보 포함) 이메일 발송</td></tr>
+                    <tr><th scope="row">항목</th><td>이메일, 이름</td></tr>
+                    <tr><th scope="row">보유 기간</th><td>동의 철회 또는 회원 탈퇴 시까지</td></tr>
+                  </table>
+                  <p>동의하지 않아도 가입과 이용에 제한이 없고, 마이페이지에서 언제든 바꿀 수 있습니다.</p>
+                </div></details>
+              </li>
+            </ul>
+          </div>
+          <p class="field-err" id="obConsentErr"></p>
+        </div>
+        <div class="auth-msg" id="onboardMsg" role="alert" hidden></div>
+        <button class="btn btn-primary auth-btn" type="submit">가입 완료</button>
+      </form>
+      <p class="auth-links"><button class="btn btn-line btn-sm" type="button" data-sign-out>로그아웃</button></p>
+    </section>
+
+    <div id="acct" hidden>
+      <section class="auth-card">
+        <div class="acct-head">
+          <span class="acct-avatar" id="acctAvatar" aria-hidden="true"></span>
+          <div>
+            <h1 class="auth-title"><span id="acctName"></span>님</h1>
+            <div class="acct-badges" id="acctBadges"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="auth-card" aria-labelledby="infoTitle">
+        <h2 id="infoTitle">내 정보</h2>
+        <p class="card-sub">이름·회원 구분·학년은 언제든 바꿀 수 있어요.</p>
+        <dl class="acct-dl">
+          <dt>이메일</dt><dd id="acctEmail"></dd>
+          <dt>가입 방식</dt><dd id="acctProvider"></dd>
+          <dt>가입일</dt><dd id="acctJoined"></dd>
+        </dl>
+        <form class="auth-form" id="profileForm" method="post" action="#" novalidate style="margin-top:22px">
+          <div class="field">
+          <label for="pfName">이름</label>
+          <input type="text" id="pfName" name="name" autocomplete="name" maxlength="20" required aria-describedby="pfNameErr">
+          <p class="field-err" id="pfNameErr"></p>
+        </div>
+        <div class="field">
+          <fieldset class="seg" id="pfType" aria-describedby="pfTypeErr">
+            <legend>회원 구분</legend>
+            <label><input type="radio" name="member_type" value="학생"><span>학생</span></label>
+            <label><input type="radio" name="member_type" value="학부모"><span>학부모</span></label>
+            <label><input type="radio" name="member_type" value="기타"><span>기타</span></label>
+          </fieldset>
+          <p class="field-err" id="pfTypeErr"></p>
+        </div>
+        <div class="field">
+          <label for="pfGrade" data-grade-label>학년</label>
+          <select id="pfGrade" name="grade" required aria-describedby="pfGradeErr">
+            <option value="">선택해 주세요</option>
+            <option value="초등">초등</option>
+            <option value="중1">중1</option>
+            <option value="중2">중2</option>
+            <option value="중3">중3</option>
+            <option value="고1">고1</option>
+            <option value="고2">고2</option>
+            <option value="고3">고3</option>
+            <option value="N수">N수</option>
+            <option value="기타">기타·해당 없음</option>
+          </select>
+          <p class="field-err" id="pfGradeErr"></p>
+        </div>
+          <div class="auth-msg" id="profileMsg" role="status" hidden></div>
+          <button class="btn btn-primary auth-btn" type="submit">저장</button>
+        </form>
+      </section>
+
+      <section class="auth-card" aria-labelledby="mktTitle">
+        <h2 id="mktTitle">마케팅 정보 수신</h2>
+        <p class="card-sub">학습 자료·이벤트·코칭 프로그램 소식을 이메일로 받아요. 언제든 바꿀 수 있어요.</p>
+        <label class="check"><input type="checkbox" id="mktToggle"> <span>이메일 수신에 동의합니다</span></label>
+        <p class="consent-log" id="mktLog"></p>
+        <div class="auth-msg" id="mktMsg" role="status" hidden style="margin-top:12px"></div>
+      </section>
+
+      <section class="auth-card" id="pwCard" aria-labelledby="pwTitle" hidden>
+        <h2 id="pwTitle">비밀번호 변경</h2>
+        <p class="card-sub">지금 비밀번호를 확인한 뒤 바꿔요.</p>
+        <form class="auth-form" id="pwForm" method="post" action="#" novalidate>
+          <div class="field">
+          <label for="curPw">현재 비밀번호</label>
+          <div class="pw-wrap"><input type="password" id="curPw" name="curPw" autocomplete="current-password" maxlength="72" required aria-describedby="curPwErr"><button class="pw-toggle" type="button" aria-controls="curPw" aria-pressed="false" aria-label="현재 비밀번호 표시">보기</button></div>
+          <p class="field-err" id="curPwErr"></p>
+        </div>
+          <div class="field">
+          <label for="chPw">새 비밀번호</label>
+          <div class="pw-wrap"><input type="password" id="chPw" name="chPw" autocomplete="new-password" maxlength="72" required aria-describedby="chPwHint chPwErr"><button class="pw-toggle" type="button" aria-controls="chPw" aria-pressed="false" aria-label="새 비밀번호 표시">보기</button></div>
+          <p class="field-hint" id="chPwHint">8자 이상, 영문과 숫자를 함께 써 주세요.</p><p class="field-err" id="chPwErr"></p>
+        </div>
+          <div class="field">
+          <label for="chPw2">새 비밀번호 확인</label>
+          <div class="pw-wrap"><input type="password" id="chPw2" name="chPw2" autocomplete="new-password" maxlength="72" required aria-describedby="chPw2Err"><button class="pw-toggle" type="button" aria-controls="chPw2" aria-pressed="false" aria-label="새 비밀번호 확인 표시">보기</button></div>
+          <p class="field-err" id="chPw2Err"></p>
+        </div>
+          <div class="auth-msg" id="pwMsg" role="status" hidden></div>
+          <button class="btn btn-primary auth-btn" type="submit">비밀번호 바꾸기</button>
+        </form>
+      </section>
+
+      <section class="auth-card" aria-labelledby="sessTitle">
+        <h2 id="sessTitle">로그인 관리</h2>
+        <p class="card-sub">휴대폰을 잃어버렸거나 다른 사람이 로그인한 것 같다면 ‘모든 기기에서 로그아웃’을 눌러 주세요.</p>
+        <div class="acct-row">
+          <button class="btn btn-line btn-sm" type="button" data-sign-out>로그아웃</button>
+          <button class="btn btn-line btn-sm" type="button" id="signOutAll">모든 기기에서 로그아웃</button>
+          <a class="btn btn-line btn-sm" id="adminLink" href="admin.html" hidden>회원 관리(관리자)</a>
+        </div>
+      </section>
+
+      <section class="auth-card">
+        <details class="danger-zone">
+          <summary>회원 탈퇴</summary>
+          <ul>
+            <li>계정과 회원 정보(이름·회원 구분·학년·동의 기록)가 바로 삭제되며 되돌릴 수 없어요.</li>
+            <li>진행 중인 코칭의 환불은 탈퇴와 별개로 카카오톡 채널로 문의해 주세요.</li>
+            <li>같은 이메일로 언제든 다시 가입할 수 있어요.</li>
+          </ul>
+          <div class="field">
+            <label for="delConfirm">확인을 위해 ‘탈퇴’라고 입력해 주세요</label>
+            <input type="text" id="delConfirm" autocomplete="off" maxlength="10">
+          </div>
+          <div class="auth-msg" id="delMsg" role="alert" hidden style="margin-top:14px"></div>
+          <button class="btn btn-danger auth-btn" type="button" id="delBtn" disabled style="margin-top:14px">회원 탈퇴</button>
+        </details>
+      </section>
+    </div>
+
+    <section class="auth-card auth-done" id="deletedCard" aria-labelledby="deletedTitle" hidden>
+      <span class="done-ico"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span>
+      <h1 class="auth-title" id="deletedTitle" tabindex="-1">탈퇴가 완료되었어요</h1>
+      <p class="auth-sub">그동안 스누코치를 이용해 주셔서 감사합니다. 회원 정보는 모두 삭제되었어요.</p>
+      <a class="btn btn-primary auth-btn" href="index.html">홈으로</a>
+    </section>
+  </div>
+</main>
+<footer class="site-footer">
+  <div class="footer-inner">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <a class="footer-logo" href="index.html" aria-label="스누코치 홈">
+          <img src="assets/img/logo_black.png" alt="스누코치 로고"></a>
+        <p class="footer-tagline">서울대 대표가 직접 하는 1:1 학습코칭</p>
+      </div>
+      <div class="footer-cols">
+        <div class="footer-col">
+          <div class="ft-h">메뉴</div>
+          <a href="index.html">홈</a>
+          <a href="coaching.html">학습코칭 안내</a>
+          <a href="saenggibu.html">생기부 컨설팅 안내</a>
+          <a href="event.html">이벤트</a>
+          <a href="reviews.html">후기</a>
+          <a href="columns.html">자료·칼럼</a>
+        </div>
+        <div class="footer-col">
+          <div class="ft-h">바로가기</div>
+          <a href="https://smore.im/form/r7q2TCOBoc" target="_blank" rel="noopener">무료 상담 신청</a>
+          <a href="https://forms.gle/Q4ZR3V8CfJSbZuyPA" target="_blank" rel="noopener">무료 생기부 진단</a>
+          <a href="https://pf.kakao.com/_wiwxmG/chat" target="_blank" rel="noopener">카카오톡 문의</a>
+          <a href="notice.html">유의사항·환불</a>
+          <a href="https://blog.naver.com/snustudycoach/223313413829" target="_blank" rel="noopener">대표 소개글</a>
+        </div>
+        <div class="footer-col">
+          <div class="ft-h">SNS</div>
+          <a href="https://blog.naver.com/snustudycoach" target="_blank" rel="noopener">네이버 블로그</a>
+          <a href="https://www.instagram.com/snu_studycoach/" target="_blank" rel="noopener">인스타그램</a>
+          <a href="https://pf.kakao.com/_wiwxmG" target="_blank" rel="noopener">카카오톡 채널</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-info">
+      <div class="biz">스누코치&ensp;|&ensp;대표 : 유정원&ensp;|&ensp;사업자등록번호 : 849-37-01282</div>
+      <div class="footer-legal"><a href="terms.html">이용약관</a><a href="privacy.html"><b>개인정보처리방침</b></a></div>
+      <div class="footer-copy">© 2025. snucoach Inc. All rights reserved.</div>
+    </div>
+  </div>
+</footer>
+
+<script src="assets/js/auth-config.js?v=a1" defer></script>
+<script src="assets/js/site.js?v=v3f" defer></script>
+<script src="assets/vendor/supabase-js-2.117.2.js" defer></script>
+<script src="assets/js/auth.js?v=a1" defer></script>
+</body>
+</html>
