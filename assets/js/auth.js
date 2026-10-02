@@ -622,16 +622,18 @@
     show(loading, false);
     if (pErr) { msg(out, errText(pErr)); return; }
     // 후기 화면의 「로그인하고 후기 쓰기」로 들어와 구글·카카오로 로그인한 경우: 후기 화면으로 되돌아간다.
-    // 가는 곳은 여기에 고정한다(저장된 값으로 주소를 만들지 않는다). 가입 완료·인증 안내가 있거나 가입 마무리 전이면 여기에 머문다.
+    // 가는 곳은 여기에 고정한다(저장된 값으로 주소를 만들지 않는다). 가입 완료·인증 안내가 있으면 여기에 머문다.
+    // 가입 마무리 전이면 마무리를 끝낸 뒤 가입 완료 안내(수신 동의 처리 결과 포함)와 함께 「후기 쓰러 가기」 버튼을 보여 준다.
     const back = tryDo(() => Number(sessionStorage.getItem(RETURN_KEY)), 0);
     tryDo(() => sessionStorage.removeItem(RETURN_KEY));
-    if (isComplete(profile) && !notice && back && Date.now() - back < 30 * 60 * 1000) {
+    const fromReviews = !!back && Date.now() - back < 30 * 60 * 1000;
+    if (isComplete(profile) && !notice && fromReviews) {
       location.replace("reviews.html#member-reviews");
       return;
     }
     $$("[data-sign-out]").forEach((b) => b.addEventListener("click", () => busy(b, "로그아웃 중…", signOutHere)));
 
-    if (!isComplete(profile)) renderOnboarding(user, profile || {});
+    if (!isComplete(profile)) renderOnboarding(user, profile || {}, fromReviews);
     else renderAccount(user, profile, notice);
   }
 
@@ -640,7 +642,7 @@
     location.replace("index.html");
   }
 
-  function renderOnboarding(user, profile) {
+  function renderOnboarding(user, profile, fromReviews) {
     const card = $("#onboard");
     const form = $("#onboardForm");
     const out = $("#onboardMsg");
@@ -667,6 +669,17 @@
         if (error || !data) { msg(out, error ? errText(error) : "회원 정보를 찾지 못했습니다. 카카오톡 채널로 문의해 주세요."); return; }
         show(card, false);
         renderAccount(user, data, ["가입이 완료되었습니다. 스누코치 회원이 되신 걸 환영합니다!", "ok", true]);
+        if (fromReviews) {
+          // 후기 화면에서 가입 마무리를 하러 온 경우: 완료 안내 아래에 돌아가는 버튼을 둔다
+          const actions = document.createElement("div");
+          actions.className = "msg-actions";
+          const a = document.createElement("a");
+          a.className = "btn btn-primary btn-sm";
+          a.href = "reviews.html#member-reviews";
+          a.textContent = "후기 쓰러 가기";
+          actions.append(a);
+          $("#authMsg").append(actions);
+        }
       });
     });
   }
@@ -1072,7 +1085,7 @@
       shown.map((r) => [r.univ, r.track, r.name, r.email, r.phone ? fmtPhone(r.phone) : "", smsWay(r), r.member_type, r.grade, fmtDateTime(r.created_at)])));
   }
 
-  // 관리자: 회원 후기(숨김·숨김 해제·수강 확인). DB: supabase/migrations/20261003000000_reviews.sql
+  // 관리자: 회원 후기(숨김·숨김 해제·수강 확인·작성자 알림 기록). DB: supabase/migrations/20261003000000_reviews.sql
   async function adminReviews() {
     const box = $("#admReviews");
     if (!box) return; // 브라우저에 남은 옛 화면
@@ -1090,13 +1103,43 @@
     let shown = [];
     let target = null;
     let opener = null; // 숨김 창을 연 버튼(창을 닫으면 초점을 돌려준다)
+    const DAY = 86400000;
     const mdDate = (iso) => new Intl.DateTimeFormat("ko-KR", { month: "long", day: "numeric", timeZone: "Asia/Seoul" }).format(new Date(iso));
     const edited = (r) => Date.parse(r.updated_at) !== Date.parse(r.created_at);
-    const dayCount = (iso) => Math.max(1, Math.floor((Date.now() - Date.parse(iso)) / 86400000) + 1);
+    const dayCount = (iso) => Math.max(1, Math.floor((Date.now() - Date.parse(iso)) / DAY) + 1);
+    const tempUntil = (r) => Date.parse(r.hidden_at) + TEMP_DAYS * DAY; // 임시 조치 기한
+    const tempLeft = (r) => Math.ceil((tempUntil(r) - Date.now()) / DAY);
     const rpcErr = (error) => (error.code === "RV004" ? "후기를 찾을 수 없습니다. 작성자가 지웠을 수 있습니다."
-      : error.code === "42501" ? "관리자만 할 수 있습니다. 관리자로 지정한 계정으로 로그인했는지 확인해 주세요."
-        : error.code === "23514" && error.message ? error.message
-          : `처리하지 못했습니다. (${error.code || ""} ${error.message || ""})`);
+      : error.code === "RV008" || /본인 계정으로 쓴 후기/.test(error.message || "") ? "본인 계정으로 쓴 후기는 직접 처리할 수 없습니다."
+        : error.code === "42501" ? "관리자만 할 수 있습니다. 관리자로 지정한 계정으로 로그인했는지 확인해 주세요."
+          : error.code === "23514" && error.message ? error.message
+            : `처리하지 못했습니다. (${error.code || ""} ${error.message || ""})`);
+
+    // 다시 살펴볼 글에 붙는 표시(상태 칸에 적고, 「확인할 글」 필터로 모아 본다)
+    //  - 숨긴 뒤 작성자가 고친 글: 다시 보고 기준에 해당하지 않으면 숨김을 해제한다(약관 제10조 제7항)
+    //  - 다른 후기를 숨긴 뒤 같은 회원이 올리거나 고친 글: 숨긴 내용을 옮겨 적지 않았는지 본다
+    //  - 임시 조치 기한이 7일 이내로 남은 글, 작성자에게 알렸다는 기록이 없는 숨김 글
+    let flagsOf = new Map();
+    function computeFlags() {
+      const firstHide = new Map(); // 이메일 → 그 회원의 글 가운데 가장 먼저 숨긴 시각
+      rows.forEach((r) => {
+        if (!r.hidden_at || !r.email) return;
+        const t = Date.parse(r.hidden_at);
+        if (!firstHide.has(r.email) || t < firstHide.get(r.email)) firstHide.set(r.email, t);
+      });
+      flagsOf = new Map(rows.map((r) => {
+        const f = [];
+        if (r.hidden_at) {
+          if (Date.parse(r.updated_at) > Date.parse(r.hidden_at)) f.push(`숨긴 뒤 작성자가 고침(${mdDate(r.updated_at)}). 다시 확인해 주세요`);
+          if (r.hidden_reason === HIDE_TEMP && tempLeft(r) <= 7) f.push(tempLeft(r) > 1 ? `임시 조치 기한이 ${tempLeft(r)}일 남았습니다` : "임시 조치 기한이 다 됐습니다. 곧 자동으로 다시 게시됩니다");
+          if (!r.notified_at) f.push("작성자 알림 기록 없음");
+        } else if (r.email && firstHide.has(r.email) && Date.parse(r.updated_at) > firstHide.get(r.email)) {
+          f.push("이 회원의 다른 후기를 숨긴 뒤에 올리거나 고친 글");
+        }
+        return [r.id, f];
+      }));
+    }
+    const flags = (r) => flagsOf.get(r.id) || [];
 
     async function load() {
       const list = [];
@@ -1115,41 +1158,96 @@
         if (!data || data.length < 1000) break;
       }
       rows = list;
+      computeFlags();
       show(box);
       show($("#rvBody"));
       render();
       return true;
     }
 
-    // 숨김 처리를 작성자에게 알리는 메일(사유와 이의 제기 방법). 메일 앱이 열리고, 보내는 것은 관리자가 직접 한다.
-    function mailHref(r, why, detail) {
-      const lines = [
-        "안녕하세요, 스누코치입니다.",
-        "",
-        `회원님이 ${fmtDate(r.created_at)}에 올리신 후기(${r.program}, 글 번호 ${r.id})가 회원 후기 운영 기준(${why})에 따라 숨김 처리되어 다른 사람에게 보이지 않게 되었음을 알려 드립니다.`,
-        ...(why === "기타" && detail ? [`구체 사유: ${detail}`] : []),
-        "",
-        "- 후기 페이지의 「내가 쓴 후기」에서 숨김 사유를 확인하고 내용을 고치거나 지울 수 있습니다.",
-        "- 내용을 고쳤거나 숨김 처리에 이의가 있으면 이 메일에 답장하거나 카카오톡 채널(https://pf.kakao.com/_wiwxmG/chat)로 알려 주세요. 확인한 뒤 운영 기준에 해당하지 않으면 다시 게시하고 결과를 알려 드립니다.",
-        `- 운영 기준: ${site("terms.html#reviews")}`,
-        "",
-        "스누코치 드림",
-      ];
-      return `mailto:${encodeURIComponent(r.email || "").replace(/%40/g, "@")}?subject=${encodeURIComponent("[스누코치] 후기 숨김 처리 안내")}&body=${encodeURIComponent(lines.join("\r\n"))}`;
+    // 작성자에게 보내는 안내 메일. 메일 앱이 열리고, 보내는 것은 관리자가 직접 한다. 보낸 뒤 「알림 기록」으로 남긴다.
+    //   hide: 숨김 안내(사유와 이의 제기 방법. 임시 조치는 기한 포함) · unhide: 해제 결과 · keep: 이의 검토 결과(숨김 유지)
+    const KAKAO_URL = "https://pf.kakao.com/_wiwxmG/chat";
+    function mailHref(r, kind, why, detail) {
+      const what = `${fmtDate(r.created_at)}에 올리신 후기(${r.program}, 글 번호 ${r.id})`;
+      const detailLine = detail ? [`구체 사유: ${detail}`] : [];
+      const temp = why === HIDE_TEMP;
+      let subject;
+      let lines;
+      if (kind === "unhide") {
+        subject = "[스누코치] 후기 다시 게시 안내";
+        lines = [
+          `회원님이 ${what}의 숨김 처리를 해제하여 다시 게시했음을 알려 드립니다.`,
+          "",
+          `- 후기 페이지: ${site("reviews.html#member-reviews")}`,
+          `- 운영 기준: ${site("terms.html#reviews")}`,
+        ];
+      } else if (kind === "keep") {
+        subject = "[스누코치] 후기 숨김 처리 이의 검토 결과";
+        lines = [
+          `회원님이 ${what}의 숨김 처리에 대해 알려 주신 내용을 확인했습니다. 확인한 결과 이 후기가 회원 후기 운영 기준(${why})에 해당하여 숨김 처리를 유지함을 알려 드립니다.`,
+          ...detailLine,
+          "",
+          "- 해당하는 부분을 고친 뒤 알려 주시면 다시 확인해, 기준에 해당하지 않으면 다시 게시합니다.",
+          `- 더 알리실 내용이 있으면 이 메일에 답장하거나 카카오톡 채널(${KAKAO_URL})로 알려 주세요.`,
+          `- 운영 기준: ${site("terms.html#reviews")}`,
+        ];
+      } else if (temp) {
+        subject = "[스누코치] 후기 임시 조치 안내";
+        lines = [
+          `회원님이 ${what}로 권리를 침해당했다는 신고가 접수되어, 이용약관 제10조 제8항에 따라 ${mdDate(new Date(tempUntil(r)).toISOString())}까지 임시로 숨김 처리했음을 알려 드립니다(임시 조치). 그동안 다른 사람에게는 보이지 않습니다.`,
+          ...detailLine,
+          "",
+          "- 스누코치는 이 기간에 양쪽의 설명을 확인해 다시 게시할지 정하고 결과를 알려 드립니다. 그때까지 정하지 못하면 다시 게시합니다.",
+          `- 의견이나 설명할 자료가 있으면 이 메일에 답장하거나 카카오톡 채널(${KAKAO_URL})로 알려 주세요.`,
+          "- 후기 페이지의 「내가 쓴 후기」에서 내용을 고치거나 지울 수 있습니다. 숨김 처리된 후기를 지우면 14일 동안 새 후기를 올릴 수 없습니다.",
+          `- 운영 기준: ${site("terms.html#reviews")}`,
+        ];
+      } else {
+        subject = "[스누코치] 후기 숨김 처리 안내";
+        lines = [
+          `회원님이 ${what}가 회원 후기 운영 기준(${why})에 따라 숨김 처리되어 다른 사람에게 보이지 않게 되었음을 알려 드립니다.`,
+          ...detailLine,
+          "",
+          "- 후기 페이지의 「내가 쓴 후기」에서 숨김 사유를 확인하고 내용을 고치거나 지울 수 있습니다. 숨김 처리된 후기를 지우면 14일 동안 새 후기를 올릴 수 없습니다.",
+          `- 내용을 고쳤거나 숨김 처리에 이의가 있으면 이 메일에 답장하거나 카카오톡 채널(${KAKAO_URL})로 알려 주세요. 확인한 뒤 운영 기준에 해당하지 않으면 다시 게시하고 결과를 알려 드립니다.`,
+          `- 운영 기준: ${site("terms.html#reviews")}`,
+        ];
+      }
+      const text = ["안녕하세요, 스누코치입니다.", "", ...lines, "", "스누코치 드림"].join("\r\n");
+      return `mailto:${encodeURIComponent(r.email || "").replace(/%40/g, "@")}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(text)}`;
     }
-    function mailLink(r, label) {
+    function mailLink(r, kind, label) {
       const a = document.createElement("a");
       a.className = "btn btn-line btn-sm";
-      a.href = mailHref(r, r.hidden_reason, r.hidden_note);
-      a.textContent = label || "작성자에게 알리기";
+      a.href = mailHref(r, kind, r.hidden_reason, r.hidden_note);
+      a.textContent = label;
       return a;
+    }
+    const button = (label, fn, cls) => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = cls || "btn btn-line btn-sm";
+      b.textContent = label;
+      b.addEventListener("click", () => fn(b));
+      return b;
+    };
+    // 처리 결과 안내 아래에 붙이는 버튼 줄: 메일 쓰기 + 「알림 보냄으로 기록」
+    function noticeActions(r, kind, noticeKind, mailLabel) {
+      const wrap = document.createElement("div");
+      wrap.className = "msg-actions";
+      wrap.append(mailLink(r, kind, mailLabel), button("알림 보냄으로 기록", (b) => busy(b, "기록하는 중…", () => logNotice(r, noticeKind))));
+      return wrap;
+    }
+    async function logNotice(r, noticeKind) {
+      return call("admin_log_review_notice", { p_id: r.id, p_kind: noticeKind }, `「${noticeKind}」을 보냈다고 처리 기록에 남겼습니다.`);
     }
 
     async function call(fn, args, okText) {
       const { error } = await sb().rpc(fn, args);
       if (error) {
         if (error.code === "RV004") await load();
-        msg(out, rpcErr(error));
+        msg(out, error.code === "PGRST202" ? "데이터베이스 설정(20261003000000_reviews.sql)을 다시 실행해 주세요. 이 기능은 새 판에 들어 있습니다." : rpcErr(error));
         focusEl(out);
         return false;
       }
@@ -1162,41 +1260,49 @@
     function actions(r) {
       const wrap = document.createElement("div");
       wrap.className = "adm-acts";
-      const btn = (label, fn, cls) => {
-        const b = document.createElement("button");
-        b.type = "button";
-        b.className = cls || "btn btn-line btn-sm";
-        b.textContent = label;
-        b.addEventListener("click", () => fn(b));
-        return b;
-      };
+      const back = () => { wrap.replaceChildren(...normal()); focusEl(wrap.querySelector("button")); };
       // window.confirm 대신 한 번 더 누르게 한다
       const confirmIn = (text, okLabel, fn) => {
         const q = document.createElement("span");
         q.className = "adm-confirm";
         q.textContent = text;
-        const no = btn("그만두기", () => { wrap.replaceChildren(...normal()); focusEl(wrap.querySelector("button")); });
-        wrap.replaceChildren(q, btn(okLabel, (b) => busy(b, "처리 중…", fn), "btn btn-danger btn-sm"), no);
+        const no = button("그만두기", back);
+        wrap.replaceChildren(q, button(okLabel, (b) => busy(b, "처리 중…", fn), "btn btn-danger btn-sm"), no);
         focusEl(no);
       };
       const normal = () => {
         const list = [];
         if (REVIEW_VERIFIABLE.includes(r.program)) {
           list.push(r.verified
-            ? btn("확인 취소", () => confirmIn("착오로 붙인 수강 확인만 취소합니다. 취소할까요?", "확인 취소",
+            ? button("확인 취소", () => confirmIn("착오로 붙인 수강 확인만 취소합니다. 취소할까요?", "확인 취소",
               () => call("admin_set_review_verified", { p_id: r.id, p_verified: false }, "수강 확인을 취소했습니다.")))
-            : btn("수강 확인", (b) => busy(b, "처리 중…",
+            : button("수강 확인", (b) => busy(b, "처리 중…",
               () => call("admin_set_review_verified", { p_id: r.id, p_verified: true }, "수강 확인 표시를 붙였습니다."))));
         }
         if (r.hidden_at) {
           list.push(
-            btn("숨김 해제", () => confirmIn("다시 게시할까요?", "다시 게시",
-              () => call("admin_set_review_hidden", { p_id: r.id, p_hidden: false }, "숨김을 해제해 다시 게시했습니다. 작성자에게 결과를 알려 주세요."))),
-            btn("사유 고치기", (b) => openHide(r, b)),
-            mailLink(r),
+            button("숨김 해제", () => confirmIn("다시 게시할까요?", "다시 게시", async () => {
+              const done = await call("admin_set_review_hidden", { p_id: r.id, p_hidden: false }, "숨김을 해제해 다시 게시했습니다. 작성자에게 결과를 알려 주세요.");
+              if (done) { out.append(noticeActions(r, "unhide", "해제 결과 안내", "작성자에게 결과 메일 쓰기")); focusEl(out); }
+            })),
+            button("사유 고치기", (b) => openHide(r, b)),
+            mailLink(r, "hide", "작성자에게 알리기"),
+            mailLink(r, "keep", "이의 결과 메일"),
+            // 어떤 안내를 보냈는지 골라 기록한다
+            button("알림 기록", () => {
+              const q = document.createElement("span");
+              q.className = "adm-confirm";
+              q.textContent = "작성자에게 보낸 안내를 골라 주세요. 처리 기록에 남습니다.";
+              const no = button("그만두기", back);
+              wrap.replaceChildren(q,
+                button("숨김 안내", (b) => busy(b, "기록하는 중…", () => logNotice(r, "숨김 안내"))),
+                button("이의 검토 결과 안내", (b) => busy(b, "기록하는 중…", () => logNotice(r, "이의 검토 결과 안내"))),
+                no);
+              focusEl(no);
+            }),
           );
         } else {
-          list.push(btn("숨김", (b) => openHide(r, b)));
+          list.push(button("숨김", (b) => openHide(r, b)));
         }
         return list;
       };
@@ -1204,29 +1310,58 @@
       return wrap;
     }
 
+    // 상태 칸: 숨김 여부·사유·메모·기간, 임시 조치 기한, 작성자 알림 기록, 다시 살펴볼 표시
+    function statusCell(r) {
+      const d = document.createElement("div");
+      d.className = "adm-status";
+      const lines = [];
+      if (r.hidden_at) {
+        lines.push(`숨김 · ${r.hidden_reason}`);
+        if (r.hidden_note) lines.push(r.hidden_note);
+        lines.push(`${mdDate(r.hidden_at)}부터 ${dayCount(r.hidden_at)}일째`);
+        if (r.hidden_reason === HIDE_TEMP) lines.push(`임시 조치 기한 ${mdDate(new Date(tempUntil(r)).toISOString())}`);
+        if (r.notified_at) lines.push(`작성자 알림 ${mdDate(r.notified_at)} 기록`);
+      } else {
+        lines.push("게시 중");
+      }
+      d.textContent = lines.join("\n");
+      flags(r).forEach((t) => {
+        const f = document.createElement("span");
+        f.className = "adm-flag";
+        f.textContent = t;
+        d.append(f);
+      });
+      return d;
+    }
+    const memberCell = (r) => {
+      const n = r.email ? rows.filter((x) => x.email === r.email).length : 0;
+      return [[r.name, r.member_type].filter(Boolean).join(" · "), r.email, n > 1 && `이 회원의 후기 ${n}건`, r.banned && "작성 제한"].filter(Boolean).join("\n");
+    };
+
+    // 「관리」를 번호 바로 다음에 둔다(표가 넓어 맨 끝에 두면 가로로 밀어야 버튼이 보인다)
     const cols = [
       ["번호", (r) => String(r.id)],
+      ["관리", actions],
+      ["상태", statusCell, "lines"],
       ["작성일", (r) => fmtDate(r.created_at) + (edited(r) ? `\n수정 ${mdDate(r.updated_at)}` : ""), "lines"],
-      ["상태", (r) => (r.hidden_at
-        ? `숨김 · ${r.hidden_reason}` + (r.hidden_note ? `\n${r.hidden_note}` : "") + `\n${mdDate(r.hidden_at)}부터 ${dayCount(r.hidden_at)}일째`
-        : "게시 중"), "lines"],
       ["별점", (r) => String(r.rating)],
       ["프로그램", (r) => r.program],
       ["본문", (r) => { const d = document.createElement("div"); d.className = "adm-body"; d.textContent = r.body; return d; }, "wrap"],
       ["표시 이름", (r) => r.author_label],
-      ["회원", (r) => [[r.name, r.member_type].filter(Boolean).join(" · "), r.email, r.banned && "작성 제한"].filter(Boolean).join("\n"), "lines"],
+      ["회원", memberCell, "lines"],
       ["수강 확인", (r) => (r.verified ? `확인 (${mdDate(r.verified_at)})` : "")],
-      ["관리", actions],
     ];
     drawHead(body, cols);
     function render() {
       const qv = search.value.trim().toLowerCase();
-      shown = rows.filter((r) => (!stateSel.value || (stateSel.value === "hidden") === !!r.hidden_at)
+      const st = stateSel.value;
+      shown = rows.filter((r) => (!st || (st === "check" ? flags(r).length > 0 : (st === "hidden") === !!r.hidden_at))
         && (!qv || String(r.id) === qv || [r.name, r.email, r.body, r.author_label, r.program].some((v) => (v || "").toLowerCase().includes(qv))));
       drawRows(body, cols, shown, rows.length ? "조건에 맞는 후기가 없습니다." : "아직 회원 후기가 없습니다.");
       const n = (x) => x.toLocaleString("ko-KR");
       const hidden = rows.filter((r) => r.hidden_at);
-      $("#rvCount").textContent = `${n(shown.length)}건 표시 중 (전체 ${n(rows.length)}건 · 게시 중 ${n(rows.length - hidden.length)} · 숨김 ${n(hidden.length)} · 수강 확인 ${n(rows.filter((r) => r.verified).length)})`;
+      const check = rows.filter((r) => flags(r).length).length;
+      $("#rvCount").textContent = `${n(shown.length)}건 표시 중 (전체 ${n(rows.length)}건 · 게시 중 ${n(rows.length - hidden.length)} · 숨김 ${n(hidden.length)} · 수강 확인 ${n(rows.filter((r) => r.verified).length)} · 확인할 글 ${n(check)})`;
       // 숨긴 글이 낮은 별점에 쏠려 있지 않은지 스스로 점검하는 줄
       const dist = $("#rvDist");
       dist.textContent = hidden.length
@@ -1238,10 +1373,11 @@
     search.addEventListener("input", render);
 
     // 숨김 창
+    const NOTE_NEEDED = "이 사유는 메모에 구체 사유를 적어 주세요.";
     const syncNote = () => {
-      const other = reason.value === "기타";
-      $("#rvHideNoteOpt").textContent = other ? "(필수)" : "(선택)";
-      if (!other) setErr(noteEl, noteErr, "");
+      const need = HIDE_NOTE_REQUIRED.includes(reason.value);
+      $("#rvHideNoteOpt").textContent = need ? "(필수)" : "(선택)";
+      if (!need) setErr(noteEl, noteErr, "");
     };
     reason.addEventListener("change", () => { if (reason.value) setErr(reason, reasonErr, ""); syncNote(); });
     function openHide(r, from) {
@@ -1267,7 +1403,7 @@
       const detail = noteEl.value.trim();
       let bad = null;
       if (!setErr(reason, reasonErr, HIDE_REASONS.includes(why) ? "" : "숨김 사유를 골라 주세요.")) bad = reason;
-      if (!setErr(noteEl, noteErr, why === "기타" && detail.length < 2 ? "기타 사유는 내용을 적어 주세요." : "")) bad = bad || noteEl;
+      if (!setErr(noteEl, noteErr, HIDE_NOTE_REQUIRED.includes(why) && detail.length < 2 ? NOTE_NEEDED : "")) bad = bad || noteEl;
       if (bad) { focusEl(bad); return; }
       await busy(e.currentTarget, "처리 중…", async () => {
         const r = target;
@@ -1277,23 +1413,22 @@
         dlg.close();
         await load();
         // 숨긴 날 작성자에게 사유와 이의 제기 방법을 알린다(약관 제10조)
-        msg(out, first ? "숨김 처리했습니다. 오늘 안에 작성자에게 사유와 이의 제기 방법을 알려 주세요." : "숨김 사유를 고쳤습니다. 작성자에게 알린 사유와 달라졌다면 다시 알려 주세요.", "ok");
-        const actionsBox = document.createElement("div");
-        actionsBox.className = "msg-actions";
-        actionsBox.append(mailLink({ ...r, hidden_reason: why, hidden_note: detail }, "작성자에게 메일 쓰기"));
-        out.append(actionsBox);
+        msg(out, first ? "숨김 처리했습니다. 오늘 안에 작성자에게 사유와 이의 제기 방법을 알리고, 보낸 뒤 「알림 보냄으로 기록」을 눌러 주세요."
+          : "숨김 사유를 고쳤습니다. 작성자에게 알린 사유와 달라졌다면 다시 알려 주세요.", "ok");
+        const now = rows.find((x) => x.id === r.id) || { ...r, hidden_at: new Date().toISOString() };
+        out.append(noticeActions({ ...now, hidden_reason: why, hidden_note: detail }, "hide", "숨김 안내", "작성자에게 메일 쓰기"));
         focusEl(out);
       });
     });
 
     // CSV: 화면 필터를 따른다
     $("#rvCsv").addEventListener("click", () => downloadCsv("snucoach-reviews",
-      ["글 번호", "작성일시", "수정일시", "상태", "숨김 사유", "숨김 메모", "숨김 일시", "별점", "프로그램", "본문", "표시 이름", "이름", "이메일", "회원 구분", "수강 확인", "수강 확인 일시", "작성 제한"],
+      ["글 번호", "작성일시", "수정일시", "상태", "숨김 사유", "숨김 메모", "숨김 일시", "작성자 알림 기록", "확인할 점", "별점", "프로그램", "본문", "표시 이름", "이름", "이메일", "회원 구분", "수강 확인", "수강 확인 일시", "작성 제한"],
       shown.map((r) => [r.id, fmtDateTime(r.created_at), edited(r) ? fmtDateTime(r.updated_at) : "", r.hidden_at ? "숨김" : "게시 중", r.hidden_reason, r.hidden_note,
-        r.hidden_at ? fmtDateTime(r.hidden_at) : "", r.rating, r.program, r.body, r.author_label, r.name, r.email, r.member_type,
+        r.hidden_at ? fmtDateTime(r.hidden_at) : "", r.notified_at ? fmtDateTime(r.notified_at) : "", flags(r).join(" / "), r.rating, r.program, r.body, r.author_label, r.name, r.email, r.member_type,
         r.verified ? "확인" : "", r.verified_at ? fmtDateTime(r.verified_at) : "", r.banned ? "제한" : ""])));
-    // 처리 기록: 숨김·사유 수정·해제·수강 확인을 처리한 내역(작성자·본문 없음). 글이 지워진 뒤에도 남는다.
-    const ACTIONS = { hide: "숨김", reason: "사유 수정", unhide: "숨김 해제", verify: "수강 확인", unverify: "수강 확인 취소" };
+    // 처리 기록: 숨김·사유 수정·해제·수강 확인·작성자 알림을 처리한 내역(작성자·본문 없음). 글이 지워진 뒤에도 남는다.
+    const ACTIONS = { hide: "숨김", reason: "사유 수정", unhide: "숨김 해제", verify: "수강 확인", unverify: "수강 확인 취소", notify: "작성자 알림" };
     $("#rvLogCsv").addEventListener("click", (e) => busy(e.currentTarget, "불러오는 중…", async () => {
       const list = [];
       for (let from = 0; ; from += 1000) {
@@ -1304,7 +1439,7 @@
       }
       downloadCsv("snucoach-review-log",
         ["처리 일시", "글 번호", "처리", "별점", "프로그램", "사유", "메모", "처리한 관리자", "후기"],
-        list.map((l) => [fmtDateTime(l.at), l.review_id, ACTIONS[l.action] || l.action, l.rating, l.program, l.reason, l.note, l.admin_email, l.deleted ? "지워짐" : "남아 있음"]));
+        list.map((l) => [fmtDateTime(l.at), l.review_id, ACTIONS[l.action] || l.action, l.rating, l.program, l.reason, l.note, l.admin_email || (l.action === "unhide" ? "(자동)" : ""), l.deleted ? "지워짐" : "남아 있음"]));
     }));
 
     await load();
@@ -1433,7 +1568,11 @@
   // ── 회원 후기 (후기 페이지·관리자 화면 공용). DB: supabase/migrations/20261003000000_reviews.sql ──
   const REVIEW_PROGRAMS = ["학습코칭", "생기부 컨설팅", "무료 자료·이벤트", "기타"]; // DB 의 reviews_program_allowed 와 같아야 함
   const REVIEW_VERIFIABLE = ["학습코칭", "생기부 컨설팅"]; // 수강 확인을 붙일 수 있는 프로그램(DB 의 reviews_verified_program)
-  const HIDE_REASONS = ["욕설·비방", "광고·스팸", "개인정보 노출", "허위 사실·권리 침해", "기타"]; // DB 의 reviews_hidden_consistent 와 같아야 함
+  // 숨김 사유. DB 의 reviews_hidden_consistent 와 같아야 한다. 이름은 약관 제10조 제5항 각 호(와 제8항의 임시 조치)에 맞췄다.
+  const HIDE_REASONS = ["욕설·인신공격", "광고·스팸", "개인정보 노출", "허위 사실·권리 침해", "법령 위반", "임시 조치(권리 침해 신고)"];
+  const HIDE_NOTE_REQUIRED = ["법령 위반", "임시 조치(권리 침해 신고)"]; // 메모(구체 사유)가 필수인 사유
+  const HIDE_TEMP = "임시 조치(권리 침해 신고)";
+  const TEMP_DAYS = 30; // 임시 조치 기간(약관 제10조 제8항). DB 의 정리 작업은 29일이 지나면 자동으로 다시 게시한다
   const RETURN_KEY = "snucoach-return"; // 후기 화면에서 로그인하러 온 표시(같은 탭에서만, 30분). reviews.js 가 적는다
   // 서버가 직접 정한 코드(RV…)는 메시지로도 판정한다(실제 API 가 코드를 그대로 돌려주는지 미리 확인하지 못했다)
   const reviewErrText = (e) => {
@@ -1441,9 +1580,10 @@
     const m = e.message || "";
     if (e.code === "RV001" || /하루에 3건/.test(m)) return "후기는 하루에 3건까지 올릴 수 있습니다. 내일 다시 시도해 주세요.";
     if (e.code === "RV002" || /가입 마무리/.test(m)) return "가입 마무리를 끝낸 뒤 후기를 남길 수 있습니다.";
-    if (e.code === "RV003" || /관리자 계정으로는/.test(m)) return "관리자 계정으로는 후기를 쓸 수 없습니다.";
+    if (e.code === "RV003" || /관리자 계정으로는/.test(m)) return "관리자 계정으로는 후기를 쓰거나 고칠 수 없습니다.";
     if (e.code === "RV005" || /제한된 계정/.test(m)) return "후기 작성이 제한된 계정입니다. 이의가 있으면 카카오톡 채널로 알려 주세요.";
     if (e.code === "RV006" || /하루에 20번/.test(m)) return "후기는 하루에 20번까지 고칠 수 있습니다. 내일 다시 시도해 주세요.";
+    if (e.code === "RV007" || /14일 동안/.test(m)) return "숨김 처리된 후기를 지운 뒤 14일 동안은 새 후기를 올릴 수 없습니다. 이미 올린 후기는 고칠 수 있습니다.";
     if (e.code === "23505") return "이 프로그램에는 이미 후기를 남기셨습니다. 「내가 쓴 후기」에서 고칠 수 있습니다.";
     if (e.code === "23514" && /reviews_body_length/.test(m)) return "후기 내용은 10자 이상 1,000자 이하로 적어 주세요.";
     if (["PGRST205", "PGRST202", "42P01", "PGRST204", "42703"].includes(e.code)) return "지금은 후기를 올릴 수 없습니다. 잠시 뒤 다시 시도해 주세요.";
@@ -1453,7 +1593,8 @@
   const reviews = {
     PROGRAMS: REVIEW_PROGRAMS,
     errText: reviewErrText,
-    // 후기를 쓸 수 있는 상태인지: "ok" | "signed-out" | "onboarding"(가입 마무리 전) | "admin" | "banned"(작성 제한) | "error"
+    // 후기를 쓸 수 있는 상태인지: "ok" | "signed-out" | "onboarding"(가입 마무리 전) | "admin" | "banned"(작성 제한)
+    //                             | "hold"(숨김 처리된 글을 지운 뒤의 새 글 보류. holdUntil 까지) | "error"
     // author 는 지금 쓰면 붙는 표시 이름(예: 김**). 프로필(실명 등)은 이 화면으로 읽어 오지 않는다.
     async status() {
       const { data } = await sb().auth.getSession();
@@ -1461,8 +1602,8 @@
       const { data: rows, error } = await sb().rpc("my_review_status");
       if (error) return { state: /^PGRST30[1-3]$/.test(error.code || "") ? "signed-out" : "error", error };
       const row = Array.isArray(rows) ? rows[0] : rows;
-      if (!row || !["ok", "onboarding", "admin", "banned"].includes(row.state)) return { state: "error", error: { code: "empty" } };
-      return { state: row.state, author: row.author || "" };
+      if (!row || !["ok", "onboarding", "admin", "banned", "hold"].includes(row.state)) return { state: "error", error: { code: "empty" } };
+      return { state: row.state, author: row.author || "", holdUntil: row.hold_until || "" };
     },
     async mine() { return sb().rpc("my_reviews"); },
     // 넣는 칸은 세 개뿐이다. select("id") 를 빼면 안 된다(전체 칸을 돌려 달라고 하면 열 권한 때문에 42501 이 된다).

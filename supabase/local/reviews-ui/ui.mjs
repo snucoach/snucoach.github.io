@@ -63,6 +63,8 @@ try {
   ok('1 구역과 히어로 버튼이 보임', (await vis(pg, '#member-reviews')) && (await vis(pg, '#mrvJump')) && (await pg.ev(`return document.getElementById('mrvJump').getAttribute('href')`)) === '#member-reviews');
   ok('1 첫 화면 10건, 최신순, 전체 23건', (await count(pg, '#mrvList > li')) === 10 && (await txt(pg, '#mrvTotal')) === '23건' && (await pg.ev(`return document.querySelector('#mrvList > li').id`)) === 'mrv-23', [await count(pg, '#mrvList > li'), await txt(pg, '#mrvTotal')]);
   ok('1 카드: 별점(글자 대체)·프로그램·가린 이름·날짜·수정됨', await pg.ev(`const li = document.getElementById('mrv-23'); const s = li.querySelector('.mrv-stars'); return s.getAttribute('role') === 'img' && s.getAttribute('aria-label') === '별점 5점 만점에 3점' && s.querySelectorAll('svg.on').length === 3 && s.querySelectorAll('svg').length === 5 && li.querySelector('.badge').textContent === '무료 자료·이벤트' && li.querySelector('.mrv-author').textContent === '박**' && li.querySelector('time').textContent === '2026년 10월 1일' && li.querySelector('.mrv-meta').textContent.endsWith('· 수정됨');`), await txt(pg, '#mrv-23'));
+  ok('1 별점이 색만으로 구분되지 않음: 보이는 점수 글자(3점), 꺼진 별에도 윤곽선', await pg.ev(`const li = document.getElementById('mrv-23'); const sc = li.querySelector('.mrv-score'); const off = li.querySelector('.mrv-stars svg:not(.on)'); const cs = getComputedStyle(off); return sc.textContent === '3점' && sc.getAttribute('aria-hidden') === 'true' && sc.getBoundingClientRect().width > 0 && cs.stroke !== 'none' && parseFloat(cs.strokeWidth) >= 1;`));
+  ok('1 후기 모음 안내가 칩 줄 바로 위에 늘 보임(받은 경로·골라 실음·게시 기간·내려 달라는 요청)', await pg.ev(`const a = document.getElementById('rvAbout'); const t = document.querySelector('.rv-toolbar'); const r = a.getBoundingClientRect(); return a.nextElementSibling === t && r.height > 0 && !a.closest('details') && /보내 주신 후기와 성적·합격 인증 가운데 스누코치가 골라 실은 것/.test(a.textContent) && /받은 후기를 모두 실은 것은 아닙니다/.test(a.textContent) && /내려 달라고 요청하면 지체 없이 내립니다/.test(a.textContent) && a.querySelector('a').href === 'https://pf.kakao.com/_wiwxmG/chat';`));
   ok('1 수강 확인 배지는 확인된 글에만', (await pg.ev(`return [...document.querySelectorAll('#mrvList .badge.gold')].map((b) => b.closest('li').id + ':' + b.textContent).join()`)) === 'mrv-21:수강 확인');
   ok('1 수정하지 않은 글에는 「수정됨」 없음', !(await txt(pg, '#mrv-22 .mrv-meta')).includes('수정됨'));
   ok('1 쓰기 영역: 로그인 안내 링크', (await pg.ev(`const a = document.querySelector('#mrvWrite a'); return a && a.textContent + '|' + a.getAttribute('href')`)) === '로그인하고 후기 쓰기|login.html?next=reviews.html%23member-reviews' && (await txt(pg, '#mrvWrite .mrv-write-note')) === '후기는 스누코치 회원만 쓸 수 있습니다.');
@@ -71,6 +73,8 @@ try {
   ok('1 안내 문구: 가입한 회원이면 누구나·수강 확인 구분', /가입한 회원이면 누구나 쓸 수 있는 후기입니다.+수강 사실을 확인한 후기에만/.test(await txt(pg, '.mrv-sub')));
   await click(pg, '#mrvRules summary');
   await pg.waitFor(`document.getElementById('mrvHiddenStat').textContent !== '확인하는 중입니다.'`);
+  ok('1 운영 기준의 숨김 기준이 약관 제10조 제5항 다섯 호와 같음(차별·혐오, 되풀이, 관계없는 글, 코치 성명 제외 포함)', (await count(pg, '.mrv-rules-ol > li')) === 5 && /차별·혐오 표현/.test(await txt(pg, '.mrv-rules-ol')) && /같은 내용을 되풀이해 올린 글/.test(await txt(pg, '.mrv-rules-ol')) && /상담·환불·응대에 관한 경험은 후기로 봅니다/.test(await txt(pg, '.mrv-rules-ol')) && /스누코치 소속 코치의 성명만 적은 것은 제외/.test(await txt(pg, '.mrv-rules-ol')));
+  ok('1 운영 기준: 관계자·대가성 후기, 14일 보류, 임시 조치 30일', /운영자와 소속 코치는 회원 후기를 쓰지 않으며/.test(await txt(pg, '.mrv-rules-list')) && /대가를 받고 쓰는 후기는 그 사실을 후기에 밝혀야 합니다/.test(await txt(pg, '.mrv-rules-list')) && /지우면 14일 동안 새 후기를 올릴 수 없습니다/.test(await txt(pg, '.mrv-rules-list')) && /30일 이내로 임시로 숨기고, 그 안에 정하지 못하면 다시 게시합니다/.test(await txt(pg, '.mrv-rules-list')));
   ok('1 운영 기준 자세히: 항목 6개, 숨김 현황, 약관 링크', (await count(pg, '.mrv-rules-list dt')) === 6 && (await txt(pg, '#mrvHiddenStat')) === '지금 숨김 처리된 후기는 없습니다.' && (await pg.ev(`return document.querySelector('.mrv-rules-more a').getAttribute('href')`)) === 'terms.html#reviews', await txt(pg, '#mrvHiddenStat'));
   await click(pg, '#mrvMore');
   await pg.waitFor(`document.querySelectorAll('#mrvList > li').length === 20`);
@@ -97,6 +101,10 @@ try {
   await sleep(500);
   ok('3 DB 설정 전(404 PGRST205): 구역·히어로 버튼 숨긴 채', (await vis(pg, '#member-reviews')) === false && (await vis(pg, '#mrvJump')) === false);
   ok('3 큐레이션 후기는 그대로(카드 134장)', (await count(pg, '.rv-card')) === 134);
+  const heroH0 = await pg.ev(`return document.querySelector('.hero-reviews').getBoundingClientRect().height`);
+  await open(pg, '/reviews.html', { reviews: seed(3) });
+  await settle(pg);
+  ok('3 히어로의 버튼 자리를 미리 잡아 둠: 버튼이 나타나도 히어로 높이가 같음', Math.abs((await pg.ev(`return document.querySelector('.hero-reviews').getBoundingClientRect().height`)) - heroH0) < 1 && (await vis(pg, '#mrvJump')) === true, [heroH0, await pg.ev(`return document.querySelector('.hero-reviews').getBoundingClientRect().height`)]);
   clean(pg, '3');
   await open(pg, '/reviews.html', { emptyConfig: true, reviews: seed(3) });
   await sleep(500);
@@ -113,11 +121,34 @@ try {
   await pg.waitFor(`document.querySelectorAll('#mrvList > li').length === 3`);
   ok('4 다시 시도 → 목록, 안내 사라짐', (await vis(pg, '#mrvMsg')) === false);
   clean(pg, '4');
+  await open(pg, '/reviews.html', { mode: 'fail', reviews: seed(3) }, U1);
+  await settle(pg); await pg.waitFor(`document.getElementById('mrvOpen')`); await sleep(200);
+  ok('4 조회 실패 + 로그인: 오류 안내만 보이고 「아직 회원 후기가 없습니다」는 보이지 않음', (await txt(pg, '#mrvMsg')).startsWith('후기를 불러오지 못했습니다.') && (await vis(pg, '#mrvEmpty')) === false, await vis(pg, '#mrvEmpty'));
+  ok('4 조회 실패여도 숨김 처리 현황은 따로 읽어 「확인하는 중」에 멈추지 않음', (await txt(pg, '#mrvHiddenStat')) === '지금 숨김 처리된 후기는 없습니다.', await txt(pg, '#mrvHiddenStat'));
+  await api('/__fake/set', { mode: 'ok' });
+  await click(pg, '#mrvMsg button');
+  await pg.waitFor(`document.querySelectorAll('#mrvList > li').length === 3`);
+  ok('4 다시 시도 뒤 빈 상태 문구는 계속 숨김', (await vis(pg, '#mrvEmpty')) === false);
+  clean(pg, '4b');
+  // 더 보기: 실패 안내는 버튼 바로 위에, 다시 누르면 새 카드만 덧붙는다(펼쳐 둔 글 유지)
+  await open(pg, '/reviews.html', { reviews: seed(23, (i) => (i === 21 ? { body: '줄이 많은 글\n'.repeat(40) + '끝' } : {})) });
+  await settle(pg);
+  await click(pg, '#mrv-22 .mrv-toggle');
+  await api('/__fake/set', { mode: 'fail' });
+  await click(pg, '#mrvMore');
+  await pg.waitFor(`document.getElementById('mrvMoreMsg').textContent !== ''`);
+  ok('4 더 보기 실패: 안내가 버튼 바로 위에 보임(화면 밖이 아님)', await pg.ev(`const m = document.getElementById('mrvMoreMsg'); const b = document.getElementById('mrvMore'); const mr = m.getBoundingClientRect(), br = b.getBoundingClientRect(); return m.textContent === '후기를 더 불러오지 못했습니다. 잠시 뒤 다시 눌러 주세요.' && m.getAttribute('role') === 'alert' && mr.height > 0 && mr.bottom <= br.top + 1 && br.top - mr.bottom < 40 && document.getElementById('mrvMsg').hidden;`), await pg.ev(`return [document.getElementById('mrvMoreMsg').getBoundingClientRect().bottom, document.getElementById('mrvMore').getBoundingClientRect().top]`));
+  await api('/__fake/set', { mode: 'ok' });
+  await click(pg, '#mrvMore');
+  await pg.waitFor(`document.querySelectorAll('#mrvList > li').length === 20`);
+  ok('4 다시 누르면 20건, 실패 안내 사라짐, 펼쳐 둔 글은 그대로 펼쳐져 있음', (await txt(pg, '#mrvMoreMsg')) === '' && (await txt(pg, '#mrv-22 .mrv-toggle')) === '접기' && (await pg.ev(`return !document.querySelector('#mrv-22 .mrv-body').classList.contains('is-clamped')`)) && (await active(pg)) === 'mrv-13', [await txt(pg, '#mrv-22 .mrv-toggle'), await active(pg)]);
+  clean(pg, '4c');
 
   // ── 5. 로그인 상태별 쓰기 영역 ─────────────────────────
   await open(pg, '/reviews.html', { reviews: seed(2) }, { session: true, uid: 'u3', profile: profile({ name: null }) });
   await settle(pg); await pg.waitFor(`document.querySelector('#mrvWrite a')`);
   ok('5 가입 마무리 전: 「가입 마무리하고 후기 쓰기」', (await pg.ev(`const a = document.querySelector('#mrvWrite a'); return a.textContent + '|' + a.getAttribute('href')`)) === '가입 마무리하고 후기 쓰기|account.html');
+  ok('5 그 링크를 누르면 「돌아오기」 표시를 남김', await pg.ev(`const a = document.querySelector('#mrvWrite a'); a.addEventListener('click', (e) => e.preventDefault()); a.click(); const v = Number(sessionStorage.getItem('snucoach-return')) > 0; sessionStorage.removeItem('snucoach-return'); return v;`));
   reqs = (await api('/__fake/state')).requests;
   ok('5 로그인 흔적이 있으면 라이브러리와 auth.js?v=a7 을 불러옴', reqs.some((r) => r.includes('supabase-js-2.117.2.js')) && reqs.some((r) => r.includes('/assets/js/auth.js?v=a7')));
   ok('5 후기 화면은 프로필(실명 등)을 읽지 않음', (await calls(pg, 'profiles.select')).length === 0);
@@ -128,6 +159,11 @@ try {
   await open(pg, '/reviews.html', { reviews: seed(2) }, { session: true, uid: 'u8', profile: profile() });
   await settle(pg); await pg.waitFor(`document.querySelector('#mrvWrite a')`);
   ok('5 작성 제한 계정: 안내와 카카오톡 채널 링크', /후기 작성이 제한된 계정입니다/.test(await txt(pg, '#mrvWrite')) && (await pg.ev(`return document.querySelector('#mrvWrite a').href`)) === 'https://pf.kakao.com/_wiwxmG/chat');
+  const holdUntil = new Date(Date.now() + 10 * 86400000).toISOString();
+  const holdDay = new Intl.DateTimeFormat('ko-KR', { month: 'long', day: 'numeric', timeZone: 'Asia/Seoul' }).format(new Date(holdUntil));
+  await open(pg, '/reviews.html', { reviews: seed(2), holds: { u1: holdUntil } }, U1);
+  await settle(pg); await pg.waitFor(`document.querySelector('#mrvWrite a')`);
+  ok('5 보류 중(숨김 처리된 후기를 지운 회원): 끝나는 날짜 안내, 「후기 쓰기」 버튼 없음', (await txt(pg, '#mrvWrite')) === `숨김 처리된 후기를 지워서 ${holdDay}까지 새 후기를 올릴 수 없습니다. 이미 올린 후기는 고칠 수 있습니다. 이의가 있으면 카카오톡 채널로 알려 주세요.` && (await count(pg, '#mrvOpen')) === 0, await txt(pg, '#mrvWrite'));
   await open(pg, '/reviews.html', { reviews: seed(2) }, { session: false }, `localStorage.setItem('snucoach-auth', ${JSON.stringify(AUTH)});`);
   await settle(pg); await pg.waitFor(`document.querySelector('#mrvWrite a')`);
   ok('5 로그인 흔적만 남고 세션이 없으면 로그인 안내', (await txt(pg, '#mrvWrite a')) === '로그인하고 후기 쓰기');
@@ -141,7 +177,7 @@ try {
   ok('6 쓸 수 있는 회원: 「후기 쓰기」 버튼(aria-expanded=false)', (await txt(pg, '#mrvOpen')) === '후기 쓰기' && (await pg.ev(`return document.getElementById('mrvOpen').getAttribute('aria-expanded')`)) === 'false');
   await click(pg, '#mrvOpen');
   ok('6 폼이 열리고 제목으로 초점, 표시 이름 미리 보기 김**', (await vis(pg, '#mrvForm')) && (await active(pg)) === 'mrvFormTitle' && (await txt(pg, '#mrvAuthorPreview')) === '김**' && (await pg.ev(`return document.getElementById('mrvOpen').getAttribute('aria-expanded')`)) === 'true', [await active(pg), await txt(pg, '#mrvAuthorPreview')]);
-  ok('6 폼 안내: 즉시 공개·개인정보 금지·숨김 기준·삭제·수집 안내 5줄, 약관 동의 문구', (await count(pg, '#mrvNotice li')) === 5 && /다른 사람의 이름·연락처·학교 같은 개인정보와 사실과 다른 내용은 적지 말아 주세요/.test(await txt(pg, '#mrvNotice')) && /이용약관 제10조\(회원 후기\)에 동의한 것으로 봅니다/.test(await txt(pg, '.mrv-agree')));
+  ok('6 폼 안내: 즉시 공개·개인정보 금지·숨김 기준·삭제·수집 안내 5줄, 약관 동의 문구', (await count(pg, '#mrvNotice li')) === 5 && /다른 사람의 이름·연락처·학교 같은 개인정보, 본인의 연락처, 허위 사실은 적지 말아 주세요\(숨김 처리될 수 있습니다\)\. 스누코치 소속 코치의 성명만 적는 것은 괜찮습니다/.test(await txt(pg, '#mrvNotice')) && /대가를 받고 쓰는 후기는 그 사실을 후기에 밝혀 주세요/.test(await txt(pg, '#mrvNotice')) && /숨김 처리된 후기를 지우면 14일 동안 새 후기를 올릴 수 없습니다/.test(await txt(pg, '#mrvNotice')) && /이용약관 제10조\(회원 후기\)에 동의한 것으로 봅니다/.test(await txt(pg, '.mrv-agree')));
   await click(pg, '#mrvSubmit');
   await sleep(80);
   ok('6 빈 값 제출: 세 칸 오류, 첫 칸으로 초점, 서버 요청 없음', (await txt(pg, '#mrvProgramErr')) === '이용한 프로그램을 골라 주세요.' && (await txt(pg, '#mrvRateErr')) === '별점을 골라 주세요.' && (await txt(pg, '#mrvBodyErr')) === '후기 내용을 10자 이상 적어 주세요.' && (await active(pg)) === 'mrvProgram' && (await pg.ev(`return document.getElementById('mrvProgram').getAttribute('aria-invalid') + document.getElementById('mrvBody').getAttribute('aria-invalid') + document.getElementById('mrvRate').classList.contains('is-invalid')`)) === 'truetruetrue' && (await calls(pg, 'reviews.insert')).length === 0, [await txt(pg, '#mrvProgramErr'), await txt(pg, '#mrvRateErr'), await txt(pg, '#mrvBodyErr'), await active(pg)]);
@@ -169,6 +205,19 @@ try {
   ok('6 다시 쓰기: 이미 쓴 프로그램은 고를 수 없음', (await pg.ev(`const o = [...document.getElementById('mrvProgram').options].find((x) => x.value === '학습코칭'); return o.disabled + '|' + o.textContent`)) === 'true|학습코칭 (작성함)');
   await click(pg, '#mrvCancel');
   ok('6 취소: 폼 닫고 버튼으로 초점', (await vis(pg, '#mrvForm')) === false && (await active(pg)) === 'mrvOpen');
+  // 쓰던 내용 보호
+  await click(pg, '#mrvOpen');
+  await set(pg, '#mrvProgram', '기타');
+  await pg.ev(`document.querySelector('#mrvRate input[value="2"]').click();`);
+  await set(pg, '#mrvBody', '쓰다가 만 초안입니다. 지워지면 안 됩니다.');
+  await click(pg, '#mrvOpen');
+  ok('6 폼이 열린 채 「후기 쓰기」를 다시 눌러도 쓰던 내용이 그대로, 제목으로 초점', (await pg.ev(`return document.getElementById('mrvBody').value + '|' + document.getElementById('mrvProgram').value + '|' + document.querySelector('#mrvRate input:checked').value`)) === '쓰다가 만 초안입니다. 지워지면 안 됩니다.|기타|2' && (await active(pg)) === 'mrvFormTitle' && (await pg.ev(`return document.getElementById('mrvOpen').getAttribute('aria-expanded')`)) === 'true');
+  await pg.ev(`document.querySelector('#mrvMineList .mrv-item-actions button').click();`);
+  ok('6 새 글을 쓰다가 「고치기」를 누르면 한 번 더 누르라는 안내만(초안 유지)', /쓰던 내용이 있습니다\. 「고치기」를 한 번 더 누르면/.test(await txt(pg, '#mrvFormMsg')) && (await txt(pg, '#mrvFormTitle')) === '후기 쓰기' && (await pg.ev(`return document.getElementById('mrvBody').value`)) === '쓰다가 만 초안입니다. 지워지면 안 됩니다.', await txt(pg, '#mrvFormMsg'));
+  await pg.ev(`document.querySelector('#mrvMineList .mrv-item-actions button').click();`);
+  ok('6 한 번 더 누르면 고치는 화면으로 바뀜, 「후기 쓰기」는 열린 상태(aria-expanded=true)', (await txt(pg, '#mrvFormTitle')) === '후기 고치기' && (await pg.ev(`return document.getElementById('mrvBody').value`)).startsWith('계획 세우는 습관이') && (await vis(pg, '#mrvFormMsg')) === false && (await pg.ev(`return document.getElementById('mrvOpen').getAttribute('aria-expanded')`)) === 'true');
+  await click(pg, '#mrvCancel');
+  ok('6 「고치기」로 연 폼을 취소하면 누른 「고치기」 버튼으로 초점', (await active(pg)) === 'BUTTON:고치기' && (await pg.ev(`return document.getElementById('mrvOpen').getAttribute('aria-expanded')`)) === 'false', await active(pg));
   clean(pg, '6');
 
   // ── 7. 서버 거절 ──────────────────────────────────────
@@ -180,6 +229,7 @@ try {
     ['23514 길이', { code: '23514', message: 'new row for relation "reviews" violates check constraint "reviews_body_length"' }, '후기 내용은 10자 이상 1,000자 이하로 적어 주세요.'],
     ['23514 그 밖', { code: '23514', message: 'violates check constraint "reviews_rating_range"' }, '입력한 내용을 다시 확인해 주세요.'],
     ['42501', { code: '42501', message: 'permission denied for table reviews' }, '권한이 없습니다. 다시 로그인해 주세요.'],
+    ['RV007', { code: 'RV007', message: '숨김 처리된 후기를 지운 뒤 14일 동안은 새 후기를 올릴 수 없습니다(2026-10-20 12:00 까지).' }, '숨김 처리된 후기를 지운 뒤 14일 동안은 새 후기를 올릴 수 없습니다. 이미 올린 후기는 고칠 수 있습니다.'],
     ['PGRST205', { code: 'PGRST205', message: 'not found' }, '지금은 후기를 올릴 수 없습니다. 잠시 뒤 다시 시도해 주세요.'],
   ]) {
     await api('/__fake/set', { failNext: { kind: 'reviews.insert', error } });
@@ -219,26 +269,39 @@ try {
   await open(pg, '/reviews.html', { reviews: [
     ...seed(3),
     { id: 4, user_id: 'u1', rating: 2, program: '학습코칭', body: '피드백이 늦어서 아쉬웠습니다. 담당 코치 연락처는 010-0000-0000', author_label: '김**', created_at: NOW, updated_at: NOW, hidden_at: NOW, hidden_reason: '개인정보 노출', hidden_note: '다른 사람의 연락처' },
-    { id: 5, user_id: 'u1', rating: 5, program: '기타', body: '교재 본문을 통째로 옮겨 적은 글입니다.', author_label: '김**', created_at: NOW, updated_at: NOW, hidden_at: NOW, hidden_reason: '기타', hidden_note: '저작권법 위반: 교재 본문 전재' },
+    { id: 5, user_id: 'u1', rating: 5, program: '기타', body: '교재 본문을 통째로 옮겨 적은 글입니다.', author_label: '김**', created_at: NOW, updated_at: NOW, hidden_at: NOW, hidden_reason: '법령 위반', hidden_note: '저작권법 위반: 교재 본문 전재' },
+    { id: 7, user_id: 'u1', rating: 1, program: '생기부 컨설팅', body: '권리 침해 신고가 들어온 글입니다. 열 글자 이상.', author_label: '김**', created_at: NOW, updated_at: NOW, hidden_at: NOW, hidden_reason: '임시 조치(권리 침해 신고)', hidden_note: '명예훼손 신고 접수' },
     { id: 6, user_id: 'w9', rating: 1, program: '기타', body: '광고 글입니다 광고 글입니다', author_label: '최**', created_at: NOW, updated_at: NOW, hidden_at: NOW, hidden_reason: '광고·스팸' },
   ] }, U1);
-  await settle(pg); await pg.waitFor(`document.querySelectorAll('#mrvMineList > li').length === 2`);
+  await settle(pg); await pg.waitFor(`document.querySelectorAll('#mrvMineList > li').length === 3`);
   ok('9 숨긴 글은 공개 목록에 없음(3건)', (await count(pg, '#mrvList > li')) === 3 && (await txt(pg, '#mrvTotal')) === '3건');
-  ok('9 본인에게는 숨김 사실과 사유(종류), 이의 제기 링크', (await pg.ev(`const li = [...document.querySelectorAll('#mrvMineList > li')].find((l) => l.textContent.includes('학습코칭')); const n = li.querySelector('.mrv-hidden-note'); return li.classList.contains('is-hidden') && n.textContent + '|' + n.querySelector('a').href`)) === '운영 기준(개인정보 노출)에 따라 숨김 처리되어 다른 사람에게는 보이지 않습니다. 내용을 고쳤거나 이의가 있으면 카카오톡 채널로 알려 주세요. 확인한 뒤 운영 기준에 해당하지 않으면 다시 게시하고 결과를 알려 드립니다.|https://pf.kakao.com/_wiwxmG/chat', await txt(pg, '#mrvMineList .mrv-hidden-note'));
-  ok('9 사유가 「기타」이면 구체 사유도 보임, 다른 사유의 메모는 안 보임', /운영 기준\(기타\).+사유: 저작권법 위반: 교재 본문 전재/.test(await pg.ev(`return [...document.querySelectorAll('#mrvMineList > li')].find((l) => l.textContent.includes('교재')).querySelector('.mrv-hidden-note').textContent`)) && !(await txt(pg, '#mrvMine')).includes('다른 사람의 연락처'));
+  ok('9 본인에게는 숨김 사실과 사유(종류), 이의 제기 링크', (await pg.ev(`const li = [...document.querySelectorAll('#mrvMineList > li')].find((l) => l.textContent.includes('학습코칭')); const n = li.querySelector('.mrv-hidden-note'); return li.classList.contains('is-hidden') && n.textContent + '|' + n.querySelector('a').href`)) === '운영 기준(개인정보 노출)에 따라 숨김 처리되어 다른 사람에게는 보이지 않습니다. 사유: 다른 사람의 연락처 내용을 고친 뒤 카카오톡 채널로 알려 주시면 확인해 다시 게시합니다. 숨김 처리에 이의가 있을 때도 같은 채널로 알려 주세요. 확인한 결과는 알려 드립니다.|https://pf.kakao.com/_wiwxmG/chat', await txt(pg, '#mrvMineList .mrv-hidden-note'));
+  ok('9 사유 이름은 약관의 이름 그대로(법령 위반), 관리자가 적은 구체 사유가 보임', /운영 기준\(법령 위반\).+사유: 저작권법 위반: 교재 본문 전재/.test(await pg.ev(`return [...document.querySelectorAll('#mrvMineList > li')].find((l) => l.textContent.includes('교재')).querySelector('.mrv-hidden-note').textContent`)));
+  ok('9 임시 조치: 신고 접수·기한(숨긴 날부터 30일)·정하지 못하면 다시 게시·의견 채널', await pg.ev(`const n = [...document.querySelectorAll('#mrvMineList > li')].find((l) => l.textContent.includes('생기부 컨설팅')).querySelector('.mrv-hidden-note'); const t = n.textContent; return /신고가 접수되어 임시로 숨김 처리되었습니다/.test(t) && /10월 31일까지 양쪽의 설명을 확인해 다시 게시할지 정하고/.test(t) && /그때까지 정하지 못하면 다시 게시합니다/.test(t) && /사유: 명예훼손 신고 접수/.test(t) && n.querySelector('a').href === 'https://pf.kakao.com/_wiwxmG/chat';`), await pg.ev(`return [...document.querySelectorAll('#mrvMineList > li')].find((l) => l.textContent.includes('생기부 컨설팅')).querySelector('.mrv-hidden-note').textContent`));
   await click(pg, '#mrvRules summary');
-  ok('9 운영 기준의 숨김 현황: 사유별 건수', (await txt(pg, '#mrvHiddenStat')) === '지금 운영 기준에 따라 숨김 처리된 후기는 3건입니다(개인정보 노출 1건, 광고·스팸 1건, 기타 1건).', await txt(pg, '#mrvHiddenStat'));
+  ok('9 운영 기준의 숨김 현황: 사유별 건수', (await txt(pg, '#mrvHiddenStat')) === '지금 운영 기준에 따라 숨김 처리된 후기는 4건입니다(개인정보 노출 1건, 광고·스팸 1건, 법령 위반 1건, 임시 조치(권리 침해 신고) 1건).', await txt(pg, '#mrvHiddenStat'));
   await pg.ev(`[...document.querySelectorAll('#mrvMineList > li')].find((l) => l.textContent.includes('학습코칭')).querySelector('.mrv-item-actions button').click();`);
   await set(pg, '#mrvBody', '피드백이 늦어서 아쉬웠습니다. 연락처는 지웠습니다.');
   await click(pg, '#mrvSubmit');
   await pg.waitFor(`/후기를 고쳤습니다/.test(document.getElementById('mrvMsg').textContent)`);
-  ok('9 숨긴 글을 고쳐도 숨김 유지 + 안내', (await txt(pg, '#mrvMsg')) === '후기를 고쳤습니다. 숨김 처리된 후기는 스누코치가 확인한 뒤 다시 게시합니다.' && (await count(pg, '#mrvList > li')) === 3);
+  ok('9 숨긴 글을 고쳐도 숨김 유지 + 고쳤다고 알려 달라는 안내', (await txt(pg, '#mrvMsg')) === '후기를 고쳤습니다. 아직 숨김 처리된 상태입니다. 고쳤다고 카카오톡 채널로 알려 주시면 확인해 다시 게시합니다.' && (await count(pg, '#mrvList > li')) === 3);
+  // 숨김 처리된 글을 지우면 14일 보류
+  ok('9 지우기 전에는 「후기 쓰기」 버튼이 있음', (await count(pg, '#mrvOpen')) === 1);
+  await pg.ev(`[...document.querySelectorAll('#mrvMineList > li')].find((l) => l.textContent.includes('학습코칭')).querySelectorAll('.mrv-item-actions button')[1].click();`);
+  ok('9 숨김 처리된 글 지우기: 확인 문구에 14일 보류와 고쳐서 다시 게시를 요청하는 길', (await txt(pg, '.mrv-confirm')) === '이 후기를 지울까요? 지우면 되돌릴 수 없고, 숨김 처리된 후기를 지우면 14일 동안 새 후기를 올릴 수 없습니다. 내용을 고쳐 다시 게시를 요청할 수도 있습니다.' && (await calls(pg, 'reviews.delete')).length === 0, await txt(pg, '.mrv-confirm'));
+  await pg.ev(`document.querySelector('.mrv-confirm').parentNode.querySelector('.btn-danger').click();`);
+  await pg.waitFor(`/후기를 지웠습니다/.test(document.getElementById('mrvMsg').textContent)`);
+  ok('9 지운 뒤: 보류 안내, 「후기 쓰기」 버튼이 사라지고 끝나는 날짜가 보임', (await txt(pg, '#mrvMsg')) === '후기를 지웠습니다. 숨김 처리된 후기를 지워서 14일 동안 새 후기를 올릴 수 없습니다.' && (await count(pg, '#mrvOpen')) === 0 && /숨김 처리된 후기를 지워서 \d+월 \d+일까지 새 후기를 올릴 수 없습니다\. 이미 올린 후기는 고칠 수 있습니다/.test(await txt(pg, '#mrvWrite')) && (await count(pg, '#mrvMineList > li')) === 2, [await txt(pg, '#mrvMsg'), await txt(pg, '#mrvWrite')]);
+  await pg.ev(`[...document.querySelectorAll('#mrvMineList > li')].find((l) => l.textContent.includes('교재')).querySelector('.mrv-item-actions button').click();`);
+  ok('9 보류 중에도 이미 올린 글은 고치는 폼이 열림', (await vis(pg, '#mrvForm')) && (await txt(pg, '#mrvFormTitle')) === '후기 고치기');
+  await click(pg, '#mrvCancel');
+  ok('9 「후기 쓰기」 버튼이 없을 때 취소하면 누른 「고치기」 버튼으로 초점(초점이 사라지지 않음)', (await active(pg)) === 'BUTTON:고치기', await active(pg));
   clean(pg, '9');
 
   // ── 10. XSS · 화면을 깨는 글 ───────────────────────────
   await open(pg, '/reviews.html', { reviews: [
     { id: 1, user_id: 'w1', rating: 5, program: '기타', body: '<img src=x onerror="window.__xss=1"><script>window.__xss=2</script><a href="javascript:window.__xss=3">눌러</a> http://evil.example/x', author_label: '<b onmouseover="window.__xss=4">x</b>', created_at: NOW, updated_at: NOW },
-    { id: 2, user_id: 'u1', rating: 1, program: '학습코칭', body: '"><svg onload=window.__xss=5>' + 'a\n'.repeat(60) + 'W'.repeat(400), author_label: '김**', created_at: NOW, updated_at: NOW, hidden_at: NOW, hidden_reason: '기타', hidden_note: '<img src=x onerror="window.__xss=6">' },
+    { id: 2, user_id: 'u1', rating: 1, program: '학습코칭', body: '"><svg onload=window.__xss=5>' + 'a\n'.repeat(60) + 'W'.repeat(400), author_label: '김**', created_at: NOW, updated_at: NOW, hidden_at: NOW, hidden_reason: '법령 위반', hidden_note: '<img src=x onerror="window.__xss=6">' },
     { id: 3, user_id: 'w3', rating: 3, program: '무료 자료·이벤트', body: '줄이 많은 글\n'.repeat(40) + '끝', author_label: '이**', created_at: NOW, updated_at: NOW },
   ] }, U1);
   await settle(pg); await pg.waitFor(`document.querySelectorAll('#mrvMineList > li').length === 1`);
@@ -266,46 +329,66 @@ try {
   ];
   await open(pg, '/admin.html', { reviews: admReviews, members: [] }, ADMIN);
   await pg.waitFor(`!document.getElementById('rvBody').hidden && document.querySelectorAll('#rvRows tr').length === 3`);
-  ok('12 관리자 목록: 3건, 제목 줄 10칸', (await pg.ev(`return [...document.querySelectorAll('#admReviews thead th')].map((t) => t.textContent).join()`)) === '번호,작성일,상태,별점,프로그램,본문,표시 이름,회원,수강 확인,관리');
-  ok('12 줄 내용: 회원 이름·구분·이메일, 작성 제한 표시, 휴대전화 없음', await pg.ev(`const rows = [...document.querySelectorAll('#rvRows tr')].map((tr) => [...tr.cells].map((c) => c.textContent)); const r3 = rows[0], r2 = rows[1]; return r3[0] === '3' && r3[7] === '최제한 · 학생\\nban@example.com\\n작성 제한' && r2[1].includes('수정 10월 2일') && r2[2] === '게시 중' && !document.getElementById('admReviews').textContent.includes('010');`), await pg.ev(`return [...document.querySelectorAll('#rvRows tr')].map((tr) => [...tr.cells].map((c) => c.textContent))`));
-  ok('12 수강 확인 버튼은 학습코칭·생기부 컨설팅 후기에만', (await pg.ev(`return [...document.querySelectorAll('#rvRows tr')].map((tr) => tr.cells[0].textContent + ':' + [...tr.cells[9].querySelectorAll('button, a')].map((b) => b.textContent).join('/')).join(' ')`)) === '3:수강 확인/숨김 2:숨김 1:수강 확인/숨김');
-  ok('12 관리자 수칙 안내 4줄(같은 잣대·알림·수강 확인 기준·연락 금지)', (await count(pg, '.adm-rules li')) === 4 && /별점과 관계없이 같은 잣대/.test(await txt(pg, '.adm-rules')) && /수정·삭제를 부탁하거나 대가를 제시하지 않습니다/.test(await txt(pg, '.adm-rules')));
+  ok('12 관리자 목록: 3건, 제목 줄 10칸', (await pg.ev(`return [...document.querySelectorAll('#admReviews thead th')].map((t) => t.textContent).join()`)) === '번호,관리,상태,작성일,별점,프로그램,본문,표시 이름,회원,수강 확인');
+  ok('12 줄 내용: 회원 이름·구분·이메일, 작성 제한 표시, 휴대전화 없음', await pg.ev(`const rows = [...document.querySelectorAll('#rvRows tr')].map((tr) => [...tr.cells].map((c) => c.textContent)); const r3 = rows[0], r2 = rows[1]; return r3[0] === '3' && r3[8] === '최제한 · 학생\\nban@example.com\\n작성 제한' && r2[3].includes('수정 10월 2일') && r2[2] === '게시 중' && !document.getElementById('admReviews').textContent.includes('010');`), await pg.ev(`return [...document.querySelectorAll('#rvRows tr')].map((tr) => [...tr.cells].map((c) => c.textContent))`));
+  ok('12 수강 확인 버튼은 학습코칭·생기부 컨설팅 후기에만', (await pg.ev(`return [...document.querySelectorAll('#rvRows tr')].map((tr) => tr.cells[0].textContent + ':' + [...tr.cells[1].querySelectorAll('button, a')].map((b) => b.textContent).join('/')).join(' ')`)) === '3:수강 확인/숨김 2:숨김 1:수강 확인/숨김');
+  ok('12 「관리」 칸이 가로로 밀지 않아도 표 안에 보임', await pg.ev(`const w = document.querySelector('#rvBody .adm-table-wrap').getBoundingClientRect(); return [...document.querySelectorAll('#rvRows .adm-acts')].every((a) => { const r = a.getBoundingClientRect(); return r.left >= w.left && r.right <= w.right; });`));
+  ok('12 관리자 수칙 안내 5줄(같은 잣대·알림과 기록·임시 조치·수강 확인 기준·연락 금지)', (await count(pg, '.adm-rules li')) === 5 && /상담·환불·응대에 관한 불만도 후기입니다/.test(await txt(pg, '.adm-rules')) && /29일이 지난 뒤 자동으로 다시 게시됩니다/.test(await txt(pg, '.adm-rules')) && /별점과 관계없이 같은 잣대/.test(await txt(pg, '.adm-rules')) && /수정·삭제를 부탁하거나 대가를 제시하지 않습니다/.test(await txt(pg, '.adm-rules')));
   // 숨김 창
-  await pg.ev(`[...document.querySelectorAll('#rvRows tr')][1].cells[9].querySelector('button').click();`);
+  await pg.ev(`[...document.querySelectorAll('#rvRows tr')][1].cells[1].querySelector('button').click();`);
   ok('12 숨김 창이 열림(본문 미리 보기, 사유로 초점)', (await pg.ev(`return document.getElementById('rvHideDlg').open`)) && (await txt(pg, '#rvHideBody')).startsWith('글 번호 2 · 별점 1점 · 무료 자료·이벤트 · 이**') && (await active(pg)) === 'rvHideReason');
   await click(pg, '#rvHideOk'); await sleep(60);
   ok('12 사유 없이 → 오류, 요청 없음', (await txt(pg, '#rvHideReasonErr')) === '숨김 사유를 골라 주세요.' && (await calls(pg, 'rpc:admin_set_review_hidden')).length === 0 && (await active(pg)) === 'rvHideReason');
-  await set(pg, '#rvHideReason', '기타');
-  ok('12 「기타」를 고르면 메모가 (필수)', (await txt(pg, '#rvHideNoteOpt')) === '(필수)');
+  ok('12 숨김 사유 6개: 약관 제10조 제5항의 이름과 임시 조치', (await pg.ev(`return [...document.getElementById('rvHideReason').options].filter((o) => o.value).map((o) => o.value).join('/')`)) === '욕설·인신공격/광고·스팸/개인정보 노출/허위 사실·권리 침해/법령 위반/임시 조치(권리 침해 신고)' && /후기 문장을 그대로 옮겨 적지 않고/.test(await txt(pg, '#rvHideNoteHint')) && /코치의 성명만 적은 것은 제외/.test(await txt(pg, '#rvHideReasonHint')));
+  await set(pg, '#rvHideReason', '임시 조치(권리 침해 신고)');
+  ok('12 「임시 조치」를 고르면 메모가 (필수)', (await txt(pg, '#rvHideNoteOpt')) === '(필수)');
+  await set(pg, '#rvHideReason', '법령 위반');
+  ok('12 「법령 위반」을 고르면 메모가 (필수)', (await txt(pg, '#rvHideNoteOpt')) === '(필수)');
   await click(pg, '#rvHideOk'); await sleep(60);
-  ok('12 기타 + 메모 없음 → 오류', (await txt(pg, '#rvHideNoteErr')) === '기타 사유는 내용을 적어 주세요.' && (await calls(pg, 'rpc:admin_set_review_hidden')).length === 0 && (await active(pg)) === 'rvHideNote');
+  ok('12 법령 위반 + 메모 없음 → 오류', (await txt(pg, '#rvHideNoteErr')) === '이 사유는 메모에 구체 사유를 적어 주세요.' && (await calls(pg, 'rpc:admin_set_review_hidden')).length === 0 && (await active(pg)) === 'rvHideNote');
   await set(pg, '#rvHideReason', '광고·스팸');
   await set(pg, '#rvHideNote', '후기와 관계없는 광고 링크');
   await click(pg, '#rvHideOk');
   await pg.waitFor(`!document.getElementById('rvHideDlg').open && /숨김 처리했습니다/.test(document.getElementById('rvMsg').textContent)`);
   c = await calls(pg, 'rpc:admin_set_review_hidden');
   ok('12 숨김 처리: 사유·메모 전달, 상태 칸 변경', c.length === 1 && c[0].p_id === 2 && c[0].p_hidden === true && c[0].p_reason === '광고·스팸' && c[0].p_note === '후기와 관계없는 광고 링크' && (await pg.ev(`return [...document.querySelectorAll('#rvRows tr')][1].cells[2].textContent`)).startsWith('숨김 · 광고·스팸\n후기와 관계없는 광고 링크\n'), c);
-  ok('12 숨긴 뒤: 작성자에게 알리라는 안내와 메일 링크(받는 사람·사유·이의 방법)', await pg.ev(`const m = document.getElementById('rvMsg'); const a = m.querySelector('a'); const u = decodeURIComponent(a.getAttribute('href')); return m.textContent.startsWith('숨김 처리했습니다. 오늘 안에 작성자에게 사유와 이의 제기 방법을 알려 주세요.') && a.textContent === '작성자에게 메일 쓰기' && u.startsWith('mailto:lee@example.com?subject=[스누코치] 후기 숨김 처리 안내') && u.includes('운영 기준(광고·스팸)') && u.includes('글 번호 2') && u.includes('이의가 있으면') && u.includes('terms.html#reviews') && !u.includes('후기와 관계없는 광고 링크');`), await pg.ev(`return decodeURIComponent(document.querySelector('#rvMsg a').getAttribute('href'))`));
-  ok('12 숨긴 글의 관리 칸: 숨김 해제·사유 고치기·작성자에게 알리기', (await pg.ev(`return [...[...document.querySelectorAll('#rvRows tr')][1].cells[9].querySelectorAll('button, a')].map((b) => b.textContent).join('/')`)) === '숨김 해제/사유 고치기/작성자에게 알리기');
-  ok('12 아래 줄: 건수와 숨긴 글의 별점 분포', (await txt(pg, '#rvCount')) === '3건 표시 중 (전체 3건 · 게시 중 2 · 숨김 1 · 수강 확인 0)' && (await txt(pg, '#rvDist')).startsWith('숨긴 글의 별점: 1점 1 · 2점 0 · 3점 0 · 4점 0 · 5점 0 / 게시 중인 글의 별점: 1점 0 · 2점 1'), [await txt(pg, '#rvCount'), await txt(pg, '#rvDist')]);
+  ok('12 숨긴 뒤: 작성자에게 알리라는 안내와 메일 링크(받는 사람·사유·이의 방법)', await pg.ev(`const m = document.getElementById('rvMsg'); const a = m.querySelector('a'); const u = decodeURIComponent(a.getAttribute('href')); return m.textContent.startsWith('숨김 처리했습니다. 오늘 안에 작성자에게 사유와 이의 제기 방법을 알리고, 보낸 뒤 「알림 보냄으로 기록」을 눌러 주세요.') && a.textContent === '작성자에게 메일 쓰기' && u.startsWith('mailto:lee@example.com?subject=[스누코치] 후기 숨김 처리 안내') && u.includes('운영 기준(광고·스팸)') && u.includes('글 번호 2') && u.includes('이의가 있으면') && u.includes('terms.html#reviews') && u.includes('구체 사유: 후기와 관계없는 광고 링크') && u.includes('지우면 14일 동안 새 후기를 올릴 수 없습니다') && m.querySelector('.msg-actions button').textContent === '알림 보냄으로 기록';`), await pg.ev(`return decodeURIComponent(document.querySelector('#rvMsg a').getAttribute('href'))`));
+  ok('12 숨긴 글의 관리 칸: 숨김 해제·사유 고치기·작성자에게 알리기', (await pg.ev(`return [...[...document.querySelectorAll('#rvRows tr')][1].cells[1].querySelectorAll('button, a')].map((b) => b.textContent).join('/')`)) === '숨김 해제/사유 고치기/작성자에게 알리기/이의 결과 메일/알림 기록');
+  ok('12 숨긴 글에 작성자 알림 기록이 없으면 상태 칸에 표시', (await pg.ev(`return [...document.querySelectorAll('#rvRows tr')][1].cells[2].querySelector('.adm-flag').textContent`)) === '작성자 알림 기록 없음');
+  ok('12 아래 줄: 건수와 숨긴 글의 별점 분포', (await txt(pg, '#rvCount')) === '3건 표시 중 (전체 3건 · 게시 중 2 · 숨김 1 · 수강 확인 0 · 확인할 글 1)' && (await txt(pg, '#rvDist')).startsWith('숨긴 글의 별점: 1점 1 · 2점 0 · 3점 0 · 4점 0 · 5점 0 / 게시 중인 글의 별점: 1점 0 · 2점 1'), [await txt(pg, '#rvCount'), await txt(pg, '#rvDist')]);
   ok('12 공개 조회에서 사라짐', (await (await fetch(`${SITE}/rest/v1/reviews_public?select=id`, { headers: { apikey: 'sb_publishable_fake_for_local_check' } })).json()).map((r) => r.id).join() === '3,1');
+  // 작성자에게 알렸다는 기록
+  await pg.ev(`document.querySelector('#rvMsg .msg-actions button').click();`);
+  await pg.waitFor(`/처리 기록에 남겼습니다/.test(document.getElementById('rvMsg').textContent)`);
+  c = await calls(pg, 'rpc:admin_log_review_notice');
+  ok('12 「알림 보냄으로 기록」: 글 번호와 안내 종류 전달, 상태 칸에 기록 날짜, 「확인할 글」에서 빠짐', c.length === 1 && c[0].p_id === 2 && c[0].p_kind === '숨김 안내' && (await txt(pg, '#rvMsg')) === '「숨김 안내」을 보냈다고 처리 기록에 남겼습니다.' && /작성자 알림 \d+월 \d+일 기록/.test(await pg.ev(`return [...document.querySelectorAll('#rvRows tr')][1].cells[2].textContent`)) && (await pg.ev(`return [...document.querySelectorAll('#rvRows tr')][1].cells[2].querySelectorAll('.adm-flag').length`)) === 0 && (await txt(pg, '#rvCount')).endsWith('· 확인할 글 0)'), [c, await txt(pg, '#rvMsg'), await txt(pg, '#rvCount')]);
+  ok('12 이의 결과 메일: 숨김 유지 안내 문안', await pg.ev(`const a = [...[...document.querySelectorAll('#rvRows tr')][1].cells[1].querySelectorAll('a')].find((x) => x.textContent === '이의 결과 메일'); const u = decodeURIComponent(a.getAttribute('href')); return u.startsWith('mailto:lee@example.com?subject=[스누코치] 후기 숨김 처리 이의 검토 결과') && u.includes('숨김 처리를 유지함을 알려 드립니다') && u.includes('운영 기준(광고·스팸)') && u.includes('구체 사유: 후기와 관계없는 광고 링크');`));
+  await pg.ev(`[...[...document.querySelectorAll('#rvRows tr')][1].cells[1].querySelectorAll('button')].find((b) => b.textContent === '알림 기록').click();`);
+  ok('12 줄의 「알림 기록」: 어떤 안내였는지 고르게 함', (await txt(pg, '.adm-confirm')) === '작성자에게 보낸 안내를 골라 주세요. 처리 기록에 남습니다.' && (await pg.ev(`return [...document.querySelector('.adm-confirm').parentNode.querySelectorAll('button')].map((b) => b.textContent).join('/')`)) === '숨김 안내/이의 검토 결과 안내/그만두기' && (await active(pg)) === 'BUTTON:그만두기');
+  await pg.ev(`[...document.querySelector('.adm-confirm').parentNode.querySelectorAll('button')][1].click();`);
+  await pg.waitFor(`/「이의 검토 결과 안내」/.test(document.getElementById('rvMsg').textContent)`);
+  ok('12 이의 검토 결과 안내 기록', (await calls(pg, 'rpc:admin_log_review_notice')).map((x) => x.p_kind).join() === '숨김 안내,이의 검토 결과 안내');
   // 사유 고치기
-  await pg.ev(`[...document.querySelectorAll('#rvRows tr')][1].cells[9].querySelectorAll('button')[1].click();`);
+  await pg.ev(`[...document.querySelectorAll('#rvRows tr')][1].cells[1].querySelectorAll('button')[1].click();`);
   ok('12 사유 고치기: 지금 값으로 열림', (await txt(pg, '#rvHideTitle')) === '숨김 사유 고치기' && (await pg.ev(`return document.getElementById('rvHideReason').value + '|' + document.getElementById('rvHideNote').value`)) === '광고·스팸|후기와 관계없는 광고 링크' && (await txt(pg, '#rvHideOk')) === '사유 저장');
   await pg.key('Escape'); await sleep(80);
   ok('12 Esc 로 닫히고 누른 버튼으로 초점이 돌아옴', (await pg.ev(`return document.getElementById('rvHideDlg').open`)) === false && (await active(pg)) === 'BUTTON:사유 고치기', await active(pg));
   // 숨김 해제(두 번)
-  await pg.ev(`[...document.querySelectorAll('#rvRows tr')][1].cells[9].querySelector('button').click();`);
+  await pg.ev(`[...document.querySelectorAll('#rvRows tr')][1].cells[1].querySelector('button').click();`);
   ok('12 숨김 해제: 한 번 누르면 확인 문구만', (await txt(pg, '.adm-confirm')) === '다시 게시할까요?' && (await calls(pg, 'rpc:admin_set_review_hidden')).length === 1 && (await active(pg)) === 'BUTTON:그만두기');
   await pg.ev(`document.querySelector('.adm-confirm').parentNode.querySelector('.btn-danger').click();`);
   await pg.waitFor(`/숨김을 해제해 다시 게시했습니다/.test(document.getElementById('rvMsg').textContent)`);
   c = await calls(pg, 'rpc:admin_set_review_hidden');
   ok('12 두 번째에 해제', c.length === 2 && c[1].p_hidden === false && (await pg.ev(`return [...document.querySelectorAll('#rvRows tr')][1].cells[2].textContent`)) === '게시 중');
+  ok('12 해제 뒤: 작성자에게 결과를 알리는 메일 문안과 기록 버튼', await pg.ev(`const m = document.getElementById('rvMsg'); const a = m.querySelector('a'); const u = decodeURIComponent(a.getAttribute('href')); return a.textContent === '작성자에게 결과 메일 쓰기' && u.startsWith('mailto:lee@example.com?subject=[스누코치] 후기 다시 게시 안내') && u.includes('숨김 처리를 해제하여 다시 게시했음을 알려 드립니다') && u.includes('글 번호 2') && m.querySelector('.msg-actions button').textContent === '알림 보냄으로 기록';`), await pg.ev(`return decodeURIComponent(document.querySelector('#rvMsg a').getAttribute('href'))`));
+  await pg.ev(`document.querySelector('#rvMsg .msg-actions button').click();`);
+  await pg.waitFor(`/「해제 결과 안내」/.test(document.getElementById('rvMsg').textContent)`);
+  ok('12 해제 결과 안내 기록', (await calls(pg, 'rpc:admin_log_review_notice')).map((x) => x.p_kind).join() === '숨김 안내,이의 검토 결과 안내,해제 결과 안내');
   // 수강 확인
-  await pg.ev(`[...document.querySelectorAll('#rvRows tr')][2].cells[9].querySelector('button').click();`);
+  await pg.ev(`[...document.querySelectorAll('#rvRows tr')][2].cells[1].querySelector('button').click();`);
   await pg.waitFor(`/수강 확인 표시를 붙였습니다/.test(document.getElementById('rvMsg').textContent)`);
-  ok('12 수강 확인 표시', (await pg.ev(`return [...document.querySelectorAll('#rvRows tr')][2].cells[8].textContent`)).startsWith('확인 (') && (await pg.ev(`return [...document.querySelectorAll('#rvRows tr')][2].cells[9].querySelector('button').textContent`)) === '확인 취소');
-  await pg.ev(`[...document.querySelectorAll('#rvRows tr')][2].cells[9].querySelector('button').click();`);
+  ok('12 수강 확인 표시', (await pg.ev(`return [...document.querySelectorAll('#rvRows tr')][2].cells[9].textContent`)).startsWith('확인 (') && (await pg.ev(`return [...document.querySelectorAll('#rvRows tr')][2].cells[1].querySelector('button').textContent`)) === '확인 취소');
+  await pg.ev(`[...document.querySelectorAll('#rvRows tr')][2].cells[1].querySelector('button').click();`);
   ok('12 확인 취소는 한 번 더 묻는다', (await txt(pg, '.adm-confirm')) === '착오로 붙인 수강 확인만 취소합니다. 취소할까요?' && (await calls(pg, 'rpc:admin_set_review_verified')).length === 1);
   await pg.ev(`document.querySelector('.adm-confirm').parentNode.querySelector('.btn-line').click();`);
   ok('12 그만두기 → 원래 버튼', (await count(pg, '.adm-confirm')) === 0 && (await calls(pg, 'rpc:admin_set_review_verified')).length === 1);
@@ -320,19 +403,47 @@ try {
   await pg.ev(`window.__csv = []; const o = URL.createObjectURL.bind(URL); URL.createObjectURL = (b) => { b.text().then((t) => window.__csv.push(t)); return o(b); };`);
   await click(pg, '#rvCsv'); await sleep(200);
   let csv = await pg.ev(`return window.__csv[0]`);
-  ok('12 CSV: 제목 줄, 수식으로 시작하는 본문은 무력화, 휴대전화 칸 없음', csv.includes('"글 번호","작성일시","수정일시","상태","숨김 사유","숨김 메모","숨김 일시","별점","프로그램","본문","표시 이름","이름","이메일","회원 구분","수강 확인","수강 확인 일시","작성 제한"') && csv.includes(`"'=HYPERLINK(""http://evil.example"",""눌러 보세요"") 광고입니다"`) && !/휴대전화/.test(csv) && csv.includes('"최제한","ban@example.com","학생","","","제한"'), csv);
+  ok('12 CSV: 제목 줄, 수식으로 시작하는 본문은 무력화, 휴대전화 칸 없음', csv.includes('"글 번호","작성일시","수정일시","상태","숨김 사유","숨김 메모","숨김 일시","작성자 알림 기록","확인할 점","별점","프로그램","본문","표시 이름","이름","이메일","회원 구분","수강 확인","수강 확인 일시","작성 제한"') && csv.includes(`"'=HYPERLINK(""http://evil.example"",""눌러 보세요"") 광고입니다"`) && !/휴대전화/.test(csv) && csv.includes('"최제한","ban@example.com","학생","","","제한"'), csv);
   await click(pg, '#rvLogCsv'); await pg.waitFor(`window.__csv.length === 2`);
   csv = await pg.ev(`return window.__csv[1]`);
-  ok('12 처리 기록 CSV: 숨김·해제·수강 확인 3줄, 작성자 정보 없음', csv.includes('"처리 일시","글 번호","처리","별점","프로그램","사유","메모","처리한 관리자","후기"') && csv.split('\r\n').length === 4 && csv.includes('"숨김 해제"') && csv.includes('"수강 확인"') && !csv.includes('lee@example.com') && csv.includes('admin@example.com'), csv);
+  ok('12 처리 기록 CSV: 숨김·알림 3번·해제·수강 확인 6줄, 작성자 정보 없음', csv.includes('"처리 일시","글 번호","처리","별점","프로그램","사유","메모","처리한 관리자","후기"') && csv.split('\r\n').length === 7 && csv.includes('"숨김 해제"') && csv.includes('"수강 확인"') && csv.includes('"작성자 알림"') && csv.includes('"해제 결과 안내"') && !csv.includes('lee@example.com') && csv.includes('admin@example.com'), csv);
   // 작성자가 지운 글
   await api('/__fake/op', { uid: 'u2', kind: 'reviews.delete', filters: { id: 2 } });
-  await pg.ev(`[...document.querySelectorAll('#rvRows tr')][1].cells[9].querySelector('button').click();`);
+  await pg.ev(`[...document.querySelectorAll('#rvRows tr')][1].cells[1].querySelector('button').click();`);
   await set(pg, '#rvHideReason', '광고·스팸');
   await click(pg, '#rvHideOk');
   await pg.waitFor(`!document.getElementById('rvHideMsg').hidden`);
   ok('12 작성자가 그 사이 지운 글: 안내', (await txt(pg, '#rvHideMsg')) === '후기를 찾을 수 없습니다. 작성자가 지웠을 수 있습니다.');
   await click(pg, '#rvHideCancel');
   clean(pg, '12');
+
+  // ── 12b. 관리자 화면: 다시 살펴볼 글 ───────────────────
+  const ago = (d) => new Date(Date.now() - d * 86400000).toISOString();
+  await open(pg, '/admin.html', { members: [], reviews: [
+    { id: 10, user_id: 'u1', rating: 1, program: '학습코칭', body: '숨긴 뒤에 작성자가 고친 글입니다.', author_label: '김**', created_at: ago(5), updated_at: ago(1), hidden_at: ago(3), hidden_reason: '욕설·인신공격', hidden_note: '특정 코치에 대한 욕설' },
+    { id: 11, user_id: 'u1', rating: 5, program: '기타', body: '다른 글이 숨겨진 뒤에 올린 글입니다.', author_label: '김**', created_at: ago(2), updated_at: ago(2) },
+    { id: 12, user_id: 'u2', rating: 2, program: '생기부 컨설팅', body: '권리 침해 신고가 들어온 글입니다.', author_label: '이**', created_at: ago(40), updated_at: ago(40), hidden_at: ago(25), hidden_reason: '임시 조치(권리 침해 신고)', hidden_note: '명예훼손 신고 접수' },
+    { id: 13, user_id: 'u8', rating: 4, program: '학습코칭', body: '살펴볼 것이 없는 보통 글입니다.', author_label: '최**', created_at: ago(9), updated_at: ago(9) },
+    { id: 14, user_id: 'u9', rating: 5, program: '학습코칭', body: '관리자가 되기 전에 쓴 글입니다.', author_label: '유**', created_at: ago(30), updated_at: ago(30) },
+  ] }, ADMIN);
+  await pg.waitFor(`!document.getElementById('rvBody').hidden && document.querySelectorAll('#rvRows tr').length === 5`);
+  const cell = (id, i) => pg.ev(`const tr = [...document.querySelectorAll('#rvRows tr')].find((t) => t.cells[0].textContent === '${id}'); return tr.cells[${i}].textContent;`);
+  ok('12b 숨긴 뒤 작성자가 고친 글: 다시 확인하라는 표시', /숨긴 뒤 작성자가 고침\(\d+월 \d+일\)\. 다시 확인해 주세요/.test(await cell(10, 2)) && /작성자 알림 기록 없음/.test(await cell(10, 2)), await cell(10, 2));
+  ok('12b 다른 후기를 숨긴 뒤 같은 회원이 올린 글: 표시, 회원 칸에 그 회원의 후기 수', /이 회원의 다른 후기를 숨긴 뒤에 올리거나 고친 글/.test(await cell(11, 2)) && /이 회원의 후기 2건/.test(await cell(11, 8)), [await cell(11, 2), await cell(11, 8)]);
+  ok('12b 임시 조치: 기한 날짜와 남은 날(5일)', /임시 조치 기한 \d+월 \d+일/.test(await cell(12, 2)) && /임시 조치 기한이 5일 남았습니다/.test(await cell(12, 2)), await cell(12, 2));
+  ok('12b 보통 글에는 표시 없음', (await cell(13, 2)) === '게시 중' && (await cell(14, 2)) === '게시 중');
+  ok('12b 건수 줄에 확인할 글 3', (await txt(pg, '#rvCount')).endsWith('· 확인할 글 3)'), await txt(pg, '#rvCount'));
+  await set(pg, '#rvState', 'check');
+  ok('12b 상태 「확인할 글」: 3건만', (await pg.ev(`return [...document.querySelectorAll('#rvRows tr')].map((t) => t.cells[0].textContent).join()`)) === '12,11,10');
+  await set(pg, '#rvState', '');
+  ok('12b 임시 조치 안내 메일: 신고 접수·기한·정하지 못하면 다시 게시', await pg.ev(`const tr = [...document.querySelectorAll('#rvRows tr')].find((t) => t.cells[0].textContent === '12'); const a = [...tr.cells[1].querySelectorAll('a')].find((x) => x.textContent === '작성자에게 알리기'); const u = decodeURIComponent(a.getAttribute('href')); return u.startsWith('mailto:lee@example.com?subject=[스누코치] 후기 임시 조치 안내') && u.includes('이용약관 제10조 제8항에 따라') && /[0-9]+월 [0-9]+일까지 임시로 숨김 처리했음을/.test(u) && u.includes('그때까지 정하지 못하면 다시 게시합니다') && u.includes('구체 사유: 명예훼손 신고 접수');`), await pg.ev(`const tr = [...document.querySelectorAll('#rvRows tr')].find((t) => t.cells[0].textContent === '12'); return decodeURIComponent([...tr.cells[1].querySelectorAll('a')][0].getAttribute('href'));`));
+  await pg.ev(`const tr = [...document.querySelectorAll('#rvRows tr')].find((t) => t.cells[0].textContent === '14'); [...tr.cells[1].querySelectorAll('button')].find((b) => b.textContent === '숨김').click();`);
+  await set(pg, '#rvHideReason', '광고·스팸');
+  await click(pg, '#rvHideOk');
+  await pg.waitFor(`!document.getElementById('rvHideMsg').hidden`);
+  ok('12b 관리자가 자기 계정으로 쓴 글은 처리할 수 없다는 안내', (await txt(pg, '#rvHideMsg')) === '본인 계정으로 쓴 후기는 직접 처리할 수 없습니다.');
+  await click(pg, '#rvHideCancel');
+  clean(pg, '12b');
 
   // ── 13. 관리자 화면, 후기용 DB 설정 전 · 옛 화면 ────────
   await open(pg, '/admin.html', { reviews: [], members: [], fnMissing: true }, ADMIN);
@@ -362,6 +473,7 @@ try {
   ok('14 회원 후기 카드는 스크롤 리빌·라이트박스 대상이 아님', await pg.ev(`return document.querySelectorAll('#member-reviews [data-rv], #member-reviews .nb-img, #member-reviews .rv-card').length === 0 && getComputedStyle(document.querySelector('#mrvList > li')).opacity === '1';`));
   await open(pg, '/reviews.html#member-reviews', { reviews: seed(12) });
   await settle(pg); await sleep(300);
+  ok('14 도착한 위치에서 위쪽 후기 모음의 칩 줄이 「회원 후기」 제목 위에 보이지 않음', await pg.ev(`const t = document.querySelector('.rv-toolbar'); const r = t.getBoundingClientRect(); const e = document.elementFromPoint(r.left + r.width / 2, Math.max(0, r.bottom - 6)); const title = document.getElementById('mrvTitle').getBoundingClientRect(); return (!e || !t.contains(e)) && title.top > 0 && title.top < 260;`), await pg.ev(`const r = document.querySelector('.rv-toolbar').getBoundingClientRect(); return [r.top, r.bottom, document.getElementById('mrvTitle').getBoundingClientRect().top]`));
   ok('14 #member-reviews 로 들어오면 그 구역으로 이동', await pg.ev(`const r = document.getElementById('member-reviews').getBoundingClientRect(); return r.top < window.innerHeight && r.top > -50;`), await pg.ev(`return document.getElementById('member-reviews').getBoundingClientRect().top`));
   clean(pg, '14');
 
@@ -381,6 +493,11 @@ try {
   await open(pg, '/account.html', {}, { session: true, uid: 'u3', profile: profile({ name: null, member_type: null, grade: null, terms_agreed_at: null, privacy_agreed_at: null, age_confirmed_at: null }) }, `sessionStorage.setItem('snucoach-return', 'javascript:alert(1)');`);
   await pg.waitFor(`!document.getElementById('onboard').hidden`);
   ok('R5 가입 마무리 전·이상한 값: 머문다(저장된 값으로 주소를 만들지 않음)', (await pg.ev(`return location.pathname`)) === '/account.html');
+  await open(pg, '/account.html', {}, { session: true, uid: 'u3', profile: profile({ name: null, member_type: null, grade: null, terms_agreed_at: null, privacy_agreed_at: null, age_confirmed_at: null }) }, `sessionStorage.setItem('snucoach-return', String(Date.now()));`);
+  await pg.waitFor(`!document.getElementById('onboard').hidden`);
+  await pg.ev(`const set = (id, v) => { const e = document.getElementById(id); e.value = v; e.dispatchEvent(new Event('input', { bubbles: true })); e.dispatchEvent(new Event('change', { bubbles: true })); }; set('obName', '미완성'); if (!document.getElementById('obPhone').closest('.field').hidden) set('obPhone', '010-1234-5678'); document.querySelector('#obType input[value="학생"]').click(); set('obGrade', '고2'); document.querySelector('#obConsent [data-agree-all]').click(); document.querySelector('#onboardForm button[type="submit"]').click();`);
+  await pg.waitFor(`!document.getElementById('acct').hidden`);
+  ok('R5b 후기 화면에서 가입 마무리를 하러 온 회원: 완료 안내 아래에 「후기 쓰러 가기」(수신 동의 처리 결과 안내는 그대로)', await pg.ev(`const m = document.getElementById('authMsg'); const a = m.querySelector('.msg-actions a'); return location.pathname === '/account.html' && /가입이 완료되었습니다/.test(m.textContent) && !!a && a.textContent === '후기 쓰러 가기' && a.getAttribute('href') === 'reviews.html#member-reviews' && sessionStorage.getItem('snucoach-return') === null;`), await txt(pg, '#authMsg'));
   ok('R6 탈퇴 안내에 「작성한 후기」', /와 작성한 후기가 바로 삭제되며/.test(await pg.ev(`return document.querySelector('.danger-zone').textContent`)));
   clean(pg, 'R');
 
@@ -415,7 +532,8 @@ try {
     ok(`15 ${w}px 관리자: 페이지 가로 스크롤 없음(표는 안에서 스크롤)`, await p2.ev(`return document.documentElement.scrollWidth <= window.innerWidth`), await p2.ev(`return [document.documentElement.scrollWidth, window.innerWidth]`));
     await p2.ev(`document.getElementById('admReviews').scrollIntoView({ behavior: 'instant' }); window.scrollBy({ top: -110, behavior: 'instant' });`); await sleep(300);
     await p2.shot(path.join(RUN, `shot-admin-${w}.png`), false);
-    await p2.ev(`[...document.querySelectorAll('#rvRows tr')][0].cells[9].querySelectorAll('button')[1].click();`); await sleep(300);
+    ok(`15 ${w}px 관리자: 「관리」 칸의 버튼이 가로로 밀지 않아도 보임`, await p2.ev(`const wr = document.querySelector('#rvBody .adm-table-wrap').getBoundingClientRect(); const b = document.querySelector('#rvRows .adm-acts .btn').getBoundingClientRect(); return b.left >= wr.left && b.right <= Math.min(wr.right, window.innerWidth);`), await p2.ev(`const b = document.querySelector('#rvRows .adm-acts .btn').getBoundingClientRect(); return [b.left, b.right, innerWidth]`));
+    await p2.ev(`[...document.querySelectorAll('#rvRows tr')][0].cells[1].querySelectorAll('button')[1].click();`); await sleep(300);
     ok(`15 ${w}px 관리자: 숨김 창이 화면 안에 들어옴`, await p2.ev(`const r = document.getElementById('rvHideDlg').getBoundingClientRect(); return r.left >= 0 && r.right <= window.innerWidth && r.top >= 0 && r.bottom <= window.innerHeight;`), await p2.ev(`const r = document.getElementById('rvHideDlg').getBoundingClientRect(); return [r.left, r.top, r.right, r.bottom, innerWidth, innerHeight]`));
     await p2.shot(path.join(RUN, `shot-admin-dlg-${w}.png`), false);
     clean(p2, `15-admin-${w}`);

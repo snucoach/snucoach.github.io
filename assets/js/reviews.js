@@ -15,21 +15,24 @@
   const BODY_MAX = 1000;
   const KAKAO = "https://pf.kakao.com/_wiwxmG/chat";
   const LOGIN_URL = "login.html?next=reviews.html%23member-reviews";
-  const RETURN_KEY = "snucoach-return"; // 구글·카카오 로그인 뒤 이 화면으로 돌아오기(auth.js 의 pageAccount 가 읽는다)
+  const RETURN_KEY = "snucoach-return"; // 로그인·가입 마무리 뒤 이 화면으로 돌아오기(auth.js 의 pageAccount 가 읽는다)
+  const TEMP_REASON = "임시 조치(권리 침해 신고)"; // DB 의 reviews_hidden_consistent 와 같아야 함
+  const TEMP_DAYS = 30; // 임시 조치 기간(약관 제10조 제8항)
+  const HOLD_DAYS = 14; // 숨김 처리된 글을 지운 뒤 새 글 보류(DB 의 private.reviews_after_delete)
   const STAR_PATH = "M12 2.6l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.4l-5.8 3.1 1.1-6.5L2.6 9.4l6.5-.9z";
   const $ = (id) => document.getElementById(id);
   const tryDo = (fn, fallback) => { try { return fn(); } catch (e) { return fallback; } };
 
   // ── 순수 함수(시작). DB 의 private.review_clean_body 와 같은 규칙이다(둘을 함께 고친다).
   //    supabase/local/reviews-db.mjs 가 이 구간을 그대로 잘라 SQL 결과와 비교한다.
-  // 본문 정리: 줄바꿈 통일 → 제어 문자·특수 공백은 공백으로 → 보이지 않는 글자 삭제 → 3개 이상 겹친 결합 기호 삭제
+  // 본문 정리: 줄바꿈 통일 → 제어 문자·특수 공백은 공백으로 → 보이지 않는 글자 삭제 → 3개 이상 겹친 결합 기호(라틴·키릴·히브리·아랍·태국 문자용) 삭제
   //            → 빈 줄은 한 줄까지 → 앞뒤 공백·줄바꿈 삭제. 보이지 않는 글자는 반드시 \u 이스케이프로 적는다.
   const cleanBody = (v) => String(v == null ? "" : v)
     .replace(/\r\n?/g, "\n")
     .replace(/[\u0000-\u0009\u000B-\u001F\u007F-\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u2800\u3000]/g, " ")
     .replace(/[\u00AD\u034F\u061C\u115F\u1160\u17B4\u17B5\u180B-\u180F\u200B-\u200F\u202A-\u202E\u2060-\u206F\u3164\uFE00-\uFE0F\uFEFF\uFFA0\uFFF9-\uFFFB]/g, "")
     .replace(/[\u{E0000}-\u{E0FFF}]/gu, "")
-    .replace(/[\u0300-\u036F\u0483-\u0489\u1AB0-\u1AFF\u1DC0-\u1DFF\u20D0-\u20FF\uFE20-\uFE2F]{3,}/g, "")
+    .replace(/[\u0300-\u036F\u0483-\u0489\u0591-\u05BD\u064B-\u065F\u0E31\u0E34-\u0E3A\u0E47-\u0E4E\u1AB0-\u1AFF\u1DC0-\u1DFF\u20D0-\u20FF\uFE20-\uFE2F]{3,}/g, "")
     .replace(/\n[ \n]*\n/g, "\n\n")
     .replace(/^[ \n]+|[ \n]+$/g, "");
   // 글자 수: DB 의 char_length 와 같게 코드 포인트로 센다(이모지 1개 = 1자).
@@ -44,6 +47,7 @@
   };
   const show = (node, on = true) => { if (node) node.hidden = !on; };
   const fmtDate = (iso) => new Intl.DateTimeFormat("ko-KR", { dateStyle: "long", timeZone: "Asia/Seoul" }).format(new Date(iso));
+  const fmtDay = (ms) => new Intl.DateTimeFormat("ko-KR", { month: "long", day: "numeric", timeZone: "Asia/Seoul" }).format(new Date(ms));
   const num = (n) => Number(n).toLocaleString("ko-KR");
   function msg(node, text, kind = "error") {
     node.className = `auth-msg is-${kind}`;
@@ -79,7 +83,8 @@
     rate: $("mrvRate"), rateText: $("mrvRateText"), rateErr: $("mrvRateErr"),
     body: $("mrvBody"), bodyCount: $("mrvBodyCount"), bodyErr: $("mrvBodyErr"), preview: $("mrvAuthorPreview"),
     formMsg: $("mrvFormMsg"), submit: $("mrvSubmit"), cancel: $("mrvCancel"),
-    mine: $("mrvMine"), mineList: $("mrvMineList"), list: $("mrvList"), empty: $("mrvEmpty"), more: $("mrvMore"), status: $("mrvStatus"),
+    mine: $("mrvMine"), mineTitle: $("mrvMineTitle"), mineList: $("mrvMineList"), list: $("mrvList"), empty: $("mrvEmpty"),
+    more: $("mrvMore"), moreMsg: $("mrvMoreMsg"), status: $("mrvStatus"),
   };
   const radios = Array.from(els.rate.querySelectorAll('input[name="rating"]'));
   const framed = window.top !== window.self; // 다른 사이트의 프레임 안에서는 목록만 보여 준다(클릭재킹 방지)
@@ -87,6 +92,10 @@
   let api = null;      // auth.js 가 내놓는 회원 후기 도구(로그인한 경우에만)
   let state = null;    // 쓰기 영역 상태
   let author = "";     // 지금 쓰면 붙는 표시 이름(예: 김**)
+  let holdUntil = "";  // 새 글 보류가 끝나는 시각(보류 중일 때만)
+  let listFailed = false; // 목록을 불러오지 못한 상태(빈 상태 문구를 보이지 않는다)
+  let opener = null;   // 작성 폼을 연 버튼(폼을 닫으면 초점을 돌려준다)
+  let pendingSwitch;   // 쓰던 내용이 있을 때 다른 글로 바꾸려면 한 번 더 누르게 한다(undefined 면 대기 없음)
   let shown = [];      // 지금 그려 둔 공개 후기
   let mine = [];       // 내가 쓴 후기(숨김 처리된 글 포함)
   let editing = null;  // 고치는 중인 후기(새 글이면 null)
@@ -120,9 +129,11 @@
     stars.setAttribute("role", "img");
     stars.setAttribute("aria-label", `별점 5점 만점에 ${rating}점`);
     for (let i = 1; i <= 5; i += 1) stars.append(star(i <= rating));
-    h.append(stars, el("span", "badge", r.program));
+    const score = el("span", "mrv-score", `${rating}점`); // 색만으로 구분되지 않게 숫자도 보인다(낭독기는 위의 aria-label 을 읽는다)
+    score.setAttribute("aria-hidden", "true");
+    h.append(stars, score, el("span", "badge", r.program));
     if (r.verified) h.append(el("span", "badge gold", "수강 확인"));
-    if (own) h.append(el("span", "badge", "내 후기"));
+    if (own) h.append(el("span", "badge mrv-own", "내 후기"));
     return h;
   }
   function bodyBlock(r) {
@@ -165,13 +176,31 @@
     li.append(head(r, ownIds.has(r.id)), bodyBlock(r), meta(r));
     return li;
   }
-  function drawList(focusId) {
+  function drawList() {
     const ownIds = new Set(mine.map((m) => m.id));
     els.list.replaceChildren(...shown.map((r) => publicItem(r, ownIds)));
-    show(els.empty, !shown.length);
+    show(els.empty, !shown.length && !listFailed);
     show(els.more, hasMore);
     fitBodies(els.list);
-    if (focusId) { const first = $(`mrv-${focusId}`); if (first) first.focus(); }
+  }
+  // 「후기 더 보기」: 새 카드만 덧붙인다(이미 펼쳐 둔 글이 다시 접히지 않게)
+  function appendList(add) {
+    const ownIds = new Set(mine.map((m) => m.id));
+    els.list.append(...add.map((r) => publicItem(r, ownIds)));
+    fitBodies(els.list);
+    if (add.length) { const first = $(`mrv-${add[0].id}`); if (first) first.focus(); }
+  }
+  // 「내 후기」 배지만 다시 맞춘다(목록을 다시 그리지 않는다)
+  function markOwn() {
+    const ownIds = new Set(mine.map((m) => m.id));
+    shown.forEach((r) => {
+      const li = $(`mrv-${r.id}`);
+      if (!li) return;
+      const headEl = li.querySelector(".mrv-item-head");
+      const badge = headEl.querySelector(".mrv-own");
+      if (ownIds.has(r.id) && !badge) { const b = el("span", "badge mrv-own", "내 후기"); headEl.append(b); }
+      if (!ownIds.has(r.id) && badge) badge.remove();
+    });
   }
   function setTotal(total) {
     els.total.textContent = total == null ? "" : `${num(total)}건`;
@@ -181,6 +210,7 @@
     const page = await fetchPage(null, true);
     hasMore = page.rows.length > PAGE_SIZE;
     shown = page.rows.slice(0, PAGE_SIZE);
+    listFailed = false;
     setTotal(page.total);
     drawList();
   }
@@ -193,11 +223,12 @@
         const add = page.rows.slice(0, PAGE_SIZE);
         hasMore = page.rows.length > PAGE_SIZE;
         shown = shown.concat(add);
-        drawList(add.length ? add[0].id : null);
+        appendList(add);
+        els.moreMsg.textContent = "";
         els.status.textContent = add.length ? `후기 ${add.length}건을 더 불러왔습니다.` : "더 불러올 후기가 없습니다.";
       } catch (e) {
         els.status.textContent = "";
-        msg(els.msg, "후기를 더 불러오지 못했습니다. 잠시 뒤 다시 시도해 주세요.");
+        els.moreMsg.textContent = "후기를 더 불러오지 못했습니다. 잠시 뒤 다시 눌러 주세요."; // 버튼 바로 위에 보인다(role="alert")
       }
     });
     show(els.more, hasMore);
@@ -219,12 +250,14 @@
   }
 
   function failList() {
+    listFailed = true;
+    show(els.empty, false);
     msg(els.msg, "후기를 불러오지 못했습니다. 잠시 뒤 다시 시도해 주세요.");
     const actions = el("div", "msg-actions");
     const b = el("button", "btn btn-line btn-sm", "다시 시도");
     b.type = "button";
     b.addEventListener("click", () => busy(b, "불러오는 중…", async () => {
-      try { await loadFirst(); msg(els.msg, ""); loadStat(); } catch (e) { /* 안내를 그대로 둔다 */ }
+      try { await loadFirst(); msg(els.msg, ""); markOwn(); loadStat(); } catch (e) { /* 안내를 그대로 둔다 */ }
     }));
     actions.append(b);
     els.msg.append(actions);
@@ -275,6 +308,8 @@
     } else if (next === "onboarding") {
       const a = el("a", "btn btn-primary btn-sm", "가입 마무리하고 후기 쓰기");
       a.href = "account.html";
+      // 가입 마무리를 끝내면 이 화면으로 되돌아오게 표시를 남긴다(같은 탭, 30분)
+      a.addEventListener("click", () => { tryDo(() => sessionStorage.setItem(RETURN_KEY, String(Date.now()))); });
       box.append(a, note("가입 마무리를 끝내면 후기를 쓸 수 있습니다."));
     } else if (next === "ok") {
       if (PROGRAMS.every((p) => mine.some((m) => m.program === p))) {
@@ -283,11 +318,19 @@
         const b = el("button", "btn btn-primary btn-sm", "후기 쓰기");
         b.type = "button";
         b.id = "mrvOpen";
-        b.setAttribute("aria-expanded", String(!els.form.hidden && !editing));
+        b.setAttribute("aria-expanded", String(!els.form.hidden));
         b.setAttribute("aria-controls", "mrvForm");
-        b.addEventListener("click", () => openForm(null));
+        b.addEventListener("click", () => openForm(null, b));
         box.append(b);
       }
+    } else if (next === "hold") {
+      const p = note(`숨김 처리된 후기를 지워서 ${holdUntil ? `${fmtDay(Date.parse(holdUntil))}까지 ` : `${HOLD_DAYS}일 동안 `}새 후기를 올릴 수 없습니다. 이미 올린 후기는 고칠 수 있습니다. 이의가 있으면 `);
+      const a = el("a", null, "카카오톡 채널");
+      a.href = KAKAO;
+      a.target = "_blank";
+      a.rel = "noopener";
+      p.append(a, "로 알려 주세요.");
+      box.append(p);
     } else if (next === "admin") {
       box.append(note("관리자 계정으로는 후기를 쓸 수 없습니다."));
     } else if (next === "banned") {
@@ -310,14 +353,21 @@
     const li = el("li", "mrv-item" + (r.hidden ? " is-hidden" : ""));
     if (r.hidden) {
       const p = el("p", "mrv-hidden-note");
-      p.append(`운영 기준(${r.hidden_reason || "기타"})에 따라 숨김 처리되어 다른 사람에게는 보이지 않습니다.`);
-      if (r.hidden_detail) p.append(` 사유: ${r.hidden_detail}`);
-      p.append(" 내용을 고쳤거나 이의가 있으면 ");
       const a = el("a", null, "카카오톡 채널");
       a.href = KAKAO;
       a.target = "_blank";
       a.rel = "noopener";
-      p.append(a, "로 알려 주세요. 확인한 뒤 운영 기준에 해당하지 않으면 다시 게시하고 결과를 알려 드립니다.");
+      if (r.hidden_reason === TEMP_REASON) {
+        // 권리 침해 신고에 따른 임시 조치(약관 제10조 제8항): 30일 안에 정하지 못하면 다시 게시한다
+        const until = r.hidden_at ? `${fmtDay(Date.parse(r.hidden_at) + TEMP_DAYS * 86400000)}까지 ` : `${TEMP_DAYS}일 안에 `;
+        p.append(`이 후기로 권리를 침해당했다는 신고가 접수되어 임시로 숨김 처리되었습니다. 다른 사람에게는 보이지 않습니다. 스누코치가 ${until}양쪽의 설명을 확인해 다시 게시할지 정하고 결과를 알려 드리며, 그때까지 정하지 못하면 다시 게시합니다.`);
+        if (r.hidden_detail) p.append(` 사유: ${r.hidden_detail}`);
+        p.append(" 의견이 있으면 ", a, "로 알려 주세요.");
+      } else {
+        p.append(`운영 기준(${r.hidden_reason || "운영 기준 위반"})에 따라 숨김 처리되어 다른 사람에게는 보이지 않습니다.`);
+        if (r.hidden_detail) p.append(` 사유: ${r.hidden_detail}`);
+        p.append(" 내용을 고친 뒤 ", a, "로 알려 주시면 확인해 다시 게시합니다. 숨김 처리에 이의가 있을 때도 같은 채널로 알려 주세요. 확인한 결과는 알려 드립니다.");
+      }
       li.append(p);
     }
     li.append(head(r, false), bodyBlock(r), meta(r));
@@ -326,7 +376,7 @@
       const edit = el("button", "text-btn", "고치기");
       edit.type = "button";
       edit.setAttribute("aria-label", `${r.program} 후기 고치기`);
-      edit.addEventListener("click", () => openForm(r));
+      edit.addEventListener("click", () => openForm(r, edit));
       const del = el("button", "text-btn", "지우기");
       del.type = "button";
       del.setAttribute("aria-label", `${r.program} 후기 지우기`);
@@ -338,7 +388,9 @@
         no.type = "button";
         no.addEventListener("click", () => { normal(); acts.querySelector("button:last-child").focus(); });
         yes.addEventListener("click", () => busy(yes, "지우는 중…", () => removeReview(r)));
-        acts.replaceChildren(el("span", "mrv-confirm", "이 후기를 지울까요? 지우면 되돌릴 수 없습니다."), yes, no);
+        acts.replaceChildren(el("span", "mrv-confirm", r.hidden
+          ? `이 후기를 지울까요? 지우면 되돌릴 수 없고, 숨김 처리된 후기를 지우면 ${HOLD_DAYS}일 동안 새 후기를 올릴 수 없습니다. 내용을 고쳐 다시 게시를 요청할 수도 있습니다.`
+          : "이 후기를 지울까요? 지우면 되돌릴 수 없습니다."), yes, no);
         no.focus();
       });
       acts.replaceChildren(edit, del);
@@ -362,19 +414,31 @@
     }
     mine = Array.isArray(data) ? data : [];
     drawMine();
-    drawList();
+    markOwn();
     if (state === "ok") setWrite("ok");
+  }
+  // 쓰기 영역의 상태를 다시 읽는다(숨김 처리된 글을 지워 보류가 걸렸을 때 등)
+  async function refreshStatus() {
+    if (!api) return;
+    const st = await api.status().catch(() => null);
+    if (!st || st.state === "error") return;
+    author = st.author || "";
+    holdUntil = st.holdUntil || "";
+    setWrite(st.state);
   }
   async function removeReview(r) {
     const { error } = await api.remove(r.id);
     if (error && error.code !== "not_found") { msg(els.msg, api.errText(error)); els.msg.focus(); return; }
     if (editing && editing.id === r.id) closeForm();
     await reloadAll();
-    msg(els.msg, error ? "이미 지워진 후기입니다." : "후기를 지웠습니다.", error ? "info" : "ok");
+    if (r.hidden) { if (!els.form.hidden && !editing) closeForm(); await refreshStatus(); } // 숨김 처리된 글을 지우면 새 글 보류가 걸린다
+    msg(els.msg, error ? "이미 지워진 후기입니다."
+      : r.hidden && state === "hold" ? `후기를 지웠습니다. 숨김 처리된 후기를 지워서 ${HOLD_DAYS}일 동안 새 후기를 올릴 수 없습니다.` : "후기를 지웠습니다.", error ? "info" : "ok");
     els.msg.focus();
   }
   async function reloadAll() {
-    await Promise.all([loadFirst().catch(() => {}), refreshMine(), loadStat()]);
+    await Promise.all([loadFirst().catch(() => {}), loadStat()]);
+    await refreshMine(); // 목록을 그린 뒤에 「내 후기」 배지를 맞춘다
   }
 
   // ── 작성 폼 ──
@@ -398,8 +462,29 @@
     els.programNote.classList.toggle("is-warn", on);
     show(els.programNote, !!editing && !!editing.verified);
   }
-  function openForm(r) {
-    editing = r || null;
+  // 폼에 쓰던 내용이 있는지(고치는 중이면 원래 글과 달라졌는지)
+  function isDirty() {
+    if (els.form.hidden) return false;
+    const v = readForm();
+    if (editing) return v.program !== editing.program || v.rating !== Number(editing.rating) || v.body !== cleanBody(editing.body);
+    return !!(v.program || v.rating || v.body);
+  }
+  function openForm(r, from) {
+    const target = r || null;
+    const same = !els.form.hidden && (target ? !!editing && editing.id === target.id : !editing);
+    // 이미 같은 글을 쓰는(고치는) 중이면 내용을 그대로 두고 폼으로 초점만 옮긴다
+    if (same) { els.formTitle.focus(); els.form.scrollIntoView({ block: "nearest" }); return; }
+    // 쓰던 내용이 있는데 다른 글로 바꾸려 하면 한 번 더 누르게 한다
+    const key = target ? target.id : 0;
+    if (isDirty() && pendingSwitch !== key) {
+      pendingSwitch = key;
+      msg(els.formMsg, `쓰던 내용이 있습니다. 「${target ? "고치기" : "후기 쓰기"}」를 한 번 더 누르면 쓰던 내용을 지우고 ${target ? "이 후기를 고치는 화면으로" : "새 후기를 쓰는 화면으로"} 바꿉니다.`, "info");
+      els.form.scrollIntoView({ block: "nearest" });
+      return;
+    }
+    pendingSwitch = undefined;
+    opener = from || null;
+    editing = target;
     msg(els.formMsg, "");
     msg(els.msg, "");
     els.formTitle.textContent = editing ? "후기 고치기" : "후기 쓰기";
@@ -424,13 +509,14 @@
     els.preview.textContent = author || "이름의 첫 글자만(예: 김**)";
     show(els.form);
     const open = $("mrvOpen");
-    if (open) open.setAttribute("aria-expanded", String(!editing));
+    if (open) open.setAttribute("aria-expanded", "true");
     els.formTitle.focus();
     els.form.scrollIntoView({ block: "nearest" });
   }
   function closeForm() {
     show(els.form, false);
     editing = null;
+    pendingSwitch = undefined;
     els.body.value = "";
     els.program.value = "";
     radios.forEach((x) => { x.checked = false; });
@@ -472,23 +558,30 @@
         if (error.code === "RV002") setWrite("onboarding");
         if (error.code === "RV003") setWrite("admin");
         if (error.code === "RV005") setWrite("banned");
+        if (error.code === "RV007" || /14일 동안/.test(error.message || "")) await refreshStatus();
         if (error.code === "23514" && /reviews_body_length/.test(error.message || "")) els.body.focus();
         return;
       }
       closeForm();
       await reloadAll();
       msg(els.msg, !was ? "후기를 올렸습니다."
-        : was.hidden ? "후기를 고쳤습니다. 숨김 처리된 후기는 스누코치가 확인한 뒤 다시 게시합니다." : "후기를 고쳤습니다.", "ok");
+        : was.hidden ? "후기를 고쳤습니다. 아직 숨김 처리된 상태입니다. 고쳤다고 카카오톡 채널로 알려 주시면 확인해 다시 게시합니다." : "후기를 고쳤습니다.", "ok");
       els.msg.focus();
     });
   }
   function wireForm() {
     els.form.addEventListener("submit", submitForm);
     els.cancel.addEventListener("click", () => {
+      const back = opener;
       closeForm();
+      // 폼을 연 버튼으로 초점을 돌려준다. 그 버튼이 없어졌으면 「후기 쓰기」, 그것도 없으면 「내가 쓴 후기」 제목이나 구역 제목으로 보낸다.
       const open = $("mrvOpen");
-      if (open) open.focus(); else els.msg.focus();
+      const to = (back && back.isConnected && back) || open || (!els.mine.hidden && els.mineTitle) || $("mrvTitle");
+      if (to) to.focus();
     });
+    const clearPending = () => { if (pendingSwitch !== undefined) { pendingSwitch = undefined; msg(els.formMsg, ""); } };
+    els.form.addEventListener("input", clearPending);
+    els.form.addEventListener("change", clearPending);
     radios.forEach((x) => x.addEventListener("change", syncRate));
     els.body.addEventListener("input", () => { syncCount(); if (els.bodyErr.textContent) setErr(els.body, els.bodyErr, ""); });
     els.program.addEventListener("change", () => { if (els.program.value) setErr(els.program, els.programErr, ""); syncProgramNote(); });
@@ -507,6 +600,7 @@
     const st = await api.status().catch((error) => ({ state: "error", error }));
     if (st.state === "error" && st.error && (st.error.code === "PGRST202" || notReady(st.error))) { setWrite("not-ready"); return; }
     author = st.author || "";
+    holdUntil = st.holdUntil || "";
     setWrite(st.state);
     if (st.state !== "signed-out" && st.state !== "error") await refreshMine();
   }
@@ -527,7 +621,7 @@
     fitBodies(els.list);
     if (failed) failList();
     if (location.hash === "#member-reviews") sec.scrollIntoView({ behavior: "instant", block: "start" });
-    if (!failed) loadStat();
+    loadStat(); // 목록 조회가 실패해도 따로 읽는다(실패하면 실패 문구로 바뀐다)
     await initMember();
   }
   init().catch(() => { /* 큐레이션 후기는 그대로 보인다 */ });

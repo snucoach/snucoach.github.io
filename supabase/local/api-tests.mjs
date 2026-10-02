@@ -312,7 +312,7 @@ sql(`delete from auth.audit_log_entries where payload->>'test' = 'new-${stamp}'`
   check('후기: my_review_status(ok + 가린 이름)', r.status === 200 && r.json[0].state === 'ok' && r.json[0].author === '김**', r);
   r = await call('/rest/v1/rpc/my_review_status', { method: 'POST', body: {} });
   check('후기: 비로그인 my_review_status 거부', r.status === 401 || r.status === 403, r);
-  r = await call('/rest/v1/rpc/admin_set_review_hidden', { method: 'POST', token: tokG, body: { p_id: rid, p_hidden: true, p_reason: '기타', p_note: '마음에 안 듦' } });
+  r = await call('/rest/v1/rpc/admin_set_review_hidden', { method: 'POST', token: tokG, body: { p_id: rid, p_hidden: true, p_reason: '법령 위반', p_note: '마음에 안 듦' } });
   check('후기: 일반 회원의 숨김 거부', r.status === 401 || r.status === 403, r);
   r = await call('/rest/v1/rpc/admin_set_review_hidden', { method: 'POST', token: tokA, body: { p_id: rid, p_hidden: true, p_reason: '평점 낮음' } });
   check('후기: 목록에 없는 숨김 사유 거부(23514)', r.json.code === '23514', r);
@@ -323,7 +323,11 @@ sql(`delete from auth.audit_log_entries where payload->>'test' = 'new-${stamp}'`
   r = await call('/rest/v1/rpc/review_hidden_stats');
   check('후기: 숨김 현황은 비로그인 GET 으로 조회(사유별 건수)', r.status === 200 && r.json.some((x) => x.reason === '개인정보 노출' && x.n >= 1), r);
   r = await call('/rest/v1/rpc/my_reviews', { method: 'POST', token: tokG, body: {} });
-  check('후기: 작성자는 my_reviews 로 숨김 사유 확인(메모 없음)', r.status === 200 && r.json.some((x) => x.id === rid && x.hidden === true && x.hidden_reason === '개인정보 노출' && !('hidden_note' in x)), r);
+  check('후기: 작성자는 my_reviews 로 숨김 사유와 구체 사유(메모) 확인', r.status === 200 && r.json.some((x) => x.id === rid && x.hidden === true && x.hidden_reason === '개인정보 노출' && x.hidden_detail === '시험' && !('user_id' in x)), r);
+  r = await call('/rest/v1/rpc/admin_log_review_notice', { method: 'POST', token: tokA, body: { p_id: rid, p_kind: '숨김 안내' } });
+  check('후기: 작성자 알림 기록', r.status === 204 || r.status === 200, r);
+  r = await call('/rest/v1/rpc/admin_log_review_notice', { method: 'POST', token: tokG, body: { p_id: rid, p_kind: '숨김 안내' } });
+  check('후기: 일반 회원의 알림 기록 거부', r.status === 403 || r.json.code === '42501', r);
   r = await call('/rest/v1/rpc/admin_list_reviews', { method: 'POST', token: tokA, body: {} });
   check('후기: 관리자 목록(이름·이메일 있음, 휴대전화·user_id 없음)', r.status === 200 && r.json.some((x) => x.id === rid && x.email === mail('g') && !('phone' in x) && !('user_id' in x)), r);
   r = await call('/rest/v1/rpc/admin_set_review_hidden', { method: 'POST', token: tokA, body: { p_id: 99999999, p_hidden: true, p_reason: '광고·스팸' } });
@@ -332,7 +336,12 @@ sql(`delete from auth.audit_log_entries where payload->>'test' = 'new-${stamp}'`
   check('후기: 남의 글 삭제 0행', r.status === 200 && r.json.length === 0, r);
   r = await call(`/rest/v1/reviews?id=eq.${rid}&select=id`, { method: 'DELETE', token: tokG, headers: rep });
   check('후기: 본인 글 삭제(숨긴 글)', r.status === 200 && r.json.length === 1, r);
-  check('후기: 글을 지워도 처리 기록은 남음', sql(`select count(*) from private.review_moderation_log where review_id = ${rid}`) === '1');
+  check('후기: 글을 지워도 처리 기록은 남음(숨김 + 알림)', sql(`select count(*) from private.review_moderation_log where review_id = ${rid}`) === '2');
+  sql(`update private.review_quota set n = 0 where user_id='${g.json.id}'`);
+  r = await post(tokG, { rating: 5, program: '생기부 컨설팅', body: '숨김 처리된 글을 지운 뒤에 새 글을 올려 봅니다.' });
+  check('후기: 숨김 처리된 글을 지운 뒤 새 글 거부(코드 RV007 이 그대로 오는지)', r.json.code === 'RV007', r);
+  r = await call('/rest/v1/rpc/my_review_status', { method: 'POST', token: tokG, body: {} });
+  check('후기: my_review_status(hold + 끝나는 시각)', r.status === 200 && r.json[0].state === 'hold' && !!r.json[0].hold_until, r);
   sql(`delete from auth.users where email='${mail('g')}'`);
   check('후기: 탈퇴하면 후기·횟수 기록 삭제', sql(`select count(*) from public.reviews where user_id='${g.json.id}'`) === '0' && sql(`select count(*) from private.review_quota where user_id='${g.json.id}'`) === '0');
   check('후기: 정리 작업이 매일 예약되어 있음', sql(`select count(*) from cron.job where jobname = 'snucoach-purge-review-records'`) === '1');

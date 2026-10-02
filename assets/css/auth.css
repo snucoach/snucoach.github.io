@@ -297,8 +297,17 @@ details.acct-item[open] > summary { margin-bottom: 16px; }
 .switch input:disabled { cursor: default; }
 
 /* ── 회원 후기 (reviews.html) ── */
-.mrv { padding: 0 14px 96px; margin-top: -48px; scroll-margin-top: calc(var(--nav-h) + 56px); }
-.mrv[hidden], .mrv-form[hidden], .mrv-mine[hidden], .mrv-jump[hidden], .mrv-more .btn[hidden] { display: none; }  /* .auth-form·.btn 은 display 를 지정한다 */
+/* 도착 위치는 html 의 scroll-padding-top 만 쓴다. 여백을 더 두면 위쪽 후기 모음의 칩 줄(sticky)이 이 구역 제목 바로 위에 남아
+   회원 후기를 거르는 칩처럼 보인다. 이 위치에서는 칩 줄이 상단 메뉴 밑으로 밀려 들어간다. */
+.mrv { padding: 0 14px 96px; margin-top: -48px; }
+.mrv[hidden], .mrv-form[hidden], .mrv-mine[hidden], .mrv-more .btn[hidden] { display: none; }  /* .auth-form·.btn 은 display 를 지정한다 */
+/* 히어로의 버튼은 목록을 읽은 뒤에 나타난다. 자리를 미리 잡아 두어 나타날 때 아래 내용이 밀리지 않게 한다. */
+.mrv-jump[hidden] { display: inline-flex; visibility: hidden; }
+/* 위쪽 후기 모음(스누코치가 골라 실은 후기)의 수집·게시 기준 안내. 칩 줄 위에 늘 보인다. */
+.rv-about { margin: 0 0 14px; padding: 13px 16px; border-radius: 12px; background: #fff; border: 1px solid var(--line-solid, #E3E8F5);
+  font-size: 13.5px; line-height: 1.7; color: var(--text-sub); }
+.rv-about b { margin-right: 6px; color: var(--text); }
+.rv-about a { color: var(--blue); font-weight: 700; }
 .mrv-inner { max-width: 760px; margin: 0 auto; }
 .mrv-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px 16px;
   padding-top: 40px; margin-bottom: 16px; border-top: 1px solid var(--line-solid, #E3E8F5); }
@@ -322,6 +331,8 @@ details.acct-item[open] > summary { margin-bottom: 16px; }
 .mrv-rules-list { margin: 6px 0 0; }
 .mrv-rules-list dt { margin-top: 10px; font-weight: 800; color: var(--text); }
 .mrv-rules-list dd { margin: 2px 0 0; }
+.mrv-rules-ol { margin: 6px 0 0; padding-left: 20px; }
+.mrv-rules-ol li { margin-top: 2px; }
 .mrv-rules-more { margin: 12px 0 0; }
 .mrv-rules a { color: var(--blue); font-weight: 700; }
 
@@ -339,9 +350,9 @@ details.acct-item[open] > summary { margin-bottom: 16px; }
 .mrv-rate label { position: relative; display: inline-flex; padding: 6px; border-radius: 8px; cursor: pointer; }  /* 누르는 영역 44px */
 .mrv-rate input { position: absolute; opacity: 0; width: 1px; height: 1px; }
 .mrv-rate label:focus-within { outline: 2px solid var(--blue); outline-offset: 1px; }
-.mrv-star { width: 32px; height: 32px; fill: #D5DBEC; }
-.mrv-rate label.on .mrv-star { fill: #E9A400; }
-.mrv-rate.is-invalid .mrv-star { stroke: #C83A43; stroke-width: 1; }
+.mrv-star { width: 32px; height: 32px; fill: #fff; stroke: #77819C; stroke-width: 1.2; stroke-linejoin: round; }
+.mrv-rate label.on .mrv-star { fill: #E9A400; stroke: #8A5F00; }
+.mrv-rate.is-invalid label .mrv-star { stroke: #C83A43; }
 .mrv-rate-text { margin-left: 10px; font-size: 14px; font-weight: 700; color: var(--text-sub); }
 .mrv-notice { margin: 0; padding: 14px 16px 14px 32px; border-radius: 12px; background: var(--sec-bg); font-size: 13.5px; line-height: 1.7; color: var(--text-sub); }
 .mrv-notice a, .mrv-agree a { color: var(--navy); font-weight: 700; }
@@ -350,13 +361,18 @@ details.acct-item[open] > summary { margin-bottom: 16px; }
 .mrv-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
 .mrv-mine .mrv-list { margin-top: 14px; }
 .mrv-item { min-width: 0; background: #fff; border: 1px solid var(--line-solid, #E3E8F5); border-radius: 14px; padding: 18px; }
-.mrv-item:focus { outline: 2px solid var(--blue); outline-offset: 2px; }
+.mrv-item:focus { outline: none; }
+.mrv-item:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }  /* 마우스로 누를 때는 테두리가 생기지 않는다 */
+.mrv-title:focus, .mrv-h3:focus { outline: none; }
+.mrv-title:focus-visible, .mrv-h3:focus-visible { outline: 2px solid var(--blue); outline-offset: 3px; border-radius: 4px; }
 .mrv-mine .mrv-item { background: var(--sec-bg); }
 .mrv-item.is-hidden { border-style: dashed; }
 .mrv-item-head { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; margin-bottom: 10px; }
-.mrv-stars { display: inline-flex; gap: 1px; margin-right: 4px; }
-.mrv-stars svg { width: 18px; height: 18px; fill: #D5DBEC; }
-.mrv-stars svg.on { fill: #E9A400; }
+.mrv-stars { display: inline-flex; gap: 1px; }
+/* 켜진 별과 꺼진 별이 색만으로 갈리지 않게 윤곽선을 두고(흰 바탕 대비 3:1 이상), 옆에 점수를 글자로도 적는다 */
+.mrv-stars svg { width: 18px; height: 18px; fill: #fff; stroke: #77819C; stroke-width: 1.4; stroke-linejoin: round; }
+.mrv-stars svg.on { fill: #E9A400; stroke: #8A5F00; }
+.mrv-score { margin-right: 4px; font-size: 13.5px; font-weight: 800; color: var(--text-sub); }
 .mrv-body { margin: 0 0 12px; font-size: 15.5px; line-height: 1.75; color: var(--text); white-space: pre-line; overflow-wrap: anywhere; overflow: hidden; }
 .mrv-body.is-clamped { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 12; line-clamp: 12; }
 .mrv-toggle { display: block; margin: -6px 0 8px; }
@@ -368,14 +384,18 @@ details.acct-item[open] > summary { margin-bottom: 16px; }
 .mrv-confirm { flex: 1 1 100%; font-weight: 700; color: #8C1D18; }
 .mrv-empty { margin: 0; padding: 36px 0; text-align: center; font-size: 15px; color: var(--text-faint); }
 .mrv-more { margin-top: 16px; text-align: center; }
+.mrv-more-msg { margin: 0 0 10px; font-size: 14px; font-weight: 700; color: #8C1D18; }
+.mrv-more-msg:empty { display: none; }
 .mrv-jump { margin-top: 18px; }
 
 /* ── 관리자: 회원 후기 ── */
 .adm-rules { margin: 0 0 4px; padding: 14px 16px 14px 32px; border-radius: 12px; background: var(--sky-2); font-size: 13.5px; line-height: 1.7; color: var(--text-sub); }
-.adm-table td.lines { white-space: pre-line; min-width: 150px; line-height: 1.6; overflow-wrap: anywhere; }
-.adm-table td.wrap { white-space: normal; min-width: 280px; max-width: 440px; }
+.adm-table td.lines { white-space: pre-line; min-width: 130px; line-height: 1.6; overflow-wrap: anywhere; }
+.adm-table td.wrap { white-space: normal; min-width: 240px; max-width: 440px; }
+.adm-status { white-space: pre-line; min-width: 170px; max-width: 260px; }
+.adm-flag { display: block; margin-top: 4px; font-weight: 700; color: #8C1D18; white-space: normal; }
 .adm-body { max-height: 220px; overflow: auto; white-space: pre-line; overflow-wrap: anywhere; line-height: 1.6; }
-.adm-acts { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; min-width: 190px; white-space: normal; }
+.adm-acts { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; min-width: 216px; max-width: 260px; white-space: normal; }
 .adm-acts .btn { text-decoration: none; }
 .adm-confirm { flex: 1 1 100%; font-size: 13px; font-weight: 700; color: #8C1D18; }
 .adm-dlg { width: min(560px, calc(100vw - 32px)); max-height: calc(100vh - 32px); overflow: auto; padding: 24px 20px; border: 0; border-radius: 16px; color: var(--text); }

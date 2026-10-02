@@ -83,14 +83,15 @@
         <div class="auth-msg" id="rvMsg" role="alert" tabindex="-1" hidden></div>
         <div id="rvBody" hidden>
           <ul class="adm-rules">
-            <li>숨김은 운영 기준(욕설·인신공격, 광고·스팸, 개인정보 노출, 객관적으로 확인되는 허위 사실·권리 침해, 법령 위반)을 위반한 후기에만, 별점과 관계없이 같은 잣대로 씁니다. 평점이 낮거나 불만·비판을 적었다는 이유로 숨기면 소비자를 속이는 행위가 될 수 있습니다.</li>
-            <li>숨긴 날 작성자에게 사유와 이의 제기 방법을 알립니다(「작성자에게 알리기」를 누르면 메일 앱이 열립니다). 이의가 들어오면 다시 보고, 기준에 해당하지 않으면 바로 숨김을 해제합니다.</li>
+            <li>숨김은 운영 기준(이용약관 제10조 제5항: 욕설·인신공격·차별·혐오 표현 / 광고·홍보, 같은 내용의 되풀이, 이용 경험과 관계없는 글 / 개인정보 노출 / 객관적으로 확인되는 허위 사실·권리 침해 / 법령 위반)을 위반한 후기에만, 별점과 관계없이 같은 잣대로 씁니다. 평점이 낮거나 불만·비판을 적었다는 이유로 숨기면 소비자를 속이는 행위가 될 수 있습니다. 상담·환불·응대에 관한 불만도 후기입니다.</li>
+            <li>숨긴 날 작성자에게 사유와 이의 제기 방법을 알립니다(「작성자에게 알리기」를 누르면 메일 앱이 열립니다). 보낸 뒤에는 「알림 기록」으로 남깁니다. 이의가 들어오거나 작성자가 글을 고치면 다시 보고, 기준에 해당하지 않으면 바로 숨김을 해제하고 결과를 알립니다. 상태 선택의 「확인할 글」에 다시 볼 글이 모입니다.</li>
+            <li>권리 침해 신고로 판단이 어려울 때만 「임시 조치(권리 침해 신고)」를 고릅니다. 30일 안에 사유를 정해 고치거나 숨김을 해제하고, 그대로 두면 29일이 지난 뒤 자동으로 다시 게시됩니다. 스누코치와 코치의 업무에 대한 평가·비판은 권리 침해 신고로 숨기지 않습니다.</li>
             <li>수강 확인은 별점·내용과 관계없이 수강 사실이 확인되는 모든 학습코칭·생기부 컨설팅 후기에 같은 기준으로 붙입니다. 착오로 붙인 경우에만 취소합니다.</li>
             <li>불만 후기를 쓴 회원에게 수정·삭제를 부탁하거나 대가를 제시하지 않습니다. 연락은 불만을 해결하려는 목적으로만 합니다.</li>
           </ul>
           <div class="adm-tools">
             <div class="field"><label for="rvSearch" class="sr-only">글 번호, 이름, 이메일 또는 본문 검색</label><input type="text" id="rvSearch" placeholder="글 번호, 이름, 이메일 또는 본문 검색" autocomplete="off"></div>
-            <div class="field"><label for="rvState" class="sr-only">상태 선택</label><select id="rvState"><option value="">전체</option><option value="on">게시 중</option><option value="hidden">숨김</option></select></div>
+            <div class="field"><label for="rvState" class="sr-only">상태 선택</label><select id="rvState"><option value="">전체</option><option value="on">게시 중</option><option value="hidden">숨김</option><option value="check">확인할 글</option></select></div>
             <button class="btn btn-line btn-sm" type="button" id="rvCsv">CSV 내려받기</button>
             <button class="btn btn-line btn-sm" type="button" id="rvLogCsv">처리 기록 CSV</button>
           </div>
@@ -114,19 +115,20 @@
         <label for="rvHideReason">숨김 사유</label>
         <select id="rvHideReason" aria-describedby="rvHideReasonHint rvHideReasonErr">
           <option value="">선택해 주세요</option>
-          <option>욕설·비방</option>
+          <option>욕설·인신공격</option>
           <option>광고·스팸</option>
           <option>개인정보 노출</option>
           <option>허위 사실·권리 침해</option>
-          <option>기타</option>
+          <option>법령 위반</option>
+          <option>임시 조치(권리 침해 신고)</option>
         </select>
-        <p class="field-hint" id="rvHideReasonHint">「욕설·비방」은 욕설과 특정인에 대한 인신공격·모욕에만 고릅니다. 스누코치나 코치에 대한 비판은 해당하지 않습니다. 「허위 사실」은 기록으로 확인되는 경우에만 고릅니다. 의견과 평가(예: 효과가 없었다, 불친절했다)는 허위 사실이 아닙니다. 「기타」는 법령 위반에만 씁니다.</p>
+        <p class="field-hint" id="rvHideReasonHint">사유 이름은 이용약관 제10조 제5항 각 호와 같고, 숨김 현황·작성자 화면·안내 메일에 그대로 나옵니다. 「욕설·인신공격」은 욕설, 특정인에 대한 인신공격·모욕, 차별·혐오 표현에만 고릅니다. 스누코치나 코치에 대한 비판은 해당하지 않습니다. 「광고·스팸」은 광고·홍보, 같은 내용의 되풀이, 스누코치 이용 경험과 관계없는 글입니다. 「개인정보 노출」에서 스누코치 소속 코치의 성명만 적은 것은 제외합니다. 「허위 사실」은 기록으로 확인되는 경우에만 고릅니다. 의견과 평가(예: 효과가 없었다, 불친절했다)는 허위 사실이 아닙니다. 「임시 조치」는 권리 침해 신고를 받았는데 판단이 어려울 때만 쓰고 30일 안에 정합니다.</p>
         <p class="field-err" id="rvHideReasonErr"></p>
       </div>
       <div class="field">
         <label for="rvHideNote">메모 <span class="opt" id="rvHideNoteOpt">(선택)</span></label>
         <textarea id="rvHideNote" rows="3" maxlength="300" aria-describedby="rvHideNoteHint rvHideNoteErr"></textarea>
-        <p class="field-hint" id="rvHideNoteHint">어느 부분이 기준에 어긋나는지 적어 둡니다. 사유가 「기타」이면 이 메모가 작성자에게 구체 사유로 보입니다. 다른 사유의 메모는 작성자 화면에 나오지 않지만 처리 기록에 남으므로, 작성자가 읽어도 되는 문장으로 쓰고 이름·연락처 같은 개인정보는 옮겨 적지 않습니다.</p>
+        <p class="field-hint" id="rvHideNoteHint">메모는 작성자에게 구체 사유로 보이고(내가 쓴 후기, 안내 메일) 처리 기록에 3년 동안 남습니다. 어느 기준에 왜 어긋나는지를 작성자가 읽을 문장으로 적습니다. 후기 문장을 그대로 옮겨 적지 않고, 이름·연락처 같은 개인정보와 신고한 사람이 누구인지도 적지 않습니다. 「법령 위반」과 「임시 조치」는 메모가 필수입니다.</p>
         <p class="field-err" id="rvHideNoteErr"></p>
       </div>
       <p class="auth-note">같은 위반이 있는 다른 후기도 함께 살펴 같은 기준으로 처리합니다. 낮은 평점이나 불만만으로는 숨기지 않습니다.</p>
