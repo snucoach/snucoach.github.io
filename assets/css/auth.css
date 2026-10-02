@@ -295,3 +295,92 @@ details.acct-item[open] > summary { margin-bottom: 16px; }
 .switch-row .switch-hint { margin: 4px 0 0; font-size: 13px; line-height: 1.6; color: var(--text-faint); }
 .switch-row .switch-hint[hidden] { display: none; }
 .switch input:disabled { cursor: default; }
+
+/* ── 회원 후기 (reviews.html) ── */
+.mrv { padding: 0 14px 96px; margin-top: -48px; scroll-margin-top: calc(var(--nav-h) + 56px); }
+.mrv[hidden], .mrv-form[hidden], .mrv-mine[hidden], .mrv-jump[hidden], .mrv-more .btn[hidden] { display: none; }  /* .auth-form·.btn 은 display 를 지정한다 */
+.mrv-inner { max-width: 760px; margin: 0 auto; }
+.mrv-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px 16px;
+  padding-top: 40px; margin-bottom: 16px; border-top: 1px solid var(--line-solid, #E3E8F5); }
+.mrv-head > div:first-child { flex: 1 1 320px; min-width: 0; }
+.mrv-title { margin: 0 0 6px; font-size: clamp(22px, 4.6vw, 26px); font-weight: 800; letter-spacing: -0.03em; color: var(--ink); }
+.mrv-total { margin-left: 4px; font-size: 15px; font-weight: 700; color: var(--text-faint); }
+.mrv-sub { margin: 0; font-size: 14.5px; line-height: 1.65; color: var(--text-sub); }
+.mrv-write { display: grid; gap: 6px; justify-items: end; max-width: 100%; }
+.mrv-write-note { margin: 0; max-width: 340px; font-size: 13px; line-height: 1.6; color: var(--text-faint); text-align: right; }
+.mrv-write-note a { color: var(--blue); font-weight: 700; }
+@media (max-width: 560px) { .mrv-write { justify-items: start; } .mrv-write-note { text-align: left; } }
+
+/* 운영 기준: 요약은 늘 보이고, 자세한 내용은 펼쳐 본다 */
+.mrv-rules { margin: 0 0 18px; padding: 14px 16px; border-radius: 12px; background: #fff; border: 1px solid var(--line-solid, #E3E8F5);
+  font-size: 13.5px; line-height: 1.7; color: var(--text-sub); }
+.mrv-rules-lead { margin: 0; }
+.mrv-rules-lead b { margin-right: 6px; color: var(--text); }
+.mrv-rules details { margin-top: 8px; }
+.mrv-rules summary { width: max-content; max-width: 100%; padding: 6px 0; cursor: pointer; font-weight: 700; color: var(--navy); }
+.mrv-rules summary:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; border-radius: 4px; }
+.mrv-rules-list { margin: 6px 0 0; }
+.mrv-rules-list dt { margin-top: 10px; font-weight: 800; color: var(--text); }
+.mrv-rules-list dd { margin: 2px 0 0; }
+.mrv-rules-more { margin: 12px 0 0; }
+.mrv-rules a { color: var(--blue); font-weight: 700; }
+
+.mrv-form, .mrv-mine { background: #fff; border: 1px solid var(--line-solid, #E3E8F5); border-radius: 14px; padding: 22px 18px; margin-bottom: 18px; }
+.mrv-h3 { margin: 0 0 4px; font-size: 18px; font-weight: 800; letter-spacing: -0.02em; color: var(--ink); }
+.field textarea { width: 100%; min-height: 150px; padding: 12px 14px; font: inherit; font-size: 16px; line-height: 1.65; color: var(--text);
+  background: #fff; border: 1px solid #CDD4EA; border-radius: 12px; resize: vertical; }
+.field textarea:focus { outline: none; border-color: var(--navy); box-shadow: 0 0 0 3px rgba(45,75,200,.16); }
+.field textarea[aria-invalid="true"] { border-color: #C83A43; }
+.field-hint[hidden] { display: none; }
+.field-hint.is-warn { color: #8A4B00; font-weight: 700; }
+.mrv-rate { border: 0; margin: 0; padding: 0; min-width: 0; }
+.mrv-rate legend { padding: 0; margin: 0 0 7px; font-size: 14px; font-weight: 700; color: var(--text); }
+.mrv-rate-row { display: flex; flex-wrap: wrap; align-items: center; gap: 2px; }
+.mrv-rate label { position: relative; display: inline-flex; padding: 6px; border-radius: 8px; cursor: pointer; }  /* 누르는 영역 44px */
+.mrv-rate input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.mrv-rate label:focus-within { outline: 2px solid var(--blue); outline-offset: 1px; }
+.mrv-star { width: 32px; height: 32px; fill: #D5DBEC; }
+.mrv-rate label.on .mrv-star { fill: #E9A400; }
+.mrv-rate.is-invalid .mrv-star { stroke: #C83A43; stroke-width: 1; }
+.mrv-rate-text { margin-left: 10px; font-size: 14px; font-weight: 700; color: var(--text-sub); }
+.mrv-notice { margin: 0; padding: 14px 16px 14px 32px; border-radius: 12px; background: var(--sec-bg); font-size: 13.5px; line-height: 1.7; color: var(--text-sub); }
+.mrv-notice a, .mrv-agree a { color: var(--navy); font-weight: 700; }
+.mrv-agree { margin: 0; font-size: 13.5px; line-height: 1.65; color: var(--text-sub); }
+.mrv-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.mrv-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.mrv-mine .mrv-list { margin-top: 14px; }
+.mrv-item { min-width: 0; background: #fff; border: 1px solid var(--line-solid, #E3E8F5); border-radius: 14px; padding: 18px; }
+.mrv-item:focus { outline: 2px solid var(--blue); outline-offset: 2px; }
+.mrv-mine .mrv-item { background: var(--sec-bg); }
+.mrv-item.is-hidden { border-style: dashed; }
+.mrv-item-head { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; margin-bottom: 10px; }
+.mrv-stars { display: inline-flex; gap: 1px; margin-right: 4px; }
+.mrv-stars svg { width: 18px; height: 18px; fill: #D5DBEC; }
+.mrv-stars svg.on { fill: #E9A400; }
+.mrv-body { margin: 0 0 12px; font-size: 15.5px; line-height: 1.75; color: var(--text); white-space: pre-line; overflow-wrap: anywhere; overflow: hidden; }
+.mrv-body.is-clamped { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 12; line-clamp: 12; }
+.mrv-toggle { display: block; margin: -6px 0 8px; }
+.mrv-meta { margin: 0; font-size: 13.5px; color: var(--text-faint); }
+.mrv-author { font-weight: 700; color: var(--text-sub); }
+.mrv-hidden-note { margin: 0 0 12px; padding: 11px 13px; border-radius: 10px; background: #FDF3E7; border: 1px solid #F2D9B5; font-size: 13.5px; line-height: 1.65; color: #6B4210; overflow-wrap: anywhere; }
+.mrv-hidden-note a { color: inherit; font-weight: 800; }
+.mrv-item-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; margin-top: 12px; font-size: 14px; }
+.mrv-confirm { flex: 1 1 100%; font-weight: 700; color: #8C1D18; }
+.mrv-empty { margin: 0; padding: 36px 0; text-align: center; font-size: 15px; color: var(--text-faint); }
+.mrv-more { margin-top: 16px; text-align: center; }
+.mrv-jump { margin-top: 18px; }
+
+/* ── 관리자: 회원 후기 ── */
+.adm-rules { margin: 0 0 4px; padding: 14px 16px 14px 32px; border-radius: 12px; background: var(--sky-2); font-size: 13.5px; line-height: 1.7; color: var(--text-sub); }
+.adm-table td.lines { white-space: pre-line; min-width: 150px; line-height: 1.6; overflow-wrap: anywhere; }
+.adm-table td.wrap { white-space: normal; min-width: 280px; max-width: 440px; }
+.adm-body { max-height: 220px; overflow: auto; white-space: pre-line; overflow-wrap: anywhere; line-height: 1.6; }
+.adm-acts { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; min-width: 190px; white-space: normal; }
+.adm-acts .btn { text-decoration: none; }
+.adm-confirm { flex: 1 1 100%; font-size: 13px; font-weight: 700; color: #8C1D18; }
+.adm-dlg { width: min(560px, calc(100vw - 32px)); max-height: calc(100vh - 32px); overflow: auto; padding: 24px 20px; border: 0; border-radius: 16px; color: var(--text); }
+.adm-dlg::backdrop { background: rgba(8,8,60,.45); }
+.adm-dlg h3 { margin: 0 0 10px; font-size: 18px; font-weight: 800; color: var(--ink); }
+.adm-dlg .adm-dlg-body { max-height: 160px; overflow: auto; margin: 0 0 14px; padding: 10px 12px; border-radius: 10px; background: var(--sec-bg);
+  font-size: 14px; line-height: 1.65; white-space: pre-line; overflow-wrap: anywhere; }
+.adm-dlg .field textarea { min-height: 96px; }

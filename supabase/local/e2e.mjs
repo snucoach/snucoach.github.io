@@ -530,6 +530,52 @@ try {
     await kctx.close();
   }
 
+  // ── 14-1. 회원 후기(후기 페이지) ────────────────────────
+  {
+    const R = mail('r');
+    const made = await fetch(`${API}/auth/v1/admin/users`, {
+      method: 'POST',
+      headers: { apikey: env.SERVICE_ROLE_KEY, authorization: `Bearer ${env.SERVICE_ROLE_KEY}`, 'content-type': 'application/json' },
+      body: JSON.stringify({ email: R, password: 'abcd1234', email_confirm: true, user_metadata: { name: '김후기', member_type: '학생', grade: '고2', agree_terms: true, agree_privacy: true, agree_age: true, phone: '010-2222-3333' } }),
+    });
+    check('후기: 시험 회원 생성', made.status === 200);
+    const rctx = await newContext(browser);
+    const rp = await rctx.newPage();
+    await rp.goto(`${SITE}/reviews.html`);
+    await rp.waitForSelector('#member-reviews:not([hidden])');
+    check('후기: 비로그인 방문자에게 구역·운영 기준 요약·로그인 안내', (await text(rp, '#mrvWrite a')) === '로그인하고 후기 쓰기' && await visible(rp, '.mrv-rules-lead'));
+    await rp.click('#mrvWrite a');
+    await rp.fill('#loginEmail', R);
+    await rp.fill('#loginPw', 'abcd1234');
+    await rp.click('#loginForm button[type="submit"]');
+    await rp.waitForSelector('#mrvOpen');
+    check('후기: 로그인 뒤 후기 화면으로 돌아와 「후기 쓰기」가 보임', rp.url().endsWith('/reviews.html#member-reviews'), rp.url());
+    await rp.click('#mrvOpen');
+    await rp.selectOption('#mrvProgram', '학습코칭');
+    await rp.check('#mrvRate input[value="4"]', { force: true });
+    await rp.fill('#mrvBody', '계획 세우는 습관이 잡혔습니다. <b>태그</b>는 글자로 보여야 합니다.');
+    await rp.click('#mrvSubmit');
+    await rp.waitForSelector('#mrvMsg:not([hidden])');
+    check('후기: 작성 완료 안내', (await text(rp, '#mrvMsg')) === '후기를 올렸습니다.', await text(rp, '#mrvMsg'));
+    check('후기: DB 에 가린 이름으로 저장', sql(`select r.author_label from public.reviews r join auth.users u on u.id = r.user_id where u.email='${R}'`) === '김**');
+    const octx = await newContext(browser);
+    const op = await octx.newPage();
+    await op.goto(`${SITE}/reviews.html`);
+    await op.waitForSelector('#mrvList > li');
+    check('후기: 다른 방문자에게 김** 로 보이고 태그는 글자 그대로',
+      ((await op.locator('#mrvList > li .mrv-author').first().textContent()) || '') === '김**'
+      && ((await op.locator('#mrvList > li .mrv-body').first().textContent()) || '').includes('<b>태그</b>')
+      && (await op.locator('#mrvList b').count()) === 0);
+    await octx.close();
+    await rp.locator('#mrvMineList .mrv-item-actions button').nth(1).click();
+    await rp.click('#mrvMineList .mrv-item-actions .btn-danger');
+    await rp.waitForFunction(() => document.getElementById('mrvMsg').textContent === '후기를 지웠습니다.');
+    check('후기: 본인 글 삭제', sql(`select count(*) from public.reviews r join auth.users u on u.id = r.user_id where u.email='${R}'`) === '0');
+    ctx.violations.push(...rctx.violations);
+    ctx.errors.push(...rctx.errors);
+    await rctx.close();
+  }
+
   // ── 15. 회원 탈퇴 ───────────────────────────────────────
   await page.goto(`${SITE}/login.html`);
   await page.fill('#loginEmail', A);

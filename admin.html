@@ -14,7 +14,7 @@
 <link rel="apple-touch-icon" href="assets/img/favicon.png">
 <link rel="stylesheet" href="assets/fonts/pretendardvariable-dynamic-subset.min.css">
 <link rel="stylesheet" href="assets/css/style.css?v=v3f">
-<link rel="stylesheet" href="assets/css/auth.css?v=a6">
+<link rel="stylesheet" href="assets/css/auth.css?v=a7">
 </head>
 <body class="p-auth p-admin" data-auth-page="admin">
 <header class="topnav" id="topnav">
@@ -43,7 +43,7 @@
     <section class="auth-card" aria-labelledby="pageTitle">
       <p class="auth-eyebrow">관리자</p>
       <h1 class="auth-title" id="pageTitle">회원 관리</h1>
-      <p class="auth-sub">회원 정보는 개인정보입니다. 업무에 필요한 만큼만 보고, 내려받은 파일은 쓴 뒤 바로 지워 주세요.</p>
+      <p class="auth-sub">회원 정보는 개인정보입니다. 업무에 필요한 만큼만 보고, 내려받은 파일은 쓴 뒤 바로 지워 주세요. 회원 후기의 숨김과 수강 확인도 이 화면에서 합니다.</p>
       <div class="auth-msg" id="authMsg" role="alert" hidden></div>
       <div class="auth-loading" id="pageLoading">불러오는 중…</div>
       <div id="admBody" hidden>
@@ -78,8 +78,65 @@
         </div>
         <p class="auth-note" id="alCount" aria-live="polite"></p>
       </div>
+      <div class="adm-section" id="admReviews" hidden>
+        <h2 class="adm-h2">회원 후기</h2>
+        <div class="auth-msg" id="rvMsg" role="alert" tabindex="-1" hidden></div>
+        <div id="rvBody" hidden>
+          <ul class="adm-rules">
+            <li>숨김은 운영 기준(욕설·인신공격, 광고·스팸, 개인정보 노출, 객관적으로 확인되는 허위 사실·권리 침해, 법령 위반)을 위반한 후기에만, 별점과 관계없이 같은 잣대로 씁니다. 평점이 낮거나 불만·비판을 적었다는 이유로 숨기면 소비자를 속이는 행위가 될 수 있습니다.</li>
+            <li>숨긴 날 작성자에게 사유와 이의 제기 방법을 알립니다(「작성자에게 알리기」를 누르면 메일 앱이 열립니다). 이의가 들어오면 다시 보고, 기준에 해당하지 않으면 바로 숨김을 해제합니다.</li>
+            <li>수강 확인은 별점·내용과 관계없이 수강 사실이 확인되는 모든 학습코칭·생기부 컨설팅 후기에 같은 기준으로 붙입니다. 착오로 붙인 경우에만 취소합니다.</li>
+            <li>불만 후기를 쓴 회원에게 수정·삭제를 부탁하거나 대가를 제시하지 않습니다. 연락은 불만을 해결하려는 목적으로만 합니다.</li>
+          </ul>
+          <div class="adm-tools">
+            <div class="field"><label for="rvSearch" class="sr-only">글 번호, 이름, 이메일 또는 본문 검색</label><input type="text" id="rvSearch" placeholder="글 번호, 이름, 이메일 또는 본문 검색" autocomplete="off"></div>
+            <div class="field"><label for="rvState" class="sr-only">상태 선택</label><select id="rvState"><option value="">전체</option><option value="on">게시 중</option><option value="hidden">숨김</option></select></div>
+            <button class="btn btn-line btn-sm" type="button" id="rvCsv">CSV 내려받기</button>
+            <button class="btn btn-line btn-sm" type="button" id="rvLogCsv">처리 기록 CSV</button>
+          </div>
+          <div class="adm-table-wrap">
+            <table class="adm-table">
+              <thead><tr><th scope="col">번호</th></tr></thead>
+              <tbody id="rvRows"></tbody>
+            </table>
+          </div>
+          <p class="auth-note" id="rvCount" aria-live="polite"></p>
+          <p class="auth-note" id="rvDist" hidden></p>
+        </div>
+      </div>
     </section>
   </div>
+  <dialog class="adm-dlg" id="rvHideDlg" aria-labelledby="rvHideTitle">
+    <h3 id="rvHideTitle">후기 숨김</h3>
+    <p class="adm-dlg-body" id="rvHideBody"></p>
+    <div class="auth-form">
+      <div class="field">
+        <label for="rvHideReason">숨김 사유</label>
+        <select id="rvHideReason" aria-describedby="rvHideReasonHint rvHideReasonErr">
+          <option value="">선택해 주세요</option>
+          <option>욕설·비방</option>
+          <option>광고·스팸</option>
+          <option>개인정보 노출</option>
+          <option>허위 사실·권리 침해</option>
+          <option>기타</option>
+        </select>
+        <p class="field-hint" id="rvHideReasonHint">「욕설·비방」은 욕설과 특정인에 대한 인신공격·모욕에만 고릅니다. 스누코치나 코치에 대한 비판은 해당하지 않습니다. 「허위 사실」은 기록으로 확인되는 경우에만 고릅니다. 의견과 평가(예: 효과가 없었다, 불친절했다)는 허위 사실이 아닙니다. 「기타」는 법령 위반에만 씁니다.</p>
+        <p class="field-err" id="rvHideReasonErr"></p>
+      </div>
+      <div class="field">
+        <label for="rvHideNote">메모 <span class="opt" id="rvHideNoteOpt">(선택)</span></label>
+        <textarea id="rvHideNote" rows="3" maxlength="300" aria-describedby="rvHideNoteHint rvHideNoteErr"></textarea>
+        <p class="field-hint" id="rvHideNoteHint">어느 부분이 기준에 어긋나는지 적어 둡니다. 사유가 「기타」이면 이 메모가 작성자에게 구체 사유로 보입니다. 다른 사유의 메모는 작성자 화면에 나오지 않지만 처리 기록에 남으므로, 작성자가 읽어도 되는 문장으로 쓰고 이름·연락처 같은 개인정보는 옮겨 적지 않습니다.</p>
+        <p class="field-err" id="rvHideNoteErr"></p>
+      </div>
+      <p class="auth-note">같은 위반이 있는 다른 후기도 함께 살펴 같은 기준으로 처리합니다. 낮은 평점이나 불만만으로는 숨기지 않습니다.</p>
+      <div class="auth-msg" id="rvHideMsg" role="alert" hidden></div>
+      <div class="mrv-actions">
+        <button class="btn btn-danger btn-sm" type="button" id="rvHideOk">숨김 처리</button>
+        <button class="btn btn-line btn-sm" type="button" id="rvHideCancel">취소</button>
+      </div>
+    </div>
+  </dialog>
 </main>
 <footer class="site-footer">
   <div class="footer-inner">
@@ -126,6 +183,6 @@
 <script src="assets/js/auth-config.js?v=a5" defer></script>
 <script src="assets/js/site.js?v=v3f" defer></script>
 <script src="assets/vendor/supabase-js-2.117.2.js" defer></script>
-<script src="assets/js/auth.js?v=a6" defer></script>
+<script src="assets/js/auth.js?v=a7" defer></script>
 </body>
 </html>

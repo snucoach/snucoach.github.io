@@ -263,6 +263,81 @@ sql(`delete from auth.audit_log_entries where payload->>'test' = 'new-${stamp}'`
   check('탈퇴하면 알림도 삭제', sql(`select count(*) from public.target_alerts where user_id='${e.json.id}'`) === '0');
 }
 
+// 13) 회원 후기 (20261003000000_reviews.sql)
+// PGlite 로는 확인하지 못한 것을 여기서 본다: 직접 정한 오류 코드(RV…)가 그대로 오는지, 열 권한이 걸린 표에 REST 로 쓰기·고치기·지우기가 되는지.
+{
+  const g = await adminCreate(mail('g'), { ...fullMeta, name: '김후기' });
+  const h = await adminCreate(mail('h'), { ...fullMeta, name: '이후기' });
+  const tokG = await login(mail('g')), tokH = await login(mail('h'));
+  const rep = { prefer: 'return=representation' };
+  const post = (tok, body, q = '?select=id') => call('/rest/v1/reviews' + q, { method: 'POST', token: tok, body, headers: rep });
+  r = await call('/rest/v1/reviews_public?select=id,rating,program,body,author,verified,created_at,updated_at&order=id.desc&limit=11', { headers: { prefer: 'count=exact' } });
+  check('후기: 비로그인 공개 조회(뷰, 건수 포함)', r.status === 200 || r.status === 206, r);
+  r = await post(tokG, { rating: 4, program: '학습코칭', body: '  계획 세우는 습관이 잡혔습니다.\n\n\n아쉬운 점은 없었어요  ' });
+  check('후기: 작성(넣는 칸 3개 + select=id)', r.status === 201 && !!r.json[0] && r.json[0].id > 0, r);
+  const rid = r.json[0] && r.json[0].id;
+  r = await call(`/rest/v1/reviews_public?select=*&id=eq.${rid}`);
+  check('후기: 공개 조회는 칸 8개, 가린 이름, 정리된 본문', r.status === 200 && r.json.length === 1
+    && Object.keys(r.json[0]).sort().join() === 'author,body,created_at,id,program,rating,updated_at,verified'
+    && r.json[0].author === '김**' && r.json[0].body === '계획 세우는 습관이 잡혔습니다.\n\n아쉬운 점은 없었어요', r);
+  r = await call('/rest/v1/reviews?select=*');
+  check('후기: 표 select=* 거부', r.status === 401 || r.status === 403, r);
+  r = await call('/rest/v1/reviews?select=user_id');
+  check('후기: user_id 조회 거부', r.status === 401 || r.status === 403, r);
+  r = await call('/rest/v1/reviews?select=user_id', { token: tokH });
+  check('후기: 로그인한 회원도 user_id 조회 거부', r.status === 401 || r.status === 403, r);
+  r = await post(tokG, { rating: 4, program: '기타', body: '전체 칸을 돌려 달라고 하면 거절됩니다.' }, '');
+  check('후기: 전체 칸을 돌려 달라는 작성 요청은 거부(열 권한)', r.status === 401 || r.status === 403, r);
+  r = await post(tokG, { rating: 5, program: '기타', body: '수강 확인을 직접 넣어 봅니다.', verified: true });
+  check('후기: verified 직접 넣기 거부', r.status === 401 || r.status === 403, r);
+  r = await post(tokG, { rating: 5, program: '기타', body: '남의 이름으로 써 봅니다. 열 글자.', user_id: h.json.id });
+  check('후기: user_id 지정 거부', r.status === 401 || r.status === 403, r);
+  r = await post(tokG, { rating: 5, program: '학습코칭', body: '같은 프로그램에 두 번째 글을 씁니다.' });
+  check('후기: 같은 프로그램 두 번째 글 거부(23505)', r.status === 409 && r.json.code === '23505', r);
+  r = await post(tokG, { rating: 5, program: '기타', body: '짧음' });
+  check('후기: 짧은 본문 거부(23514 + 제약 이름)', r.status === 400 && r.json.code === '23514' && /reviews_body_length/.test(r.json.message || ''), r);
+  r = await post(tokA, { rating: 5, program: '기타', body: '관리자 계정으로 써 봅니다. 열 글자.' });
+  check('후기: 관리자 계정 작성 거부(코드 RV003 이 그대로 오는지)', r.json.code === 'RV003', r);
+  await post(tokG, { rating: 3, program: '생기부 컨설팅', body: '두 번째 프로그램 후기입니다. 열 글자.' });
+  await post(tokG, { rating: 3, program: '무료 자료·이벤트', body: '세 번째 프로그램 후기입니다. 열 글자.' });
+  r = await post(tokG, { rating: 3, program: '기타', body: '네 번째 후기는 하루 한도를 넘습니다.' });
+  check('후기: 하루 4번째 글 거부(코드 RV001 이 그대로 오는지)', r.json.code === 'RV001', r);
+  r = await call(`/rest/v1/reviews?id=eq.${rid}&select=id`, { method: 'PATCH', token: tokH, body: { rating: 1 }, headers: rep });
+  check('후기: 남의 글 수정 0행', r.status === 200 && r.json.length === 0, r);
+  r = await call(`/rest/v1/reviews?id=eq.${rid}&select=id`, { method: 'PATCH', token: tokG, body: { rating: 5, program: '학습코칭', body: '고쳐 쓴 후기입니다. 여전히 만족합니다.' }, headers: rep });
+  check('후기: 본인 글 수정(칸 3개 + select=id)', r.status === 200 && r.json.length === 1, r);
+  r = await call(`/rest/v1/reviews?id=eq.${rid}`, { method: 'PATCH', token: tokG, body: { verified: true } });
+  check('후기: 본인 글의 verified 수정 거부', r.status === 401 || r.status === 403, r);
+  r = await call('/rest/v1/rpc/my_review_status', { method: 'POST', token: tokG, body: {} });
+  check('후기: my_review_status(ok + 가린 이름)', r.status === 200 && r.json[0].state === 'ok' && r.json[0].author === '김**', r);
+  r = await call('/rest/v1/rpc/my_review_status', { method: 'POST', body: {} });
+  check('후기: 비로그인 my_review_status 거부', r.status === 401 || r.status === 403, r);
+  r = await call('/rest/v1/rpc/admin_set_review_hidden', { method: 'POST', token: tokG, body: { p_id: rid, p_hidden: true, p_reason: '기타', p_note: '마음에 안 듦' } });
+  check('후기: 일반 회원의 숨김 거부', r.status === 401 || r.status === 403, r);
+  r = await call('/rest/v1/rpc/admin_set_review_hidden', { method: 'POST', token: tokA, body: { p_id: rid, p_hidden: true, p_reason: '평점 낮음' } });
+  check('후기: 목록에 없는 숨김 사유 거부(23514)', r.json.code === '23514', r);
+  r = await call('/rest/v1/rpc/admin_set_review_hidden', { method: 'POST', token: tokA, body: { p_id: rid, p_hidden: true, p_reason: '개인정보 노출', p_note: '시험' } });
+  check('후기: 관리자 숨김', r.status === 204 || r.status === 200, r);
+  r = await call(`/rest/v1/reviews_public?select=id&id=eq.${rid}`);
+  check('후기: 숨긴 글은 공개 조회에 없음', r.status === 200 && r.json.length === 0, r);
+  r = await call('/rest/v1/rpc/review_hidden_stats');
+  check('후기: 숨김 현황은 비로그인 GET 으로 조회(사유별 건수)', r.status === 200 && r.json.some((x) => x.reason === '개인정보 노출' && x.n >= 1), r);
+  r = await call('/rest/v1/rpc/my_reviews', { method: 'POST', token: tokG, body: {} });
+  check('후기: 작성자는 my_reviews 로 숨김 사유 확인(메모 없음)', r.status === 200 && r.json.some((x) => x.id === rid && x.hidden === true && x.hidden_reason === '개인정보 노출' && !('hidden_note' in x)), r);
+  r = await call('/rest/v1/rpc/admin_list_reviews', { method: 'POST', token: tokA, body: {} });
+  check('후기: 관리자 목록(이름·이메일 있음, 휴대전화·user_id 없음)', r.status === 200 && r.json.some((x) => x.id === rid && x.email === mail('g') && !('phone' in x) && !('user_id' in x)), r);
+  r = await call('/rest/v1/rpc/admin_set_review_hidden', { method: 'POST', token: tokA, body: { p_id: 99999999, p_hidden: true, p_reason: '광고·스팸' } });
+  check('후기: 없는 글(코드 RV004 가 그대로 오는지)', r.json.code === 'RV004', r);
+  r = await call(`/rest/v1/reviews?id=eq.${rid}&select=id`, { method: 'DELETE', token: tokH, headers: rep });
+  check('후기: 남의 글 삭제 0행', r.status === 200 && r.json.length === 0, r);
+  r = await call(`/rest/v1/reviews?id=eq.${rid}&select=id`, { method: 'DELETE', token: tokG, headers: rep });
+  check('후기: 본인 글 삭제(숨긴 글)', r.status === 200 && r.json.length === 1, r);
+  check('후기: 글을 지워도 처리 기록은 남음', sql(`select count(*) from private.review_moderation_log where review_id = ${rid}`) === '1');
+  sql(`delete from auth.users where email='${mail('g')}'`);
+  check('후기: 탈퇴하면 후기·횟수 기록 삭제', sql(`select count(*) from public.reviews where user_id='${g.json.id}'`) === '0' && sql(`select count(*) from private.review_quota where user_id='${g.json.id}'`) === '0');
+  check('후기: 정리 작업이 매일 예약되어 있음', sql(`select count(*) from cron.job where jobname = 'snucoach-purge-review-records'`) === '1');
+}
+
 // 정리
 sql(`delete from auth.users where email like 'api-%-${stamp}@example.com'`);
 console.log(failed ? `\n${failed} FAILED` : '\nALL PASSED');

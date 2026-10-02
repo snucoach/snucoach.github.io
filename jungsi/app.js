@@ -415,7 +415,7 @@
     if (authP) return authP;
     const add = (src) => new Promise((ok, no) => { const el = document.createElement("script"); el.src = src; el.onload = ok; el.onerror = no; document.head.appendChild(el); });
     authP = (window.supabase ? Promise.resolve() : add("../assets/vendor/supabase-js-2.117.2.js"))
-      .then(() => (window.SnucoachAuth ? null : add("../assets/js/auth.js?v=a6")))
+      .then(() => (window.SnucoachAuth ? null : add("../assets/js/auth.js?v=a7")))
       .then(() => { if (!window.SnucoachAuth || !window.SnucoachAuth.ok) throw new Error("auth"); return window.SnucoachAuth.alerts; });
     authP.catch(() => { authP = null; });
     return authP;
