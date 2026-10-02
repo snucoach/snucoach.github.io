@@ -72,11 +72,33 @@
     });
     if (drawerClose) drawerClose.addEventListener('click', closeDrawer);
     navScrim.addEventListener('click', closeDrawer);
-    navDrawer.querySelectorAll('.drawer-links a, .drawer-cta, .drawer-kakao').forEach(function (a) {
+    navDrawer.querySelectorAll('.drawer-links a, .drawer-cta, .drawer-kakao, .drawer-auth').forEach(function (a) {
       a.addEventListener('click', closeDrawer);
     });
     window.addEventListener('resize', function () {
       if (window.innerWidth > 640 && navDrawer.classList.contains('open')) closeDrawer();
+    });
+  }
+
+  // ── 회원 메뉴: 로그인 ↔ 마이페이지 ──
+  // Supabase 라이브러리 없이, 이 브라우저에 저장된 로그인 세션이 있는지만 본다.
+  // 설정(assets/js/auth-config.js)이 비어 있으면 메뉴를 숨긴 채로 둔다.
+  var authCfg = window.SNUCOACH_AUTH;
+  if (authCfg && authCfg.url && authCfg.key) {
+    var signedIn = false;
+    ['localStorage', 'sessionStorage'].forEach(function (store) {
+      try {
+        var s = JSON.parse(window[store].getItem('snucoach-auth') || 'null');
+        if (s && s.refresh_token) signedIn = true;
+      } catch (e) { /* 저장소 차단·손상 시 로그아웃 상태로 본다 */ }
+    });
+    document.querySelectorAll('[data-auth-nav]').forEach(function (a) {
+      if (signedIn) {
+        a.setAttribute('href', a.getAttribute('href').replace('login.html', 'account.html'));
+        var lb = a.querySelector('[data-auth-label]');
+        if (lb) lb.textContent = '마이페이지';
+      }
+      a.hidden = false;
     });
   }
 

@@ -339,7 +339,7 @@
     const pk = PK.build(state.depts, res, other, pickOpt(goal));
     state.pk = pk;
     const anyRef = BANDS.some((b) => pk[b.key].some((r) => r.pct));
-    const legend = `<p class="plegend">${goal ? "목표 점수" : "지금 성적"} 기준입니다.${anyRef ? ` <span class="ref">참고</span> 표시는 ${REF_TIP}입니다.` : ""}</p>`;
+    const legend = `<p class="plegend">${goal ? "목표 점수" : "지금 성적"} 기준입니다.${anyRef ? ` <span class="ref">참고</span> 표시는 ${REF_TIP}입니다.` : ""}<span class="ahint">☆ 목표로 고른 대학 중 인서울 주요 대학은 입시 정보 알림을 받을 수 있습니다.</span></p>`;
     $("#picks").innerHTML = legend + BANDS.map((b) => bandHtml(b, pk[b.key], goal, pk.counts[b.key])).join("");
     renderPlan(pk);
   }
@@ -384,6 +384,62 @@
     if (!text) return;
     copyNow(text).then((ok) => toast(ok ? "고른 목표를 복사했습니다. 상담 신청서에 붙여 넣어 주세요." : `복사하지 못했습니다. 상담 신청서에 이렇게 적어 주세요. ${text}`, 6000));
   }
+  // ── 목표 대학 입시 정보 알림(회원 전용). 인서울 주요 대학만 대상 ──
+  // 회원 기능(Supabase)은 무거워서 알림을 누를 때만 불러온다. 대상 목록은 auth.js·DB 와 같아야 함
+  const ALERT_UNIVS = ["서울대", "연세대", "고려대", "서강대", "성균관대", "한양대", "중앙대", "경희대", "한국외국어대",
+    "서울시립대", "이화여대", "건국대", "동국대", "홍익대", "국민대", "숭실대", "세종대", "광운대"];
+  const authOn = () => { const c = window.SNUCOACH_AUTH; return !!(c && c.url && c.key); };
+  const storedLogin = () => ["localStorage", "sessionStorage"].some((k) => { try { const v = JSON.parse(window[k].getItem("snucoach-auth") || "null"); return !!(v && v.refresh_token); } catch (_) { return false; } });
+  let authP = null;
+  function loadAuth() {
+    if (authP) return authP;
+    const add = (src) => new Promise((ok, no) => { const el = document.createElement("script"); el.src = src; el.onload = ok; el.onerror = no; document.head.appendChild(el); });
+    authP = (window.supabase ? Promise.resolve() : add("../assets/vendor/supabase-js-2.117.2.js"))
+      .then(() => (window.SnucoachAuth ? null : add("../assets/js/auth.js?v=a5")))
+      .then(() => { if (!window.SnucoachAuth || !window.SnucoachAuth.ok) throw new Error("auth"); return window.SnucoachAuth.alerts; });
+    authP.catch(() => { authP = null; });
+    return authP;
+  }
+  const alertPicks = () => { // 목표 중 알림 대상(대학별 하나, 먼저 고른 계열)
+    const m = new Map();
+    for (const t of targetList()) if (ALERT_UNIVS.includes(t.univ) && !m.has(t.univ)) m.set(t.univ, { univ: t.univ, track: t.major });
+    return [...m.values()];
+  };
+  function openAlert() {
+    const dlg = $("#alertDlg"), ok = alertPicks();
+    const out = [...new Set(targetList().map((t) => t.univ).filter((u) => !ALERT_UNIVS.includes(u)))];
+    $("#adlgList").innerHTML = ok.map((x) => `<li>${esc(x.univ)}</li>`).join("");
+    $("#adlgList").hidden = !ok.length;
+    $("#adlgOut").hidden = !out.length;
+    $("#adlgOut").textContent = !ok.length ? `고른 대학(${out.join(", ")})은 알림 대상이 아닙니다. 아래 대학 중에서 목표를 골라 주세요.`
+      : out.length ? `${out.join(", ")}은(는) 알림 대상이 아니라 빠집니다.` : "";
+    $("#adlgScope").textContent = ALERT_UNIVS.join(" · ");
+    const act = $("#adlgAct"), login = storedLogin();
+    $("#adlgNeed").hidden = !ok.length || login || !authOn();
+    if (!authOn()) act.innerHTML = `<p class="adlg-out">알림 기능을 준비하고 있습니다.</p>`;
+    else if (!ok.length) act.innerHTML = `<button type="button" class="sec" data-alert="close">확인</button>`;
+    else if (login) act.innerHTML = `<button type="button" class="pri" data-alert="save">${ok.length}곳 알림 신청하기</button>`;
+    else act.innerHTML = `<a class="pri" data-alert="go" href="../signup.html">회원가입하고 알림 받기</a><a class="sec" data-alert="go" href="../login.html?next=${encodeURIComponent("/jungsi/")}">로그인</a>`;
+    if (typeof dlg.showModal === "function") dlg.showModal(); else dlg.setAttribute("open", "");
+  }
+  async function saveAlerts(btn) {
+    const list = alertPicks(); btn.disabled = true; btn.textContent = "신청하는 중…";
+    try {
+      const a = await loadAuth();
+      if (!(await a.signedIn())) { a.setPending(list); location.href = `../login.html?next=${encodeURIComponent("/jungsi/")}`; return; }
+      const { error } = await a.save(list);
+      if (error) throw error;
+      $("#alertDlg").close();
+      toast(`${list.map((x) => x.univ).join("·")} 입시 정보 알림을 신청했습니다. 마이페이지에서 바꿀 수 있습니다.`, 6000);
+    } catch (_) { btn.disabled = false; btn.textContent = "다시 시도하기"; toast("신청하지 못했습니다. 잠시 뒤 다시 시도해 주세요."); }
+  }
+  // 로그인 전에 신청해 둔 알림이 있고 지금 로그인돼 있으면(로그인하고 돌아온 경우) 바로 저장
+  function flushAlerts() {
+    let pend = []; try { pend = JSON.parse(localStorage.getItem("snucoach-alert-pending") || "[]"); } catch (_) {}
+    if (!pend.length || !authOn() || !storedLogin()) return;
+    loadAuth().then((a) => a.flushPending()).then((saved) => { if (saved.length) toast(`${saved.join("·")} 입시 정보 알림을 신청했습니다.`, 6000); }).catch(() => {});
+  }
+
   // 입력과 고른 목표만 이 탭에 잠시 보관(새로고침해도 다시 넣지 않게). 스누코치로 보내지 않음
   const STATE_KEY = "jungsi_state_v2";
   function saveLocalState() {
@@ -489,6 +545,10 @@
     } else if (b.id === "tbar-go") copyGoal(targetText(targetList())); // 링크 기본 동작(상담 신청서 새 탭)은 그대로
     else if (b.matches("a.bigcta")) copyGoal(state.targets.size ? targetText(targetList()) : b.dataset.goal);
     else if (b.matches("a.nav-cta, a.drawer-cta")) { if (state.targets.size) copyGoal(targetText(targetList())); } // 헤더·메뉴의 상담 신청도 고른 목표가 있으면 복사
+    else if (b.id === "tbar-alert") openAlert();
+    else if (b.id === "adlgClose" || b.dataset.alert === "close") $("#alertDlg").close();
+    else if (b.dataset.alert === "save") saveAlerts(b);
+    else if (b.dataset.alert === "go") { try { localStorage.setItem("snucoach-alert-pending", JSON.stringify(alertPicks())); } catch (_) {} } // 링크 이동은 그대로
     else if (b.id === "tbar-clear") { state.targets.clear(); renderTargetBar(); renderPicks(); saveLocalState(); }
     else if (b.matches("#track button")) { state.track = b.dataset.t; state.trackAuto = false; syncTrack(); saveLocalState(); if (state.last) { summarize(state.last); renderPicks(); renderTargetBar(); } }
     else if (b.id === "share") {
@@ -524,4 +584,5 @@
   }
 
   renderInputs(); renderGoals(); renderTargetBar();
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", flushAlerts); else flushAlerts(); // auth-config.js(defer) 실행 뒤
 })();
