@@ -14,7 +14,7 @@
 <link rel="apple-touch-icon" href="assets/img/favicon.png">
 <link rel="stylesheet" href="assets/fonts/pretendardvariable-dynamic-subset.min.css">
 <link rel="stylesheet" href="assets/css/style.css?v=v3f">
-<link rel="stylesheet" href="assets/css/auth.css?v=a5">
+<link rel="stylesheet" href="assets/css/auth.css?v=a6">
 </head>
 <body class="p-auth p-account" data-auth-page="account">
 <header class="topnav" id="topnav">
@@ -52,6 +52,11 @@
           <label for="obName">이름</label>
           <input type="text" id="obName" name="name" autocomplete="name" maxlength="20" required aria-describedby="obNameErr">
           <p class="field-err" id="obNameErr"></p>
+        </div>
+        <div class="field" hidden>
+          <label for="obPhone">휴대전화 번호</label>
+          <input type="tel" id="obPhone" name="phone" inputmode="tel" autocomplete="tel-national" maxlength="20" placeholder="010-1234-5678" required aria-describedby="obPhoneHint obPhoneErr">
+          <p class="field-hint" id="obPhoneHint">회원 본인이 쓰는 번호를 입력해 주세요. 숫자만 입력해도 됩니다. 인증 문자는 보내지 않습니다.</p><p class="field-err" id="obPhoneErr"></p>
         </div>
         <div class="field">
           <fieldset class="seg" id="obType" aria-describedby="obTypeErr">
@@ -94,22 +99,22 @@
                 <label class="check"><input type="checkbox" data-agree="privacy"> <span><span class="req">[필수]</span> 개인정보 수집·이용 동의</span></label>
                 <details><summary>내용 보기</summary><div class="consent-detail">
                   <table>
-                    <tr><th scope="row">목적</th><td>회원 식별과 가입 의사 확인, 로그인, 회원 서비스 제공, 공지 전달과 문의 응대, 부정 이용 방지</td></tr>
-                    <tr><th scope="row">항목</th><td>이메일, 비밀번호, 이름, 회원 구분, 학년(학부모는 자녀 학년)<br>구글·카카오로 가입하면 해당 계정의 이메일·이름(닉네임), 동의한 경우 프로필 사진<br>이용 중 자동 생성: 로그인 일시, 접속 IP 주소, 기기·브라우저 정보</td></tr>
+                    <tr><th scope="row">목적</th><td>회원 식별과 가입 의사 확인, 로그인, 회원 서비스 제공, 공지 전달과 문의 응대, 회원이 신청한 입시 정보 알림 발송과 회원이 신청한 상담에 관한 연락, 부정 이용 방지</td></tr>
+                    <tr><th scope="row">항목</th><td>이메일, 비밀번호, 이름, 휴대전화 번호, 회원 구분, 학년(학부모는 자녀 학년)<br>구글·카카오로 가입하면 해당 계정의 이메일·이름(닉네임), 동의한 경우 프로필 사진<br>이용 중 자동 생성: 로그인 일시, 접속 IP 주소, 기기·브라우저 정보</td></tr>
                     <tr><th scope="row">보유 기간</th><td><b>회원 탈퇴 시까지</b> (탈퇴하면 바로 삭제). 로그인 기록은 3개월</td></tr>
                   </table>
                   <p>동의를 거부할 수 있으나, 거부하면 회원가입을 할 수 없습니다. 자세한 내용은 <a href="privacy.html" target="_blank" rel="noopener">개인정보처리방침</a>을 확인해 주세요.</p>
                 </div></details>
               </li>
               <li>
-                <label class="check"><input type="checkbox" data-agree="marketing"> <span><span class="sel">[선택]</span> 마케팅 정보 수신 동의(이메일)</span></label>
+                <label class="check"><input type="checkbox" data-agree="marketing"> <span><span class="sel">[선택]</span> 마케팅·광고성 정보 수신 동의(이메일·문자)</span></label>
                 <details><summary>내용 보기</summary><div class="consent-detail">
                   <table>
-                    <tr><th scope="row">목적</th><td>학습 자료, 이벤트, 코칭 프로그램 안내(광고성 정보 포함) 이메일 발송</td></tr>
-                    <tr><th scope="row">항목</th><td>이메일, 이름</td></tr>
-                    <tr><th scope="row">보유 기간</th><td>동의 철회 또는 회원 탈퇴 시까지</td></tr>
+                    <tr><th scope="row">목적</th><td><b>학습 자료, 이벤트, 코칭 프로그램 안내 등 광고성 정보를 이메일·문자로 발송</b></td></tr>
+                    <tr><th scope="row">항목</th><td>이메일, 휴대전화 번호, 이름</td></tr>
+                    <tr><th scope="row">보유 기간</th><td><b>동의 철회 또는 회원 탈퇴 시까지</b></td></tr>
                   </table>
-                  <p>동의하지 않아도 가입과 이용에 제한이 없고, 마이페이지에서 언제든 바꿀 수 있습니다.</p>
+                  <p>체크하면 이메일과 문자 수신에 함께 동의합니다. 동의하지 않아도 가입과 이용에 제한이 없고, 마이페이지에서 이메일과 문자를 따로 언제든 바꿀 수 있습니다.</p>
                 </div></details>
               </li>
             </ul>
@@ -123,6 +128,31 @@
     </section>
 
     <div id="acct" hidden>
+      <section class="auth-card phone-card" id="phoneCard" aria-labelledby="phoneCardTitle" hidden>
+        <h2 id="phoneCardTitle">휴대전화 번호를 입력해 주세요</h2>
+        <p class="card-sub">회원 정보에 휴대전화 번호가 추가되었습니다. 입시 정보 알림을 신청하려면 번호가 필요합니다.</p>
+        <form class="auth-form" id="phoneForm" method="post" action="#" novalidate>
+          <div class="field">
+            <label for="phTel">휴대전화 번호</label>
+            <input type="tel" id="phTel" name="phone" inputmode="tel" autocomplete="tel-national" maxlength="20" placeholder="010-1234-5678" required aria-describedby="phTelHint phTelErr">
+            <p class="field-hint" id="phTelHint">회원 본인이 쓰는 번호를 입력해 주세요. 숫자만 입력해도 됩니다. 인증 문자는 보내지 않습니다.</p><p class="field-err" id="phTelErr"></p>
+          </div>
+          <div class="consent-detail">
+            <table>
+              <tr><th scope="row">목적</th><td>회원 식별, 공지 전달과 문의 응대, 회원이 신청한 입시 정보 알림 발송과 회원이 신청한 상담에 관한 연락</td></tr>
+              <tr><th scope="row">항목</th><td>휴대전화 번호</td></tr>
+              <tr><th scope="row">보유 기간</th><td><b>회원 탈퇴 시까지</b> (탈퇴하면 바로 삭제)</td></tr>
+            </table>
+            <p>동의를 거부할 수 있으나, 거부하면 입시 정보 알림을 신청할 수 없습니다. 자세한 내용은 <a href="privacy.html" target="_blank" rel="noopener">개인정보처리방침</a>을 확인해 주세요.</p>
+          </div>
+          <div id="phSmsRow">
+            <label class="check"><input type="checkbox" id="phSms" aria-describedby="phSmsHint"> <span><span class="sel">[선택]</span> 광고성 정보 문자 수신 동의 <span class="sel">(학습 자료·이벤트·코칭 프로그램 안내)</span></span></label>
+            <p class="field-hint" id="phSmsHint" style="margin:4px 0 0 30px">체크하면 휴대전화 번호로 광고성 정보를 받는 데 동의합니다. 동의 철회 또는 탈퇴 시까지 이용하며, 동의하지 않아도 이용에 제한이 없습니다.</p>
+          </div>
+          <div class="auth-msg" id="phoneMsg" role="alert" hidden></div>
+          <button class="btn btn-primary auth-btn" type="submit">동의하고 저장</button>
+        </form>
+      </section>
       <section class="auth-card acct-profile">
         <div class="acct-head">
           <span class="acct-avatar" id="acctAvatar" aria-hidden="true"></span>
@@ -134,6 +164,7 @@
         </div>
         <dl class="acct-dl">
           <dt>이메일</dt><dd id="acctEmail"></dd>
+          <dt hidden>휴대전화</dt><dd id="acctPhone" hidden></dd>
           <dt>가입 방식</dt><dd id="acctProvider"></dd>
           <dt>가입일</dt><dd id="acctJoined"></dd>
         </dl>
@@ -146,6 +177,11 @@
           <label for="pfName">이름</label>
           <input type="text" id="pfName" name="name" autocomplete="name" maxlength="20" required aria-describedby="pfNameErr">
           <p class="field-err" id="pfNameErr"></p>
+        </div>
+        <div class="field" hidden>
+          <label for="pfPhone">휴대전화 번호</label>
+          <input type="tel" id="pfPhone" name="phone" inputmode="tel" autocomplete="tel-national" maxlength="20" placeholder="010-1234-5678" required aria-describedby="pfPhoneHint pfPhoneErr">
+          <p class="field-hint" id="pfPhoneHint">회원 본인이 쓰는 번호를 입력해 주세요. 숫자만 입력해도 됩니다. 인증 문자는 보내지 않습니다.</p><p class="field-err" id="pfPhoneErr"></p>
         </div>
         <div class="field">
           <fieldset class="seg" id="pfType" aria-describedby="pfTypeErr">
@@ -178,22 +214,27 @@
       </section>
 
       <section class="auth-card" aria-labelledby="mktTitle">
-        <div class="switch-row">
-          <div>
-            <h2 id="mktTitle">마케팅 정보 수신</h2>
-            <p class="card-sub">학습 자료·이벤트 소식을 이메일로 받습니다.</p>
+        <h2 id="mktTitle">마케팅·광고성 정보 수신</h2>
+        <p class="card-sub">학습 자료·이벤트·코칭 프로그램 안내 등 광고성 정보를 받을 방법을 고릅니다. 켜면 그 방법으로 광고성 정보를 받는 데 동의합니다. 동의 철회 또는 탈퇴 시까지 이용하며, 동의하지 않아도 이용에 제한이 없습니다.</p>
+        <div class="switch-list">
+          <div class="switch-row">
+            <div><b id="mktEmailLabel">이메일</b><p class="consent-log" id="mktLog"></p></div>
+            <label class="switch"><input type="checkbox" id="mktToggle" aria-labelledby="mktTitle mktEmailLabel"><span aria-hidden="true"></span></label>
           </div>
-          <label class="switch"><input type="checkbox" id="mktToggle" aria-labelledby="mktTitle"><span aria-hidden="true"></span></label>
+          <div class="switch-row" id="mktSmsRow" hidden>
+            <div><b id="mktSmsLabel">문자</b><p class="consent-log" id="mktSmsLog"></p><p class="switch-hint" id="mktSmsHint" hidden>휴대전화 번호를 입력하면 켤 수 있습니다.</p></div>
+            <label class="switch"><input type="checkbox" id="mktSmsToggle" aria-labelledby="mktTitle mktSmsLabel" aria-describedby="mktSmsHint"><span aria-hidden="true"></span></label>
+          </div>
         </div>
-        <p class="consent-log" id="mktLog"></p>
         <div class="auth-msg" id="mktMsg" role="status" hidden style="margin:12px 0 0"></div>
       </section>
 
       <section class="auth-card" aria-labelledby="alertTitle">
         <h2 id="alertTitle">목표 대학 입시 정보 알림</h2>
-        <p class="card-sub">대학 라인 잡기(정시)에서 고른 목표 대학의 입시 소식을 이메일로 보내 드립니다. 인서울 주요 대학만 해당합니다.</p>
+        <p class="card-sub">대학 라인 잡기(정시)에서 고른 목표 대학의 입시 소식을 이메일이나 문자로 보내 드립니다. 인서울 주요 대학만 해당합니다.</p>
         <ul class="alert-list" id="alertList"></ul>
         <p class="alert-empty" id="alertEmpty" hidden>신청한 대학이 없습니다. <a href="jungsi/">대학 라인 잡기</a>에서 목표 대학을 고른 뒤 알림을 신청해 주세요.</p>
+        <p class="auth-note" id="alertNeedPhone" role="status" hidden></p>
         <div class="auth-msg" id="alertMsg" role="status" hidden style="margin:12px 0 0"></div>
       </section>
 
@@ -227,7 +268,7 @@
         <details class="acct-item danger-zone">
           <summary>회원 탈퇴</summary>
           <ul>
-            <li>계정과 회원 정보(이름·회원 구분·학년·동의 기록)가 바로 삭제되며 되돌릴 수 없습니다.</li>
+            <li>계정과 회원 정보(이름·휴대전화 번호·회원 구분·학년·동의 기록)가 바로 삭제되며 되돌릴 수 없습니다.</li>
             <li>진행 중인 코칭의 환불은 탈퇴와 별개로 카카오톡 채널로 문의해 주세요.</li>
             <li>같은 이메일로 다시 가입할 수 있습니다.</li>
           </ul>
@@ -294,6 +335,6 @@
 <script src="assets/js/auth-config.js?v=a5" defer></script>
 <script src="assets/js/site.js?v=v3f" defer></script>
 <script src="assets/vendor/supabase-js-2.117.2.js" defer></script>
-<script src="assets/js/auth.js?v=a5" defer></script>
+<script src="assets/js/auth.js?v=a6" defer></script>
 </body>
 </html>

@@ -40,7 +40,7 @@ async function login(email, password = PW) {
   const r = await call('/auth/v1/token?grant_type=password', { method: 'POST', body: { email, password } });
   return r.json.access_token;
 }
-const fullMeta = { name: '  김학생  ', member_type: '학생', grade: '고2', agree_terms: true, agree_privacy: true, agree_age: true, marketing: true };
+const fullMeta = { name: '  김학생  ', member_type: '학생', grade: '고2', agree_terms: true, agree_privacy: true, agree_age: true, marketing: true, phone: '010-1234-5678', marketing_sms: true };
 
 // 1) 가입 트리거: 동의 포함 가입 → 프로필 완성 상태로 생성
 const a = await adminCreate(mail('a'), fullMeta);
@@ -53,6 +53,14 @@ check('이름 앞뒤 공백 제거', pa.name === '김학생', pa.name);
 check('회원 구분·학년 저장', pa.member_type === '학생' && pa.grade === '고2', pa);
 check('필수 동의 시각 3개 기록', !!(pa.terms_agreed_at && pa.privacy_agreed_at && pa.age_confirmed_at), pa);
 check('마케팅 동의와 시각 기록', pa.marketing_opt_in === true && !!pa.marketing_opt_in_at, pa);
+check('휴대전화 번호는 숫자만 저장 + 수집 동의 시각', pa.phone === '01012345678' && !!pa.phone_agreed_at, pa);
+check('문자 수신 동의와 시각 기록(이메일 동의와 따로)', pa.marketing_sms_opt_in === true && !!pa.marketing_sms_opt_in_at, pa);
+check('가입 정보(auth.users)에는 번호·문자 동의 사본을 남기지 않음',
+  sql(`select (raw_user_meta_data ? 'phone') or (raw_user_meta_data ? 'marketing_sms') from auth.users where id='${pa.id}'`) === 'f');
+{
+  const me = await call('/auth/v1/user', { token: tokA });
+  check('로그인 정보(user_metadata)에 번호가 실리지 않음', me.status === 200 && !('phone' in (me.json.user_metadata || {})) && me.json.user_metadata.name === '  김학생  ', me.json.user_metadata);
+}
 check('관리자 아님', pa.is_admin === false, pa.is_admin);
 
 // 2) 이상한 메타데이터 → 값은 버리고 가입은 진행, 동의 없음
@@ -65,6 +73,7 @@ check('이름은 20자로 잘림', pb.name === 'x'.repeat(20), pb.name);
 check('허용되지 않은 회원 구분·학년은 비움', pb.member_type === null && pb.grade === null, pb);
 check('"yes" 같은 값은 동의로 인정하지 않음', pb.terms_agreed_at === null && pb.privacy_agreed_at === null && pb.age_confirmed_at === null, pb);
 check('필수 동의 없이 마케팅 동의는 기록하지 않음', pb.marketing_opt_in === false && pb.marketing_opt_in_at === null, pb);
+check('번호 없는 가입 정보: phone 은 비고 문자 수신은 미동의', pb.phone === null && pb.phone_agreed_at === null && pb.marketing_sms_opt_in === false, pb);
 
 // 3) 남의 프로필
 r = await call(`/rest/v1/profiles?id=eq.${pb.id}&select=*`, { token: tokA });
@@ -106,6 +115,49 @@ check('마케팅 철회 시각은 서버가 기록(직접 쓰기 불가)', r.sta
 r = await call(`/rest/v1/profiles?id=eq.${pa.id}`, { method: 'PATCH', token: tokA, body: { marketing_opt_in: false }, headers: { prefer: 'return=representation' } });
 check('마케팅 철회 → 시각 갱신', r.status === 200 && r.json[0].marketing_opt_in === false && r.json[0].marketing_opt_in_at !== pa.marketing_opt_in_at, r);
 
+// 6-1) 휴대전화 번호 · 문자 수신 동의
+{
+  const rep = { prefer: 'return=representation' };
+  const patch = (id, tok, body) => call(`/rest/v1/profiles?id=eq.${id}`, { method: 'PATCH', token: tok, body, headers: rep });
+  // 옛 가입 화면(문구가 '이메일'뿐)은 marketing 만 보낸다 → 문자 동의로 기록하면 안 된다
+  const o = await adminCreate(mail('old'), { name: '옛화면', member_type: '학생', grade: '고1', agree_terms: true, agree_privacy: true, agree_age: true, marketing: true });
+  const tokO = await login(mail('old'));
+  r = await call('/rest/v1/profiles?select=*', { token: tokO });
+  const po = r.json[0] || {};
+  check('옛 가입 정보(marketing 만): 이메일만 동의, 문자 미동의·번호 없음', po.marketing_opt_in === true && po.marketing_sms_opt_in === false && po.phone === null, po);
+  r = await patch(po.id, tokO, { marketing_sms_opt_in: true });
+  check('번호 없이 문자 수신을 켜면 기록되지 않음(false 유지)', r.status === 200 && r.json[0].marketing_sms_opt_in === false && r.json[0].marketing_sms_opt_in_at === null, r);
+  for (const bad of ['02-123-4567', '0101234567', '010-1234-56789', '012-345-6789', '', 'abc']) {
+    r = await patch(po.id, tokO, { phone: bad });
+    check(`형식이 틀린 번호 ${JSON.stringify(bad)} 거부(400, profiles_phone_format)`, r.status === 400 && /profiles_phone_format/.test(JSON.stringify(r.json)), r);
+  }
+  r = await patch(po.id, tokO, { phone: '+82 10-9999-8888' });
+  check('번호 저장: 숫자만(+82 는 0 으로), 수집 동의 시각은 서버 시각', r.status === 200 && r.json[0].phone === '01099998888' && fresh(r.json[0].phone_agreed_at) && r.json[0].marketing_sms_opt_in === false, r);
+  r = await patch(po.id, tokO, { phone_agreed_at: '2001-01-01T00:00:00Z' });
+  check('phone_agreed_at 직접 쓰기 차단', r.status === 401 || r.status === 403, r);
+  r = await patch(po.id, tokO, { marketing_sms_opt_in: true, marketing_sms_opt_in_at: '2001-01-01T00:00:00Z' });
+  check('marketing_sms_opt_in_at 직접 쓰기 차단', r.status === 401 || r.status === 403, r);
+  r = await patch(po.id, tokO, { marketing_sms_opt_in: true });
+  check('문자 수신 동의 → 서버 시각 기록, 이메일 동의는 그대로', r.status === 200 && r.json[0].marketing_sms_opt_in === true && fresh(r.json[0].marketing_sms_opt_in_at) && r.json[0].marketing_opt_in === true, r);
+  r = await patch(po.id, tokO, { marketing_opt_in: false });
+  check('이메일만 철회 → 문자 동의 유지', r.status === 200 && r.json[0].marketing_opt_in === false && r.json[0].marketing_sms_opt_in === true, r);
+  r = await patch(po.id, tokA, { phone: '01000000000' });
+  check('남의 번호는 못 고친다(0행)', r.status === 200 && Array.isArray(r.json) && r.json.length === 0, r);
+  r = await patch(po.id, tokO, { phone: null });
+  check('번호를 지우면 문자 동의도 꺼지고 수집 동의 시각이 지워짐', r.status === 200 && r.json[0].phone === null && r.json[0].phone_agreed_at === null && r.json[0].marketing_sms_opt_in === false, r);
+  // 알림 신청은 번호가 있는 회원만(20261002010000_phone_alert_enforce.sql)
+  r = await call('/rest/v1/target_alerts', { method: 'POST', token: tokO, body: { univ: '서울대' } });
+  check('번호 없는 회원의 알림 신청 거부(400, 23514)', r.status === 400 && r.json.code === '23514' && /휴대전화/.test(r.json.message || ''), r);
+  r = await patch(po.id, tokO, { phone: '010-9999-8888' });
+  r = await call('/rest/v1/target_alerts', { method: 'POST', token: tokO, body: { univ: '서울대' }, headers: rep });
+  check('번호를 넣으면 알림 신청 가능', r.status === 201, r);
+  // 가입 정보의 phone 형식이 틀리면 번호만 버리고 가입은 진행
+  const w = await adminCreate(mail('wrong'), { ...fullMeta, phone: '02-123-4567' });
+  check('가입 정보의 번호 형식이 틀려도 가입은 진행', w.status === 200, w);
+  check('  → 번호는 비우고 문자 동의도 기록하지 않음', sql(`select (phone is null)::text||','||marketing_sms_opt_in::text||','||marketing_opt_in::text from public.profiles where id='${w.json.id}'`) === 'true,false,true');
+  sql(`delete from auth.users where email in ('${mail('old')}','${mail('wrong')}')`);
+}
+
 // 7) 비로그인(anon)
 r = await call('/rest/v1/profiles?select=*');
 check('비로그인은 프로필 테이블 접근 불가', r.status === 401 || r.status === 403, r);
@@ -127,6 +179,9 @@ const rows = Array.isArray(r.json) ? r.json : [];
 const rowB = rows.find((x) => x.id === pb.id) || {};
 check('관리자는 회원 목록 조회', r.status === 200 && rows.some((x) => x.id === pa.id) && !!rowB.id, r);
 check('목록에 이메일·완료 여부 포함', rowB.email === mail('b') && rowB.profile_completed === true && rowB.provider === 'email', rowB);
+const rowA = rows.find((x) => x.id === pa.id) || {};
+check('목록에 휴대전화 번호·문자 수신 동의 포함', rowA.phone === '01012345678' && rowA.marketing_sms_opt_in === true && !!rowA.marketing_sms_opt_in_at && rowB.phone === null && rowB.marketing_sms_opt_in === false, [rowA, rowB]);
+check('번호가 없어도 가입 마무리 여부는 그대로(완료)', rowB.profile_completed === true && rowB.phone === null, rowB);
 r = await call(`/rest/v1/profiles?id=eq.${pb.id}&select=*`, { token: tokA });
 check('관리자라도 profiles 테이블 직접 조회는 본인 것만', r.status === 200 && r.json.length === 0, r);
 
@@ -197,6 +252,7 @@ sql(`delete from auth.audit_log_entries where payload->>'test' = 'new-${stamp}'`
   check('일반 회원은 알림 목록(관리자) 거부', r.status === 401 || r.status === 403, r);
   r = await call('/rest/v1/rpc/admin_list_target_alerts', { method: 'POST', token: tokA, body: {} }); // A 는 위에서 관리자로 지정됨
   check('관리자는 알림 신청 목록 조회', r.status === 200 && r.json.some((x) => x.email === mail('e') && x.univ === '연세대' && x.track === '자연'), r);
+  check('알림 신청 목록에 휴대전화 번호 포함', r.status === 200 && r.json.some((x) => x.email === mail('e') && x.phone === '01012345678'), r);
   r = await call('/rest/v1/target_alerts?univ=eq.고려대', { method: 'DELETE', token: tokE, headers: rep });
   check('본인 알림 해제', r.status === 200 && r.json.length === 1, r);
   sql(`delete from auth.users where email='${mail('e')}'`);

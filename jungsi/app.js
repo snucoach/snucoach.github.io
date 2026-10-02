@@ -415,7 +415,7 @@
     if (authP) return authP;
     const add = (src) => new Promise((ok, no) => { const el = document.createElement("script"); el.src = src; el.onload = ok; el.onerror = no; document.head.appendChild(el); });
     authP = (window.supabase ? Promise.resolve() : add("../assets/vendor/supabase-js-2.117.2.js"))
-      .then(() => (window.SnucoachAuth ? null : add("../assets/js/auth.js?v=a5")))
+      .then(() => (window.SnucoachAuth ? null : add("../assets/js/auth.js?v=a6")))
       .then(() => { if (!window.SnucoachAuth || !window.SnucoachAuth.ok) throw new Error("auth"); return window.SnucoachAuth.alerts; });
     authP.catch(() => { authP = null; });
     return authP;
@@ -425,39 +425,101 @@
     for (const t of targetList()) if (ALERT_UNIVS.includes(t.univ) && !m.has(t.univ)) m.set(t.univ, { univ: t.univ, track: t.major });
     return [...m.values()];
   };
-  function openAlert() {
-    const dlg = $("#alertDlg"), ok = alertPicks();
-    const out = [...new Set(targetList().map((t) => t.univ).filter((u) => !ALERT_UNIVS.includes(u)))];
+  const NEED_TXT = "알림은 스누코치 회원에게 보내 드립니다. 가입하거나 로그인하면 고른 대학이 신청됩니다. 휴대전화 번호가 없는 회원은 번호를 먼저 입력합니다.";
+  const PENDING_KEY = "snucoach-alert-pending"; // 로그인 전에 고른 알림 대학(auth.js 와 같은 키)
+  let alertList = [];        // 창에 띄운 신청 목록(저장 함수들이 같이 쓴다)
+  let alertFromPending = false; // 로그인하고 돌아와 자동으로 연 창인지(닫으면 보류를 지워 다시 뜨지 않게 한다)
+  const telErr = (text) => { const t = $("#adlgTel"), e = $("#adlgTelErr"); if (!t || !e) return; t.setAttribute("aria-invalid", text ? "true" : "false"); e.textContent = text || ""; };
+  // opt.list: 보류해 둔 신청 목록으로 열 때 / opt.mode: "phone"(번호 입력) · "onboarding"(가입 마무리 안내)
+  function openAlert(opt) {
+    const o = opt || {};
+    const dlg = $("#alertDlg"), ok = o.list || alertPicks();
+    alertList = ok; alertFromPending = !!o.list;
+    const out = o.list ? [] : [...new Set(targetList().map((t) => t.univ).filter((u) => !ALERT_UNIVS.includes(u)))];
     $("#adlgList").innerHTML = ok.map((x) => `<li>${esc(x.univ)}</li>`).join("");
     $("#adlgList").hidden = !ok.length;
     $("#adlgOut").hidden = !out.length;
     $("#adlgOut").textContent = !ok.length ? `고른 대학(${out.join(", ")})은 알림 대상이 아닙니다. 아래 대학 중에서 목표를 골라 주세요.`
       : out.length ? `${out.join(", ")}은(는) 알림 대상이 아니라 빠집니다.` : "";
     $("#adlgScope").textContent = ALERT_UNIVS.join(" · ");
-    const act = $("#adlgAct"), login = storedLogin();
-    $("#adlgNeed").hidden = !ok.length || login || !authOn();
+    const act = $("#adlgAct"), login = storedLogin(), need = $("#adlgNeed");
+    if ($("#adlgPhone")) { $("#adlgPhone").hidden = true; $("#adlgTel").value = ""; telErr(""); } // 열 때마다 번호 입력 상태를 지운다
+    need.textContent = NEED_TXT;
+    need.hidden = !ok.length || login || !authOn();
     if (!authOn()) act.innerHTML = `<p class="adlg-out">알림 기능을 준비하고 있습니다.</p>`;
     else if (!ok.length) act.innerHTML = `<button type="button" class="sec" data-alert="close">확인</button>`;
+    else if (o.mode === "onboarding") {
+      need.textContent = "알림을 신청하려면 가입 마무리가 필요합니다."; need.hidden = false;
+      act.innerHTML = `<a class="pri" href="../account.html">가입 마무리하러 가기</a>`;
+    }
     else if (login) act.innerHTML = `<button type="button" class="pri" data-alert="save">${ok.length}곳 알림 신청하기</button>`;
     else act.innerHTML = `<a class="pri" data-alert="go" href="../signup.html">회원가입하고 알림 받기</a><a class="sec" data-alert="go" href="../login.html?next=${encodeURIComponent("/jungsi/")}">로그인</a>`;
-    if (typeof dlg.showModal === "function") dlg.showModal(); else dlg.setAttribute("open", "");
+    if (typeof dlg.showModal === "function") { if (!dlg.open) dlg.showModal(); } else dlg.setAttribute("open", "");
+    if (o.mode === "phone" && ok.length) phoneStep();
   }
+  // 휴대전화 번호가 없는 회원: 창 안에서 수집 안내와 함께 번호를 받는다
+  function phoneStep() {
+    $("#adlgPhone").hidden = false; $("#adlgNeed").hidden = true;
+    $("#adlgAct").innerHTML = `<button type="button" class="pri" data-alert="phone-save">동의하고 ${alertList.length}곳 알림 신청하기</button>`;
+    $("#adlgTel").focus();
+  }
+  const toAccount = (a, list) => { a.setPending(list); location.href = "../account.html"; }; // 마이페이지에서 가입 마무리·번호 입력 뒤 자동 신청
   async function saveAlerts(btn) {
-    const list = alertPicks(); btn.disabled = true; btn.textContent = "신청하는 중…";
+    const list = alertList.length ? alertList : alertPicks(); btn.disabled = true; btn.textContent = "신청하는 중…";
     try {
       const a = await loadAuth();
       if (!(await a.signedIn())) { a.setPending(list); location.href = `../login.html?next=${encodeURIComponent("/jungsi/")}`; return; }
+      const g = a.gate ? await a.gate() : { state: "ok" };
+      if (g.state === "signed-out") { a.setPending(list); location.href = `../login.html?next=${encodeURIComponent("/jungsi/")}`; return; }
+      if (g.state === "onboarding") { toAccount(a, list); return; }
+      if (g.state === "phone") { if ($("#adlgPhone")) phoneStep(); else toAccount(a, list); return; } // 옛 화면이 남아 있으면 마이페이지에서 받는다
+      if (g.state !== "ok") throw g.error || new Error("gate");
       const { error } = await a.save(list);
+      // DB 가 번호 없는 신청을 거절한 경우(확인한 직후 번호가 지워진 드문 경우): 번호부터 받는다
+      if (error && error.code === "23514" && /휴대전화/.test(error.message || "") && $("#adlgPhone")) { phoneStep(); return; }
       if (error) throw error;
+      a.clearPending();
       $("#alertDlg").close();
       toast(`${list.map((x) => x.univ).join("·")} 입시 정보 알림을 신청했습니다. 마이페이지에서 바꿀 수 있습니다.`, 6000);
     } catch (_) { btn.disabled = false; btn.textContent = "다시 시도하기"; toast("신청하지 못했습니다. 잠시 뒤 다시 시도해 주세요."); }
   }
-  // 로그인 전에 신청해 둔 알림이 있고 지금 로그인돼 있으면(로그인하고 돌아온 경우) 바로 저장
+  // 번호를 저장한 뒤 알림을 신청한다
+  async function savePhoneAndAlerts(btn) {
+    const tel = $("#adlgTel"), list = alertList, label = btn.textContent;
+    try {
+      const a = await loadAuth();
+      const bad = a.phone.problem(tel.value);
+      telErr(bad);
+      if (bad) { tel.focus(); return; }
+      btn.disabled = true; btn.textContent = "신청하는 중…";
+      const r = await a.savePhone(tel.value);
+      if (r.error) { btn.disabled = false; btn.textContent = label; telErr(r.error.message); tel.focus(); return; }
+      const { error } = await a.save(list);
+      if (error) { // 번호는 저장됐고 알림만 실패: 번호 칸을 닫고 다시 시도하게 한다
+        $("#adlgPhone").hidden = true;
+        $("#adlgAct").innerHTML = `<button type="button" class="pri" data-alert="save">다시 시도하기</button>`;
+        toast("휴대전화 번호는 저장했습니다. 알림 신청을 다시 시도해 주세요.", 6000);
+        return;
+      }
+      a.clearPending();
+      $("#alertDlg").close();
+      toast(`휴대전화 번호를 저장하고 ${list.map((x) => x.univ).join("·")} 입시 정보 알림을 신청했습니다. 마이페이지에서 바꿀 수 있습니다.`, 6000);
+    } catch (_) { btn.disabled = false; btn.textContent = label; toast("신청하지 못했습니다. 잠시 뒤 다시 시도해 주세요."); }
+  }
+  // 로그인 전에 신청해 둔 알림이 있고 지금 로그인돼 있으면(로그인하고 돌아온 경우) 바로 저장.
+  // 휴대전화 번호가 없으면 저장하지 않고 창을 번호 입력 상태로 연다. 가입 마무리 전이면 마이페이지로 안내한다.
   function flushAlerts() {
-    let pend = []; try { pend = JSON.parse(localStorage.getItem("snucoach-alert-pending") || "[]"); } catch (_) {}
+    let pend = []; try { pend = JSON.parse(localStorage.getItem(PENDING_KEY) || "[]"); } catch (_) {}
+    pend = (Array.isArray(pend) ? pend : []).filter((x) => x && ALERT_UNIVS.includes(x.univ)).map((x) => ({ univ: x.univ, track: x.track ? String(x.track).slice(0, 40) : null }));
     if (!pend.length || !authOn() || !storedLogin()) return;
-    loadAuth().then((a) => a.flushPending()).then((saved) => { if (saved.length) toast(`${saved.join("·")} 입시 정보 알림을 신청했습니다.`, 6000); }).catch(() => {});
+    loadAuth().then(async (a) => {
+      const g = a.gate ? await a.gate() : { state: "ok" };
+      if (g.state === "phone") { if ($("#adlgPhone")) openAlert({ list: pend, mode: "phone" }); return; } // 옛 화면이면 그대로 둔다(마이페이지에서 받는다)
+      if (g.state === "onboarding") { openAlert({ list: pend, mode: "onboarding" }); return; }
+      if (g.state !== "ok") return;
+      const saved = await a.flushPending();
+      if (saved.length) toast(`${saved.join("·")} 입시 정보 알림을 신청했습니다.`, 6000);
+    }).catch(() => {});
   }
 
   // 입력과 고른 목표만 이 탭에 잠시 보관(새로고침해도 다시 넣지 않게). 스누코치로 보내지 않음
@@ -569,7 +631,8 @@
     else if (b.id === "tbar-alert") openAlert();
     else if (b.id === "adlgClose" || b.dataset.alert === "close") $("#alertDlg").close();
     else if (b.dataset.alert === "save") saveAlerts(b);
-    else if (b.dataset.alert === "go") { try { localStorage.setItem("snucoach-alert-pending", JSON.stringify(alertPicks())); } catch (_) {} } // 링크 이동은 그대로
+    else if (b.dataset.alert === "phone-save") savePhoneAndAlerts(b);
+    else if (b.dataset.alert === "go") { try { localStorage.setItem(PENDING_KEY, JSON.stringify(alertPicks())); } catch (_) {} } // 링크 이동은 그대로
     else if (b.id === "tbar-clear") { state.targets.clear(); renderTargetBar(); renderPicks(); saveLocalState(); }
     else if (b.matches("#track button")) { state.track = b.dataset.t; state.trackAuto = false; syncTrack(); saveLocalState(); if (state.last) { summarize(state.last); renderPicks(); renderTargetBar(); } }
     else if (b.id === "share") {
@@ -589,6 +652,18 @@
     const rn = t.closest(".ovrow").querySelector(".rnote"); if (rn) rn.textContent = pctNote(ov);
     renderGoals(); requestUpdate();
   });
+  // 알림 창의 휴대전화 번호 칸: Enter 로 신청, 칸을 벗어나면 010-1234-5678 꼴로 표시
+  document.addEventListener("keydown", (e) => {
+    if (e.key !== "Enter" || e.isComposing || e.target.id !== "adlgTel") return;
+    e.preventDefault();
+    const b = $('#adlgAct [data-alert="phone-save"]'); if (b && !b.disabled) savePhoneAndAlerts(b);
+  });
+  document.addEventListener("focusout", (e) => {
+    const t = e.target, a = window.SnucoachAuth && window.SnucoachAuth.alerts;
+    if (t.id === "adlgTel" && a && a.phone && !a.phone.problem(t.value)) t.value = a.phone.format(t.value);
+  });
+  // 자동으로 연 창(로그인하고 돌아온 경우)을 닫으면 보류해 둔 신청을 지운다 → 올 때마다 다시 뜨지 않는다. 다시 신청하려면 [입시 알림 받기]
+  $("#alertDlg").addEventListener("close", () => { if (alertFromPending) { alertFromPending = false; try { localStorage.removeItem(PENDING_KEY); } catch (_) {} } });
   function renderScoreSoft(s) { renderScore(s); } // 원점수 입력 중 커서는 원점수 칸에 있으므로 아래 칸만 다시 그림
   document.addEventListener("change", (e) => { const t = e.target; if (t.matches("select.subjpick")) { const s = SUBJ.find((x) => x.key === t.dataset.k); state.sel[s.key] = t.value; delete state.ov[s.key]; clampDeltas(); renderScore(s); renderGoals(); requestUpdate(); } });
   // 로고 파일이 없으면 첫 글자 배지로 대체(CSP 때문에 인라인 onerror 대신 캡처 단계에서 처리)

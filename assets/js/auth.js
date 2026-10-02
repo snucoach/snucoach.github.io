@@ -13,6 +13,27 @@
   const TYPES = ["학생", "학부모", "기타"];
   const GRADES = ["초등", "중1", "중2", "중3", "고1", "고2", "고3", "N수", "기타"];
 
+  // ── 휴대전화 번호: 한국 휴대전화(010 은 11자리, 011·016~019 는 10~11자리). 저장은 숫자만 ──
+  // DB 의 profiles_phone_format · 트리거와 같은 규칙이다. 서버로는 항상 normalizePhone() 값을 보낸다.
+  const PHONE_RE = /^(010\d{8}|01[16789]\d{7,8})$/;
+  const normalizePhone = (v) => String(v == null ? "" : v).replace(/\D/g, "").replace(/^820?(1[016789])/, "0$1");
+  const PHONE_EMPTY = "휴대전화 번호를 입력해 주세요.";
+  const PHONE_INVALID = "휴대전화 번호를 정확히 입력해 주세요. (예: 010-1234-5678)";
+  const PHONE_NEEDED = "휴대전화 번호를 입력하면 켤 수 있습니다.";
+  const MINOR_NOTE = "만 14세 미만 학생은 보호자가 ‘학부모’로 가입해 주세요.";
+  const phoneProblem = (v) => {
+    const d = normalizePhone(v);
+    return !d ? PHONE_EMPTY : PHONE_RE.test(d) ? "" : PHONE_INVALID;
+  };
+  const fmtPhone = (v) => { // 화면·CSV 표시용: 010-1234-5678
+    const d = normalizePhone(v);
+    return PHONE_RE.test(d) ? d.replace(/^(\d{3})(\d{3,4})(\d{4})$/, "$1-$2-$3") : (v || "");
+  };
+  // 프로필 행에 그 열이 있는지. 휴대전화용 DB 설정(20261002000000_phone.sql) 적용 전이면 false → 번호 관련 화면을 숨긴다.
+  // 번호는 프로필 행(profiles.phone)에서만 읽는다. 로그인 정보(user_metadata)의 값은 쓰지 않는다.
+  const hasCol = (row, col) => !!row && Object.prototype.hasOwnProperty.call(row, col);
+  const needsPhone = (p) => hasCol(p, "phone") && !p.phone;
+
   // ── 다른 사이트의 프레임 안에서 열리면(클릭재킹) 회원 화면을 띄우지 않는다 ──
   // GitHub Pages 는 X-Frame-Options 헤더를 붙일 수 없어 스크립트로 막는다.
   if (PAGE && window.top !== window.self) {
@@ -101,6 +122,9 @@
     user_banned: "이용이 제한된 계정입니다. 카카오톡 채널로 문의해 주세요.",
     validation_failed: "입력한 내용을 다시 확인해 주세요.",
     "42501": "권한이 없습니다. 다시 로그인해 주세요.",
+    "23514": "입력한 내용을 다시 확인해 주세요.",
+    PGRST204: "지금은 저장할 수 없습니다. 잠시 뒤 다시 시도해 주세요.",
+    "42703": "지금은 저장할 수 없습니다. 잠시 뒤 다시 시도해 주세요.",
   };
   function errText(error) {
     if (!error) return "";
@@ -112,6 +136,14 @@
     if (error.status === 429) return ERR.over_request_rate_limit;
     return "문제가 생겼습니다. 잠시 뒤 다시 시도해 주세요." + (code || error.message ? ` (${code || error.message})` : "");
   }
+  // 서버(DB CHECK)가 번호 형식을 거절한 경우
+  const isPhoneFormatErr = (e) => !!e && e.code === "23514" && /profiles_phone_format/.test(e.message || "");
+  // 광고성 정보 수신 동의·거부 처리 결과(전송자 · 처리 일자 · 내용)
+  const mktResult = (iso, channel, agreed) => `스누코치는 ${fmtDate(iso)}에 회원님의 광고성 정보(${channel}) 수신 ${agreed ? "동의" : "거부"}를 처리했습니다.`;
+  const optInNote = (p) => { // 가입 완료 안내에 덧붙인다(동의한 채널만)
+    const ch = [p.marketing_opt_in && "이메일", p.marketing_sms_opt_in && "문자"].filter(Boolean);
+    return ch.length ? " " + mktResult(p.marketing_opt_in ? p.marketing_opt_in_at : p.marketing_sms_opt_in_at, ch.join("·"), true) : "";
+  };
   const isNetworkError = (e) => !!e && (e.name === "AuthRetryableFetchError" || e.status === 0 || /fetch|network|load failed/i.test(e.message || ""));
 
   // ── 화면 도우미 ──
@@ -199,9 +231,12 @@
     return null;
   }
 
-  // 이름·회원 구분·학년 (회원가입·가입 마무리·내 정보 공통)
+  // 이름·휴대전화 번호·회원 구분·학년 (회원가입·가입 마무리·내 정보 공통)
   function profileForm(form, prefix) {
     const name = $(`#${prefix}Name`, form);
+    const phone = $(`#${prefix}Phone`, form); // 브라우저에 남은 옛 화면에는 없다
+    const phoneErr = $(`#${prefix}PhoneErr`, form);
+    let phoneOn = !!phone; // 번호를 받고 보내는 상태인지
     const grade = $(`#${prefix}Grade`, form);
     const typeSet = $(`#${prefix}Type`, form);
     const gradeLabel = $("[data-grade-label]", form);
@@ -210,24 +245,37 @@
       const t = (radios.find((r) => r.checked) || {}).value;
       gradeLabel.textContent = t === "학부모" ? "자녀 학년" : "학년";
     };
+    const gradeErrEl = $(`#${prefix}GradeErr`, form);
     radios.forEach((r) => r.addEventListener("change", () => {
       syncLabel();
       typeSet.classList.remove("is-invalid");
       $(`#${prefix}TypeErr`, form).textContent = "";
+      if (gradeErrEl.textContent === MINOR_NOTE) setErr(grade, gradeErrEl, "");
     }));
+    // 칸을 벗어날 때 형식이 맞으면 010-1234-5678 꼴로 보여 준다(입력 중에는 건드리지 않는다)
+    if (phone) phone.addEventListener("blur", () => { if (!phoneProblem(phone.value)) phone.value = fmtPhone(phone.value); });
     return {
       fill(p) {
         name.value = p.name || "";
         radios.forEach((r) => { r.checked = r.value === p.member_type; });
         grade.value = GRADES.includes(p.grade) ? p.grade : "";
         syncLabel();
+        if (phone) {
+          // DB 설정 전이면 받지 않는다. 내 정보(pf)는 번호가 아직 없으면 숨긴다:
+          // 기존 회원의 첫 입력은 수집 안내가 있는 카드(#phoneCard)에서만 받는다.
+          phoneOn = hasCol(p, "phone") && !(prefix === "pf" && !p.phone);
+          phone.closest(".field").hidden = !phoneOn;
+          phone.value = phoneOn ? fmtPhone(p.phone) : "";
+        }
       },
       read() {
-        return {
+        const v = {
           name: name.value.trim(),
           member_type: (radios.find((r) => r.checked) || {}).value || null,
           grade: grade.value || null,
         };
+        if (phoneOn) v.phone = normalizePhone(phone.value);
+        return v;
       },
       // 첫 번째 잘못된 칸을 돌려준다(없으면 null)
       validate() {
@@ -235,14 +283,19 @@
         let first = null;
         const nameErr = !v.name ? "이름을 입력해 주세요." : v.name.length > 20 ? "20자 이하로 입력해 주세요." : "";
         if (!setErr(name, $(`#${prefix}NameErr`, form), nameErr)) first = first || name;
+        if (phoneOn && !setErr(phone, phoneErr, phoneProblem(phone.value))) first = first || phone;
         const typeErr = TYPES.includes(v.member_type) ? "" : "회원 구분을 골라 주세요.";
         typeSet.classList.toggle("is-invalid", !!typeErr);
         $(`#${prefix}TypeErr`, form).textContent = typeErr;
         if (typeErr) first = first || radios[0];
-        const gradeErr = GRADES.includes(v.grade) ? "" : "학년을 골라 주세요.";
-        if (!setErr(grade, $(`#${prefix}GradeErr`, form), gradeErr)) first = first || grade;
+        // 가입·가입 마무리: 학생 본인이 초등·중1 이면 만 14세 미만이다(보호자가 학부모로 가입)
+        const minor = prefix !== "pf" && v.member_type === "학생" && (v.grade === "초등" || v.grade === "중1");
+        const gradeErr = !GRADES.includes(v.grade) ? "학년을 골라 주세요." : minor ? MINOR_NOTE : "";
+        if (!setErr(grade, gradeErrEl, gradeErr)) first = first || grade;
         return first;
       },
+      // 서버가 번호 형식을 거절했을 때 번호 칸에 표시한다
+      phoneError(text) { if (phone) { setErr(phone, phoneErr, text); focusEl(phone); } return !!phone; },
     };
   }
 
@@ -371,6 +424,7 @@
 
       const p = prof.read();
       const c = consent.read();
+      const hasPhone = hasCol(p, "phone");
       remember.set(true);
       await busy($('button[type="submit"]', form), "가입하는 중…", async () => {
         const { data, error } = await sb().auth.signUp({
@@ -381,6 +435,8 @@
             data: {
               name: p.name, member_type: p.member_type, grade: p.grade,
               agree_terms: c.terms, agree_privacy: c.privacy, agree_age: c.age, marketing: c.marketing,
+              // 번호 칸이 있는 화면(문구가 ‘이메일·문자’)에서만 번호와 문자 수신 동의를 보낸다
+              ...(hasPhone ? { phone: p.phone, marketing_sms: c.marketing } : {}),
             },
           },
         });
@@ -393,6 +449,11 @@
         if (data.session) { location.replace("account.html?welcome=1"); return; }
         // 이메일 인증 대기
         $("#doneEmail").textContent = emailVal;
+        const doneConsent = $("#doneConsent"); // 수신 동의 처리 결과 안내
+        if (doneConsent && c.marketing) {
+          doneConsent.textContent = mktResult(new Date().toISOString(), hasPhone ? "이메일·문자" : "이메일", true);
+          show(doneConsent);
+        }
         show($("#signupCard"), false);
         show($("#signupDone"));
         focusEl($("#doneTitle"));
@@ -507,7 +568,7 @@
     const loading = $("#pageLoading");
     const q = new URLSearchParams(location.search);
     const h = new URLSearchParams(location.hash.slice(1));
-    let notice = q.get("welcome") ? ["가입이 완료되었습니다. 스누코치 회원이 되신 걸 환영합니다!", "ok"] : null;
+    let notice = q.get("welcome") ? ["가입이 완료되었습니다. 스누코치 회원이 되신 걸 환영합니다!", "ok", true] : null; // [문구, 종류, 가입 완료 안내인지]
     const linkFail = (text) => {
       show(loading, false);
       msg(out, text);
@@ -528,7 +589,7 @@
       cleanUrl();
       const { error } = await sb().auth.verifyOtp({ token_hash: tokenHash, type: type === "signup" ? "email" : type });
       if (error) { linkFail("인증 링크가 만료되었거나 이미 사용되었습니다. 이미 인증을 마쳤다면 로그인해 주세요. 로그인이 안 되면 로그인 화면에서 인증 메일을 다시 받을 수 있습니다."); return; }
-      notice = ["이메일 인증이 완료되었습니다. 스누코치 회원이 되신 걸 환영합니다!", "ok"];
+      notice = ["이메일 인증이 완료되었습니다. 스누코치 회원이 되신 걸 환영합니다!", "ok", true];
     }
 
     // ② 기본 메일 템플릿·카카오 로그인 복귀: ?code=… / 실패 시 ?error=…
@@ -589,20 +650,22 @@
       const p = prof.read();
       const c = consent.read();
       const now = new Date().toISOString(); // 서버가 자기 시각으로 바꿔 기록한다
+      const row = { ...p, marketing_opt_in: c.marketing, terms_agreed_at: now, privacy_agreed_at: now, age_confirmed_at: now };
+      // 번호를 받은 화면에서만 문자 수신 동의를 함께 기록한다(체크 한 번 = 이메일·문자)
+      if (hasCol(p, "phone") && hasCol(profile, "marketing_sms_opt_in")) row.marketing_sms_opt_in = c.marketing;
       await busy($('button[type="submit"]', form), "저장하는 중…", async () => {
-        const { data, error } = await sb().from("profiles")
-          .update({ ...p, marketing_opt_in: c.marketing, terms_agreed_at: now, privacy_agreed_at: now, age_confirmed_at: now })
-          .eq("id", user.id).select().maybeSingle();
+        const { data, error } = await sb().from("profiles").update(row).eq("id", user.id).select().maybeSingle();
+        if (isPhoneFormatErr(error) && prof.phoneError(PHONE_INVALID)) return;
         if (error || !data) { msg(out, error ? errText(error) : "회원 정보를 찾지 못했습니다. 카카오톡 채널로 문의해 주세요."); return; }
         show(card, false);
-        renderAccount(user, data, ["가입이 완료되었습니다. 스누코치 회원이 되신 걸 환영합니다!", "ok"]);
+        renderAccount(user, data, ["가입이 완료되었습니다. 스누코치 회원이 되신 걸 환영합니다!", "ok", true]);
       });
     });
   }
 
   function renderAccount(user, profile, notice) {
     const out = $("#authMsg");
-    if (notice) msg(out, ...notice);
+    if (notice) msg(out, notice[0] + (notice[2] ? optInNote(profile) : ""), notice[1]);
     const providers = (user.app_metadata && user.app_metadata.providers) || [user.app_metadata && user.app_metadata.provider].filter(Boolean);
     const head = (p) => {
       $("#acctName").textContent = p.name;
@@ -623,6 +686,23 @@
     show($("#adminLink"), !!profile.is_admin);
     show($("#acct"));
 
+    // 저장하고 받은 프로필 행으로 화면 전체를 맞춘다(번호 표시·입력 카드·수신 스위치가 같은 값을 본다).
+    // 아래에서 쓰는 새 요소(#acctPhone·#phoneCard·#mktSms… 등)는 브라우저에 남은 옛 화면에는 없으므로 없으면 건너뛴다.
+    const acctPhone = $("#acctPhone");
+    const phoneCard = $("#phoneCard");
+    const painters = [];
+    const apply = (p) => {
+      profile = p;
+      if (acctPhone) {
+        const on = hasCol(p, "phone");
+        acctPhone.textContent = p.phone ? fmtPhone(p.phone) : "입력 전";
+        show(acctPhone, on);
+        show(acctPhone.previousElementSibling, on);
+      }
+      show(phoneCard, needsPhone(p));
+      painters.forEach((fn) => fn(p));
+    };
+
     // 내 정보
     const pform = $("#profileForm");
     const prof = profileForm(pform, "pf");
@@ -635,32 +715,120 @@
       if (bad) { focusEl(bad); return; }
       await busy($('button[type="submit"]', pform), "저장하는 중…", async () => {
         const { data, error } = await sb().from("profiles").update(prof.read()).eq("id", user.id).select().maybeSingle();
+        if (isPhoneFormatErr(error) && prof.phoneError(PHONE_INVALID)) return;
         if (error || !data) { msg(pout, error ? errText(error) : "저장하지 못했습니다. 다시 로그인해 주세요."); return; }
-        profile = data;
+        apply(data);
         head(data);
         msg(pout, "저장했습니다.", "ok");
       });
     });
 
-    // 마케팅 수신 동의 — 바꿀 때마다 처리 결과(일자·내용)를 바로 알린다
-    const mkt = $("#mktToggle");
-    const mktLog = $("#mktLog");
-    const logText = (p) => (p.marketing_opt_in_at
-      ? `${fmtDate(p.marketing_opt_in_at)} 수신 ${p.marketing_opt_in ? "동의" : "거부"} 처리됨`
-      : "아직 수신에 동의하지 않았습니다.");
-    mkt.checked = !!profile.marketing_opt_in;
-    mktLog.textContent = logText(profile);
-    mkt.addEventListener("change", async () => {
-      const want = mkt.checked;
-      const mout = $("#mktMsg");
-      mkt.disabled = true;
-      const { data, error } = await sb().from("profiles").update({ marketing_opt_in: want }).eq("id", user.id).select().maybeSingle();
-      mkt.disabled = false;
-      if (error || !data) { mkt.checked = !want; msg(mout, error ? errText(error) : "저장하지 못했습니다."); return; }
-      profile = data;
-      mktLog.textContent = logText(data);
-      msg(mout, `스누코치는 ${fmtDate(data.marketing_opt_in_at)}에 회원님의 마케팅 정보(이메일) 수신 ${want ? "동의" : "거부"}를 처리했습니다.`, "ok");
-    });
+    // 광고성 정보 수신 동의(이메일·문자 따로) — 바꿀 때마다 처리 결과(일자·내용)를 바로 알린다
+    const mout = $("#mktMsg");
+    const wireSwitch = (toggle, logEl, col, atCol, label, hintEl) => {
+      if (!toggle) return;
+      painters.push((p) => {
+        const locked = !!hintEl && !p.phone; // 문자: 번호가 없으면 켤 수 없다
+        toggle.checked = !!p[col];
+        toggle.disabled = locked;
+        show(hintEl, locked);
+        if (logEl) {
+          logEl.textContent = p[atCol]
+            ? `${fmtDate(p[atCol])} 수신 ${p[col] ? "동의" : "거부"} 처리됨`
+            : locked ? "" : "아직 수신에 동의하지 않았습니다.";
+        }
+      });
+      toggle.addEventListener("change", async () => {
+        const want = toggle.checked;
+        toggle.disabled = true;
+        // 그 채널 열 하나만 보낸다. 한 채널을 꺼도 다른 채널은 바뀌지 않는다.
+        const { data, error } = await sb().from("profiles").update({ [col]: want }).eq("id", user.id).select().maybeSingle();
+        toggle.disabled = false;
+        if (error || !data) { toggle.checked = !want; msg(mout, error ? errText(error) : "저장하지 못했습니다."); return; }
+        apply(data);
+        if (!!data[col] !== want) { msg(mout, PHONE_NEEDED); return; } // 서버가 번호 없는 문자 동의를 기록하지 않은 경우
+        msg(mout, mktResult(data[atCol], label, want), "ok");
+      });
+    };
+    wireSwitch($("#mktToggle"), $("#mktLog"), "marketing_opt_in", "marketing_opt_in_at", "이메일");
+    if (hasCol(profile, "marketing_sms_opt_in")) {
+      show($("#mktSmsRow"));
+      wireSwitch($("#mktSmsToggle"), $("#mktSmsLog"), "marketing_sms_opt_in", "marketing_sms_opt_in_at", "문자", $("#mktSmsHint"));
+    }
+
+    // 목표 대학 입시 정보 알림: 신청 목록을 그리고, 로그인 전에 고른 대학이 있으면 저장한다.
+    // 휴대전화 번호가 없으면 저장하지 않고, 번호를 입력하면 신청된다고 알린다(이미 신청한 알림의 목록·해제는 그대로 된다).
+    const aout = $("#alertMsg");
+    const drawAlerts = async () => {
+      const { data, error } = await alerts.list();
+      const box = $("#alertList");
+      if (error) { msg(aout, errText(error)); return; }
+      box.replaceChildren(...(data || []).map((a) => {
+        const li = document.createElement("li");
+        const t = document.createElement("span");
+        t.className = "al-name";
+        t.textContent = a.univ + (a.track ? ` · ${a.track}` : "");
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "text-btn";
+        b.textContent = "해제";
+        b.setAttribute("aria-label", `${a.univ} 알림 해제`);
+        b.addEventListener("click", () => busy(b, "해제 중…", async () => {
+          const { error: e } = await alerts.remove(a.univ);
+          if (e) { msg(aout, errText(e)); return; }
+          msg(aout, `${a.univ} 알림을 해제했습니다.`, "ok");
+          await drawAlerts();
+        }));
+        li.append(t, b);
+        return li;
+      }));
+      show($("#alertEmpty"), !(data || []).length);
+    };
+    const flushAndDraw = async () => {
+      const note = $("#alertNeedPhone");
+      if (needsPhone(profile)) {
+        const pend = alerts.getPending().map((x) => x && x.univ).filter((u) => ALERT_UNIVS.includes(u));
+        if (note) note.textContent = pend.length ? `고른 대학(${pend.join("·")})의 알림은 위에서 휴대전화 번호를 입력하면 신청됩니다.` : "";
+        show(note, !!pend.length);
+      } else {
+        show(note, false);
+        const saved = await alerts.flushPending();
+        if (saved.length) msg(aout, `${saved.join("·")} 입시 정보 알림을 신청했습니다.`, "ok");
+      }
+      await drawAlerts();
+    };
+
+    // 기존 회원: 휴대전화 번호 입력 카드(수집 안내와 함께 받는다). 입력 전에도 마이페이지의 다른 기능은 그대로 쓸 수 있다.
+    if (phoneCard) {
+      const pf2 = $("#phoneForm");
+      const tel = $("#phTel");
+      const telErr = $("#phTelErr");
+      const sms = $("#phSms");
+      const pmsg = $("#phoneMsg");
+      const smsOn = hasCol(profile, "marketing_sms_opt_in");
+      show($("#phSmsRow"), smsOn);
+      tel.addEventListener("blur", () => { if (!phoneProblem(tel.value)) tel.value = fmtPhone(tel.value); });
+      pf2.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        msg(pmsg, "");
+        if (!setErr(tel, telErr, phoneProblem(tel.value))) { focusEl(tel); return; }
+        const row = { phone: normalizePhone(tel.value) };
+        if (smsOn && sms.checked) row.marketing_sms_opt_in = true;
+        await busy($('button[type="submit"]', pf2), "저장하는 중…", async () => {
+          const { data, error } = await sb().from("profiles").update(row).eq("id", user.id).select().maybeSingle();
+          if (isPhoneFormatErr(error)) { setErr(tel, telErr, PHONE_INVALID); focusEl(tel); return; }
+          if (error || !data) { msg(pmsg, error ? errText(error) : "저장하지 못했습니다. 다시 로그인해 주세요."); return; }
+          apply(data); // 카드가 사라지고 번호 표시·문자 스위치가 풀린다
+          prof.fill(data); // 회원 정보에 번호 칸이 나타난다
+          msg(out, "휴대전화 번호를 저장했습니다." + (row.marketing_sms_opt_in && data.marketing_sms_opt_in
+            ? " " + mktResult(data.marketing_sms_opt_in_at, "문자", true) : ""), "ok");
+          out.setAttribute("tabindex", "-1"); // 카드가 사라지므로 초점을 안내문으로 옮긴다
+          focusEl(out);
+          await flushAndDraw(); // 번호가 없어 미뤄 둔 알림 신청
+        });
+      });
+    }
+    apply(profile);
 
     // 비밀번호 변경 (이메일로 가입한 회원만)
     if (providers.includes("email")) {
@@ -689,38 +857,7 @@
       });
     }
 
-    // 목표 대학 입시 정보 알림: 로그인 전에 고른 대학이 있으면 저장하고, 신청 목록을 보여 준다
-    (async () => {
-      const aout = $("#alertMsg");
-      const saved = await alerts.flushPending();
-      if (saved.length) msg(aout, `${saved.join("·")} 입시 정보 알림을 신청했습니다.`, "ok");
-      const draw = async () => {
-        const { data, error } = await alerts.list();
-        const box = $("#alertList");
-        if (error) { msg(aout, errText(error)); return; }
-        box.replaceChildren(...(data || []).map((a) => {
-          const li = document.createElement("li");
-          const t = document.createElement("span");
-          t.className = "al-name";
-          t.textContent = a.univ + (a.track ? ` · ${a.track}` : "");
-          const b = document.createElement("button");
-          b.type = "button";
-          b.className = "text-btn";
-          b.textContent = "해제";
-          b.setAttribute("aria-label", `${a.univ} 알림 해제`);
-          b.addEventListener("click", () => busy(b, "해제 중…", async () => {
-            const { error: e } = await alerts.remove(a.univ);
-            if (e) { msg(aout, errText(e)); return; }
-            msg(aout, `${a.univ} 알림을 해제했습니다.`, "ok");
-            await draw();
-          }));
-          li.append(t, b);
-          return li;
-        }));
-        show($("#alertEmpty"), !(data || []).length);
-      };
-      await draw();
-    })();
+    flushAndDraw();
 
     // 모든 기기에서 로그아웃
     $("#signOutAll").addEventListener("click", async (e) => {
@@ -779,6 +916,11 @@
     show(loading, false);
     show($("#admBody"));
 
+    // 휴대전화용 DB 설정 전이면 목록에 phone 열이 없다 → 새 칸은 '-' 로 두고 안내한다
+    const phoneReady = !rows.length || hasCol(rows[0], "phone");
+    if (!phoneReady) msg(out, "휴대전화 번호용 데이터베이스 설정(20261002000000_phone.sql)이 아직 적용되지 않았습니다.", "info");
+    // 문자 발송 대상: 문자 수신에 동의했고 이메일 인증과 가입 마무리를 끝낸 회원(인증 전 계정은 남의 번호일 수 있다)
+    const smsTarget = (r) => !!r.marketing_sms_opt_in && !!r.phone && r.email_confirmed && r.profile_completed;
     const count = (fn) => rows.filter(fn).length;
     const stats = [
       ["전체 회원", rows.length],
@@ -786,13 +928,15 @@
       ["학부모", count((r) => r.member_type === "학부모")],
       ["기타", count((r) => r.member_type === "기타")],
       ["가입 마무리 전", count((r) => !r.profile_completed || !r.email_confirmed)],
-      ["마케팅 수신 동의", count((r) => r.marketing_opt_in)],
+      ["전화번호 미입력", phoneReady ? count((r) => r.profile_completed && !r.phone) : "-"],
+      ["이메일 수신 동의", count((r) => r.marketing_opt_in)],
+      ["문자 수신 동의", phoneReady ? count(smsTarget) : "-"],
     ];
     $("#admStats").replaceChildren(...stats.map(([label, n]) => {
       const d = document.createElement("div");
       d.className = "stat";
       const b = document.createElement("b");
-      b.textContent = n.toLocaleString("ko-KR");
+      b.textContent = typeof n === "number" ? n.toLocaleString("ko-KR") : n;
       const s = document.createElement("span");
       s.textContent = label;
       d.append(b, s);
@@ -801,18 +945,24 @@
 
     const search = $("#admSearch");
     const onlyMkt = $("#admMkt");
+    const onlySms = $("#admSms"); // 브라우저에 남은 옛 화면에는 없다
     const body = $("#admRows");
     const provider = (r) => PROVIDER_NAMES[r.provider] || r.provider;
     const status = (r) => (!r.email_confirmed ? "메일 인증 전" : !r.profile_completed ? "가입 마무리 전" : "");
     let shown = rows;
     function render() {
       const qv = search.value.trim().toLowerCase();
+      // 검색어가 숫자·하이픈·공백·+ 뿐이면 휴대전화 번호로 찾는다(숫자만 비교)
+      const qd = /^[\d\s+()-]+$/.test(qv) ? normalizePhone(qv) : "";
       shown = rows.filter((r) => (!onlyMkt.checked || r.marketing_opt_in)
-        && (!qv || (r.name || "").toLowerCase().includes(qv) || (r.email || "").toLowerCase().includes(qv)));
+        && (!onlySms || !onlySms.checked || smsTarget(r))
+        && (!qv || (r.name || "").toLowerCase().includes(qv) || (r.email || "").toLowerCase().includes(qv)
+          || (!!qd && (r.phone || "").includes(qd))));
       body.replaceChildren(...shown.map((r) => {
         const tr = document.createElement("tr");
-        [fmtDate(r.created_at), r.name || status(r) || "-", r.email || "-", r.member_type || "-", r.grade || "-",
-          r.marketing_opt_in ? `동의 (${fmtDate(r.marketing_opt_in_at)})` : "-", provider(r), fmtDateTime(r.last_sign_in_at)]
+        [fmtDate(r.created_at), r.name || status(r) || "-", r.email || "-", r.phone ? fmtPhone(r.phone) : "-", r.member_type || "-", r.grade || "-",
+          r.marketing_opt_in ? `동의 (${fmtDate(r.marketing_opt_in_at)})` : "-",
+          r.marketing_sms_opt_in ? `동의 (${fmtDate(r.marketing_sms_opt_in_at)})` : "-", provider(r), fmtDateTime(r.last_sign_in_at)]
           .forEach((v, i) => {
             const td = document.createElement("td");
             td.textContent = v;
@@ -824,7 +974,7 @@
       if (!shown.length) {
         const tr = document.createElement("tr");
         const td = document.createElement("td");
-        td.colSpan = 8;
+        td.colSpan = 10;
         td.className = "adm-empty";
         td.textContent = rows.length ? "조건에 맞는 회원이 없습니다." : "아직 회원이 없습니다.";
         tr.append(td);
@@ -834,13 +984,18 @@
     }
     search.addEventListener("input", render);
     onlyMkt.addEventListener("change", render);
+    if (onlySms) onlySms.addEventListener("change", render);
     render();
 
+    // CSV 는 화면 필터를 따른다. 휴대전화는 010-1234-5678 꼴(숫자만 내보내면 엑셀에서 앞자리 0 이 사라진다)
     $("#admCsv").addEventListener("click", () => downloadCsv("snucoach-members",
-      ["가입일시", "이름", "이메일", "회원 구분", "학년", "마케팅 수신 동의", "마케팅 동의·거부 일시", "가입 방식", "이메일 인증", "가입 마무리", "최근 로그인"],
+      ["가입일시", "이름", "이메일", "휴대전화", "회원 구분", "학년", "이메일 수신 동의", "이메일 동의·거부 일시", "문자 수신 동의", "문자 동의·거부 일시",
+        "가입 방식", "이메일 인증", "가입 마무리", "최근 로그인"],
       shown.map((r) => [
-        fmtDateTime(r.created_at), r.name, r.email, r.member_type, r.grade, r.marketing_opt_in ? "동의" : "미동의",
-        r.marketing_opt_in_at ? fmtDateTime(r.marketing_opt_in_at) : "", provider(r), r.email_confirmed ? "완료" : "전",
+        fmtDateTime(r.created_at), r.name, r.email, r.phone ? fmtPhone(r.phone) : "", r.member_type, r.grade,
+        r.marketing_opt_in ? "동의" : "미동의", r.marketing_opt_in_at ? fmtDateTime(r.marketing_opt_in_at) : "",
+        r.marketing_sms_opt_in ? "동의" : "미동의", r.marketing_sms_opt_in_at ? fmtDateTime(r.marketing_sms_opt_in_at) : "",
+        provider(r), r.email_confirmed ? "완료" : "전",
         r.profile_completed ? "완료" : "전", r.last_sign_in_at ? fmtDateTime(r.last_sign_in_at) : "",
       ])));
 
@@ -875,7 +1030,7 @@
       shown = rows.filter((r) => !sel.value || r.univ === sel.value);
       body.replaceChildren(...shown.map((r) => {
         const tr = document.createElement("tr");
-        [r.univ, r.track || "-", r.name || "-", r.email || "-", r.member_type || "-", r.grade || "-", fmtDate(r.created_at)]
+        [r.univ, r.track || "-", r.name || "-", r.email || "-", r.phone ? fmtPhone(r.phone) : "-", r.member_type || "-", r.grade || "-", fmtDate(r.created_at)]
           .forEach((v) => {
             const td = document.createElement("td");
             td.textContent = v;
@@ -887,7 +1042,7 @@
       if (!shown.length) {
         const tr = document.createElement("tr");
         const td = document.createElement("td");
-        td.colSpan = 7;
+        td.colSpan = 8;
         td.className = "adm-empty";
         td.textContent = "아직 알림 신청이 없습니다.";
         tr.append(td);
@@ -899,8 +1054,8 @@
     sel.addEventListener("change", render);
     render();
     $("#alCsv").addEventListener("click", () => downloadCsv("snucoach-target-alerts",
-      ["대학", "계열", "이름", "이메일", "회원 구분", "학년", "신청일시"],
-      shown.map((r) => [r.univ, r.track, r.name, r.email, r.member_type, r.grade, fmtDateTime(r.created_at)])));
+      ["대학", "계열", "이름", "이메일", "휴대전화", "회원 구분", "학년", "신청일시"],
+      shown.map((r) => [r.univ, r.track, r.name, r.email, r.phone ? fmtPhone(r.phone) : "", r.member_type, r.grade, fmtDateTime(r.created_at)])));
   }
 
   // CSV: 엑셀 수식으로 해석될 수 있는 값(=, +, -, @ 로 시작)은 앞에 ' 를 붙여 무력화한다
@@ -944,6 +1099,27 @@
     getPending() { return tryDo(() => JSON.parse(localStorage.getItem(PENDING_KEY) || "[]"), []) || []; },
     clearPending() { tryDo(() => localStorage.removeItem(PENDING_KEY)); },
     async signedIn() { const { data } = await sb().auth.getSession(); return !!data.session; },
+    phone: { normalize: normalizePhone, problem: phoneProblem, format: fmtPhone },
+    // 알림을 저장해도 되는 상태인지: "ok" | "signed-out" | "onboarding"(가입 마무리 전) | "phone"(번호 없음) | "error"
+    // 열 이름을 지정하지 않고 읽는다(select *): 휴대전화용 DB 설정 전에도 오류 없이 "ok" 가 된다.
+    async gate() {
+      const { data } = await sb().auth.getSession();
+      if (!data.session) return { state: "signed-out" };
+      const { data: row, error } = await sb().from("profiles").select("*").eq("id", data.session.user.id).maybeSingle();
+      if (error) return { state: "error", error };
+      if (!isComplete(row)) return { state: "onboarding" };
+      return { state: needsPhone(row) ? "phone" : "ok" };
+    },
+    // 알림 신청 창에서 받은 휴대전화 번호 저장. 실패하면 { error: { code, message } }
+    async savePhone(raw) {
+      const bad = phoneProblem(raw);
+      if (bad) return { error: { code: "phone_invalid", message: bad } };
+      const { data } = await sb().auth.getSession();
+      if (!data.session) return { error: { code: "signed_out", message: "다시 로그인해 주세요." } };
+      const { data: row, error } = await sb().from("profiles").update({ phone: normalizePhone(raw) }).eq("id", data.session.user.id).select("id").maybeSingle();
+      if (error) return { error: { code: error.code, message: isPhoneFormatErr(error) ? PHONE_INVALID : errText(error) } };
+      return { error: row ? null : { code: "not_found", message: "저장하지 못했습니다. 다시 로그인해 주세요." } };
+    },
     async save(list) { // [{univ, track}] → 이미 신청한 대학은 건너뜀
       const rows = list.filter((x) => x && ALERT_UNIVS.includes(x.univ))
         .map((x) => ({ univ: x.univ, track: x.track ? String(x.track).slice(0, 40) : null }));
@@ -954,6 +1130,7 @@
     async flushPending() { // 로그인돼 있으면 보류된 신청을 저장. 저장한 대학 이름 목록을 돌려줌
       const list = alerts.getPending();
       if (!list.length || !(await alerts.signedIn())) return [];
+      if ((await alerts.gate()).state !== "ok") return []; // 가입 마무리·번호 입력 전이면 보류를 지우지 않고 둔다
       const { error } = await alerts.save(list);
       if (error) return [];
       alerts.clearPending();

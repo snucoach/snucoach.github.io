@@ -67,11 +67,12 @@ async function newContext(browser, { config = CONFIG(), viewport } = {}) {
   });
   return ctx;
 }
-async function fillSignup(page, { email, pw = 'abcd1234', name = '테스트학생', type = '학생', grade = '고2', all = true }) {
+async function fillSignup(page, { email, pw = 'abcd1234', name = '테스트학생', phone = '010-1234-5678', type = '학생', grade = '고2', all = true }) {
   await page.fill('#suEmail', email);
   await page.fill('#suPw', pw);
   await page.fill('#suPw2', pw);
   await page.fill('#suName', name);
+  await page.fill('#suPhone', phone);
   await page.check(`#suType input[value="${type}"]`, { force: true });
   await page.selectOption('#suGrade', grade);
   if (all) await page.check('#suConsent [data-agree-all]');
@@ -131,8 +132,17 @@ try {
   await page.click('#signupForm button[type="submit"]');
   check('비밀번호 확인 불일치 거부', (await text(page, '#suPw2Err')).includes('서로 다릅니다'));
   await page.fill('#suPw2', 'abcd1234');
+  await page.fill('#suPhone', '');
   await page.click('#signupForm button[type="submit"]');
-  check('필수 동의 없으면 거부', (await text(page, '#suConsentErr')).length > 0);
+  check('휴대전화 번호 없으면 거부 + 포커스', (await text(page, '#suPhoneErr')) === '휴대전화 번호를 입력해 주세요.' && await page.evaluate(() => document.activeElement.id) === 'suPhone');
+  await page.fill('#suPhone', '02-123-4567');
+  await page.click('#signupForm button[type="submit"]');
+  check('일반전화 번호 거부', (await text(page, '#suPhoneErr')).includes('정확히 입력'));
+  await page.fill('#suPhone', '010 1234 5678');
+  await page.locator('#suPhone').blur();
+  check('번호 칸을 벗어나면 하이픈 표시', (await page.inputValue('#suPhone')) === '010-1234-5678');
+  await page.click('#signupForm button[type="submit"]');
+  check('필수 동의 없으면 거부', (await text(page, '#suConsentErr')).length > 0 && (await text(page, '#suPhoneErr')) === '');
   await page.check('#suType input[value="학부모"]', { force: true });
   check('학부모 선택 시 "자녀 학년" 라벨', (await text(page, '#signupForm [data-grade-label]')) === '자녀 학년');
   await page.check('#suConsent [data-agree-all]');
@@ -148,6 +158,8 @@ try {
   await page.click('#signupForm button[type="submit"]');
   await page.waitForSelector('#signupDone:not([hidden])');
   check('가입 후 인증 메일 안내 화면', (await text(page, '#doneEmail')) === A);
+  check('가입 후 수신 동의 처리 결과 안내(이메일·문자)', (await text(page, '#doneConsent')).includes('광고성 정보(이메일·문자) 수신 동의를 처리했습니다'));
+  check('DB: 번호는 숫자만, 문자 동의 기록, 가입 정보에는 사본 없음', sql(`select p.phone||','||p.marketing_sms_opt_in::text||','||((u.raw_user_meta_data ? 'phone')::text) from public.profiles p join auth.users u on u.id=p.id where u.email='${A}'`) === '01012345678,true,false');
   await page.screenshot({ path: `${SHOTS}signup-done.png` });
   const m1 = await lastMail(A, { after: t0 });
   check('한국어 인증 메일 도착', !!m1 && m1.Subject === '[스누코치] 이메일 인증을 완료해 주세요', m1 && m1.Subject);
@@ -187,6 +199,7 @@ try {
   check('로그인 → 마이페이지', (await text(page, '#acctName')) === '김스누');
   check('배지: 학생·고2', (await text(page, '#acctBadges')).includes('학생') && (await text(page, '#acctBadges')).includes('고2'));
   check('가입 방식: 이메일', (await text(page, '#acctProvider')) === '이메일');
+  check('마이페이지: 휴대전화 번호 표시, 번호 입력 카드 없음', (await text(page, '#acctPhone')) === '010-1234-5678' && !(await visible(page, '#phoneCard')));
   check('로그인 유지: localStorage 에 세션', await page.evaluate(() => !!localStorage.getItem('snucoach-auth') && !sessionStorage.getItem('snucoach-auth')));
   await page.screenshot({ path: `${SHOTS}account-desktop.png`, fullPage: true });
   await page.goto(`${SITE}/index.html`);
@@ -209,11 +222,18 @@ try {
   await page.fill('#pfName', '김스누2');
 
   // ── 6. 마케팅 수신 ──────────────────────────────────────
-  check('가입 때 마케팅 동의(전체 동의) 반영', await page.isChecked('#mktToggle'));
+  check('가입 때 마케팅 동의(전체 동의) 반영: 이메일·문자 둘 다 켜짐', await page.isChecked('#mktToggle') && await page.isChecked('#mktSmsToggle'));
+  await page.uncheck('#mktSmsToggle', { force: true });
+  await page.waitForFunction(() => document.querySelector('#mktMsg').textContent.includes('(문자) 수신 거부를 처리'));
+  check('문자만 끄면 이메일 동의는 유지', sql(`select marketing_opt_in::text||','||marketing_sms_opt_in::text from public.profiles p join auth.users u on u.id=p.id where u.email='${A}'`) === 'true,false' && await page.isChecked('#mktToggle'));
   await page.uncheck('#mktToggle', { force: true });
-  await page.waitForSelector('#mktMsg:not([hidden])');
+  await page.waitForFunction(() => document.querySelector('#mktMsg').textContent.includes('(이메일) 수신 거부를 처리'));
   check('수신 거부 처리 결과 안내', (await text(page, '#mktMsg')).includes('수신 거부를 처리'));
   check('DB: 마케팅 철회 기록', sql(`select (not marketing_opt_in) and marketing_opt_in_at > now() - interval '1 minute' from public.profiles p join auth.users u on u.id=p.id where u.email='${A}'`) === 't');
+  await page.fill('#pfPhone', '010-1234');
+  await page.click('#profileForm button[type="submit"]');
+  check('회원 정보: 잘못된 번호 저장 거부', (await text(page, '#pfPhoneErr')).includes('정확히 입력'));
+  await page.fill('#pfPhone', '010-1234-5678');
 
   // ── 7. 비밀번호 변경 ────────────────────────────────────
   await page.click('#pwCard summary');
@@ -263,6 +283,32 @@ try {
     await ap.click('#adlgAct .pri');
     await ap.waitForSelector('#alertDlg:not([open])', { state: 'attached' });
     check('회원: 신청 저장(중복은 건너뜀)', sql(`select string_agg(univ, ',' order by univ) from public.target_alerts a join auth.users u on u.id=a.user_id where u.email='${A}'`) === '서울대,연세대');
+    // 휴대전화 번호가 없는 기존 회원: 창 안에서 번호를 받고 나서 신청
+    sql(`update public.profiles set phone = null where id = (select id from auth.users where email='${A}')`);
+    await setTargets(ap, [{ univ: '고려대', major: '자연', band: 'mid' }]);
+    await ap.reload();
+    await ap.click('#tbar-alert');
+    await ap.waitForSelector('#alertDlg[open]');
+    await ap.click('#adlgAct .pri');
+    await ap.waitForSelector('#adlgPhone:not([hidden])');
+    check('번호 없는 회원: 알림 창에 번호 칸과 수집 안내', (await text(ap, '#adlgAct .pri')) === '동의하고 1곳 알림 신청하기' && (await text(ap, '#adlgPhone')).includes('거부하면 입시 정보 알림을 신청할 수 없습니다'));
+    await ap.click('#adlgAct .pri');
+    await ap.waitForFunction(() => document.querySelector('#adlgTelErr').textContent.length > 0);
+    check('번호 없이는 신청되지 않음', sql(`select count(*) from public.target_alerts a join auth.users u on u.id=a.user_id where u.email='${A}' and a.univ='고려대'`) === '0');
+    await ap.fill('#adlgTel', '010-2222-3333');
+    await ap.click('#adlgAct .pri');
+    await ap.waitForSelector('#alertDlg:not([open])', { state: 'attached' });
+    check('번호 저장(숫자만) 뒤 알림 신청', sql(`select p.phone||','||(select count(*) from public.target_alerts a where a.user_id=p.id and a.univ='고려대') from public.profiles p join auth.users u on u.id=p.id where u.email='${A}'`) === '01022223333,1');
+    sql(`delete from public.target_alerts where univ='고려대' and user_id = (select id from auth.users where email='${A}')`);
+    // 번호 없는 기존 회원의 마이페이지: 입력 카드 → 저장하면 사라짐
+    sql(`update public.profiles set phone = null where id = (select id from auth.users where email='${A}')`);
+    await ap.goto(`${SITE}/account.html`);
+    await ap.waitForSelector('#phoneCard:not([hidden])');
+    check('번호 없는 기존 회원: 번호 입력 카드, 문자 스위치 잠김', await ap.locator('#mktSmsToggle').isDisabled() && (await text(ap, '#acctPhone')) === '입력 전');
+    await ap.fill('#phTel', '010-1234-5678');
+    await ap.click('#phoneForm button[type="submit"]');
+    await ap.waitForSelector('#phoneCard', { state: 'hidden' });
+    check('카드 저장 → 번호 표시, 문자 동의는 체크하지 않았으므로 미동의', (await text(ap, '#acctPhone')) === '010-1234-5678' && sql(`select phone||','||marketing_sms_opt_in::text from public.profiles p join auth.users u on u.id=p.id where u.email='${A}'`) === '01012345678,false');
     // 마이페이지에서 확인·해제
     await ap.goto(`${SITE}/account.html`);
     await ap.waitForFunction(() => document.querySelectorAll('#alertList li').length === 2);
@@ -426,6 +472,8 @@ try {
     check('가입 마무리 화면 + 닉네임 미리 채움', (await kp.inputValue('#obName')) === '카카오닉네임');
     await kp.click('#onboardForm button[type="submit"]');
     check('마무리: 필수 항목 없으면 거부', (await text(kp, '#obTypeErr')).length > 0 && (await text(kp, '#obConsentErr')).length > 0);
+    check('마무리: 휴대전화 번호 없으면 거부', (await text(kp, '#obPhoneErr')) === '휴대전화 번호를 입력해 주세요.');
+    await kp.fill('#obPhone', '011-234-5678');
     await kp.check('#obType input[value="기타"]', { force: true });
     await kp.selectOption('#obGrade', '기타');
     await kp.check('#obConsent [data-agree="age"]');
@@ -435,6 +483,7 @@ try {
     await kp.waitForSelector('#acct:not([hidden])');
     check('가입 마무리 → 마이페이지', (await text(kp, '#authMsg')).includes('가입이 완료'));
     check('DB: 동의 시각 기록·마케팅 미동의', sql(`select (terms_agreed_at is not null and privacy_agreed_at is not null and age_confirmed_at is not null and not marketing_opt_in) from public.profiles p join auth.users u on u.id=p.id where u.email='${C}'`) === 't');
+    check('DB: 마무리에서 받은 번호는 숫자만, 문자 수신 미동의', sql(`select phone||','||marketing_sms_opt_in::text from public.profiles p join auth.users u on u.id=p.id where u.email='${C}'`) === '0112345678,false');
 
     // ── 14. 관리자 화면 ──────────────────────────────────
     await kp.goto(`${SITE}/admin.html`);
@@ -456,10 +505,18 @@ try {
     const mktRows = await kp.locator('#admRows tr').count();
     check('관리자: 마케팅 동의 필터', mktRows === Math.max(1, Number(sql(`select count(*) from public.profiles where marketing_opt_in`))), mktRows);
     await kp.uncheck('#admMkt');
+    await kp.check('#admSms');
+    const smsRows = await kp.locator('#admRows tr').count();
+    check('관리자: 문자 수신 동의 필터(이메일 인증·가입 마무리를 끝낸 회원만)', smsRows === Math.max(1, Number(sql(`select count(*) from public.profiles p join auth.users u on u.id=p.id where p.marketing_sms_opt_in and u.email_confirmed_at is not null and p.name is not null and p.member_type is not null and p.grade is not null and p.terms_agreed_at is not null`))), smsRows);
+    await kp.uncheck('#admSms');
+    await kp.fill('#admSearch', '011-234');
+    check('관리자: 휴대전화 번호로 검색', (await kp.locator('#admRows tr').count()) === 1 && (await text(kp, '#admRows')).includes('011-234-5678'));
+    await kp.fill('#admSearch', '');
+    check('관리자: 회원 표 10열', (await kp.locator('.adm-table').first().locator('thead th').count()) === 10 && (await kp.locator('#admRows tr').first().locator('td').count()) === 10);
     await kp.screenshot({ path: `${SHOTS}admin.png`, fullPage: true });
     const [dl] = await Promise.all([kp.waitForEvent('download'), kp.click('#admCsv')]);
     const csv = readFileSync(await dl.path(), 'utf8');
-    check('CSV: 엑셀용 BOM + 헤더', csv.charCodeAt(0) === 0xFEFF && csv.includes('"가입일시","이름","이메일"'));
+    check('CSV: 엑셀용 BOM + 헤더', csv.charCodeAt(0) === 0xFEFF && csv.includes('"가입일시","이름","이메일","휴대전화"') && csv.includes('"문자 수신 동의"') && csv.includes('"011-234-5678"'));
     check('CSV: 수식 주입 무력화', csv.includes(`"'=HYPERLINK(""x"")"`), csv.split('\r\n').find((l) => l.includes('HYPERLINK')));
     check('관리자 화면: 이름은 글자로만 표시(HTML 해석 안 함)', (await kp.locator('#admRows a').count()) === 0);
     await kp.waitForSelector('#admAlerts:not([hidden])');
@@ -469,7 +526,7 @@ try {
     check('관리자: 대학별 필터', (await text(kp, '#alCount')).startsWith(`${sql(`select count(*) from public.target_alerts where univ='서울대'`)}건`));
     const [dl2] = await Promise.all([kp.waitForEvent('download'), kp.click('#alCsv')]);
     const csv2 = readFileSync(await dl2.path(), 'utf8');
-    check('관리자: 알림 CSV', csv2.charCodeAt(0) === 0xFEFF && csv2.includes('"대학","계열","이름","이메일"') && csv2.includes(A));
+    check('관리자: 알림 CSV', csv2.charCodeAt(0) === 0xFEFF && csv2.includes('"대학","계열","이름","이메일","휴대전화"') && csv2.includes(A));
     await kctx.close();
   }
 

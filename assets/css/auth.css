@@ -22,9 +22,10 @@
 /* ── 입력 ── */
 .auth-form { display: grid; gap: 18px; }
 .field { display: grid; gap: 7px; }
+.field[hidden] { display: none; }
 .field > label, .field > .field-label { font-size: 14px; font-weight: 700; color: var(--text); }
 .field .opt { font-weight: 500; color: var(--text-faint); }
-.field input[type="email"], .field input[type="password"], .field input[type="text"], .field select {
+.field input[type="email"], .field input[type="password"], .field input[type="text"], .field input[type="tel"], .field select {
   width: 100%; height: 50px; padding: 0 14px;
   font: inherit; font-size: 16px; color: var(--text);
   background: #fff; border: 1px solid #CDD4EA; border-radius: 12px;
@@ -173,14 +174,14 @@
 
 /* ── 관리자 ── */
 .stat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
-@media (min-width: 720px) { .stat-grid { grid-template-columns: repeat(6, 1fr); } }
+@media (min-width: 720px) { .stat-grid { grid-template-columns: repeat(4, 1fr); } }
 .stat { padding: 14px 16px; border-radius: 14px; background: var(--sky-2); }
 .stat b { display: block; font-size: 24px; font-weight: 800; color: var(--ink); font-variant-numeric: tabular-nums; }
 .stat span { font-size: 13px; font-weight: 700; color: var(--text-sub); }
 .adm-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; margin: 20px 0 14px; }
 .adm-tools .field { flex: 1 1 240px; }
 .adm-table-wrap { overflow-x: auto; border: 1px solid var(--line-solid, #E3E8F5); border-radius: 14px; }
-.adm-table { width: 100%; min-width: 880px; border-collapse: collapse; font-size: 14px; }
+.adm-table { width: 100%; min-width: 1100px; border-collapse: collapse; font-size: 14px; }
 .adm-table th, .adm-table td { padding: 11px 12px; text-align: left; border-bottom: 1px solid var(--line); white-space: nowrap; }
 .adm-table th { position: sticky; top: 0; background: var(--off); font-size: 13px; font-weight: 800; color: var(--text-sub); }
 .adm-table tbody tr:hover { background: #FAFBFE; }
@@ -279,3 +280,17 @@ details.acct-item[open] > summary { margin-bottom: 16px; }
 .adm-section { margin-top: 40px; padding-top: 28px; border-top: 1px solid var(--line-solid, #E3E8F5); }
 .adm-h2 { margin: 0 0 16px; font-size: 19px; font-weight: 800; letter-spacing: -0.02em; color: var(--ink); }
 .adm-tools select { min-width: 180px; }
+
+/* ── 휴대전화 번호 · 광고성 정보 수신(이메일·문자) ── */
+.phone-card { border: 1.5px solid var(--navy); }
+.phone-card[hidden] + .auth-card { margin-top: 0; }
+.phone-card .consent-detail { margin-top: 0; }
+.switch-list { display: grid; }
+.switch-list .switch-row { padding: 16px 0; border-top: 1px solid var(--line); }
+.switch-list .switch-row:last-child { padding-bottom: 0; }
+.switch-row[hidden] { display: none; }
+.switch-row b { font-size: 15px; font-weight: 700; color: var(--text); }
+.switch-row .consent-log { margin-top: 4px; }
+.switch-row .switch-hint { margin: 4px 0 0; font-size: 13px; line-height: 1.6; color: var(--text-faint); }
+.switch-row .switch-hint[hidden] { display: none; }
+.switch input:disabled { cursor: default; }

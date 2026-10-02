@@ -351,6 +351,20 @@ body.has-tbar .toast{bottom:calc(96px + env(safe-area-inset-bottom))}
 .adlg-act .pri:hover{background:#1A1A86}
 .adlg-act .sec{background:#fff;color:#0F0F70;border:1px solid #CDD4EA}
 .adlg-act button:disabled{opacity:.55;cursor:default}
+/* 알림 신청 창: 휴대전화 번호 입력(번호가 없는 회원에게만 보임) */
+.adlg-phone{margin:0 0 14px;display:grid;gap:7px}
+.adlg-phone[hidden]{display:none}
+.adlg-phone label{font-size:14px;font-weight:700;color:#16183C}
+.adlg-phone input{width:100%;height:50px;padding:0 14px;font:inherit;font-size:16px;color:#16183C;background:#fff;border:1px solid #CDD4EA;border-radius:12px;-webkit-appearance:none;appearance:none}
+.adlg-phone input:focus{outline:none;border-color:#0F0F70;box-shadow:0 0 0 3px rgba(45,75,200,.16)}
+.adlg-phone input[aria-invalid="true"]{border-color:#C83A43}
+.adlg-hint{margin:0;font-size:12.5px;line-height:1.65;color:#646C8E}
+.adlg-hint a{color:#2D4BC8;font-weight:700}
+.adlg-err{margin:0;font-size:13px;line-height:1.6;color:#B3261E;font-weight:600}
+.adlg-err:empty{display:none}
+.adlg-notice{width:100%;border-collapse:collapse;margin:4px 0 0;font-size:12.5px;line-height:1.65;color:#4A5070;background:#F5F7FD;border-radius:10px}
+.adlg-notice th,.adlg-notice td{text-align:left;vertical-align:top;padding:7px 10px}
+.adlg-notice th{width:68px;white-space:nowrap;color:#16183C;font-weight:700}
 .plegend .ahint{display:block;margin-top:4px}
 </style>
 <script type="application/ld+json">{"@context": "https://schema.org", "@type": "EducationalOrganization", "name": "스누코치", "alternateName": "SNUCOACH", "url": "https://snucoach.github.io/", "logo": "https://snucoach.github.io/assets/img/logo.png", "image": "https://snucoach.github.io/assets/img/og_image.png", "description": "중·고등학생 1:1 학습코칭 서비스. 화상 컨설팅과 매일 카카오톡 플래너 피드백으로 공부 습관과 성적을 관리합니다.", "founder": {"@type": "Person", "name": "유정원"}, "sameAs": ["https://blog.naver.com/snustudycoach", "https://www.instagram.com/snu_studycoach/", "https://pf.kakao.com/_wiwxmG"]}</script>
@@ -462,11 +476,23 @@ body.has-tbar .toast{bottom:calc(96px + env(safe-area-inset-bottom))}
   <dialog class="adlg" id="alertDlg" aria-labelledby="adlgT">
     <button type="button" class="adlg-x" id="adlgClose" aria-label="닫기">✕</button>
     <h2 id="adlgT">목표 대학 입시 정보 알림</h2>
-    <p class="adlg-sub">고른 목표 대학의 모집요강 발표, 원서 접수, 입시 결과 같은 입시 소식을 이메일로 보내 드립니다.</p>
+    <p class="adlg-sub">고른 목표 대학의 모집요강 발표, 원서 접수, 입시 결과 같은 입시 소식을 이메일이나 문자로 보내 드립니다.</p>
     <ul class="adlg-list" id="adlgList"></ul>
     <p class="adlg-out" id="adlgOut" hidden></p>
     <p class="adlg-scope">알림 대상은 <b>인서울 주요 대학 18곳</b>입니다.<br><span id="adlgScope"></span></p>
-    <p class="adlg-need" id="adlgNeed" hidden>알림은 스누코치 회원에게 보내 드립니다. 가입하거나 로그인하면 고른 대학이 바로 신청됩니다.</p>
+    <div class="adlg-phone" id="adlgPhone" hidden>
+      <label for="adlgTel">휴대전화 번호</label>
+      <input type="tel" id="adlgTel" inputmode="tel" autocomplete="tel-national" maxlength="20" placeholder="010-1234-5678" aria-required="true" aria-describedby="adlgTelHint adlgTelErr">
+      <p class="adlg-hint" id="adlgTelHint">알림을 신청하려면 휴대전화 번호가 필요합니다. 회원 본인이 쓰는 번호를 입력해 주세요. 인증 문자는 보내지 않습니다.</p>
+      <p class="adlg-err" id="adlgTelErr" role="alert"></p>
+      <table class="adlg-notice">
+        <tr><th scope="row">목적</th><td>회원 식별, 공지 전달과 문의 응대, 회원이 신청한 입시 정보 알림 발송과 회원이 신청한 상담에 관한 연락</td></tr>
+        <tr><th scope="row">항목</th><td>휴대전화 번호</td></tr>
+        <tr><th scope="row">보유 기간</th><td><b>회원 탈퇴 시까지</b> (탈퇴하면 바로 삭제)</td></tr>
+      </table>
+      <p class="adlg-hint">동의를 거부할 수 있으나, 거부하면 입시 정보 알림을 신청할 수 없습니다. <a href="../privacy.html" target="_blank" rel="noopener">개인정보처리방침</a></p>
+    </div>
+    <p class="adlg-need" id="adlgNeed" hidden>알림은 스누코치 회원에게 보내 드립니다. 가입하거나 로그인하면 고른 대학이 신청됩니다. 휴대전화 번호가 없는 회원은 번호를 먼저 입력합니다.</p>
     <div class="adlg-act" id="adlgAct"></div>
   </dialog>
 </main>
@@ -516,6 +542,6 @@ body.has-tbar .toast{bottom:calc(96px + env(safe-area-inset-bottom))}
 <script src="../assets/js/auth-config.js?v=a5" defer></script>
 <script src="../assets/js/site.js?v=v3f" defer></script>
 <script src="picks.js?v=20261001c"></script>
-<script src="app.js?v=20261002c"></script>
+<script src="app.js?v=20261002d"></script>
 </body>
 </html>

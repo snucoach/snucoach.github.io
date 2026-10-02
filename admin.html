@@ -14,7 +14,7 @@
 <link rel="apple-touch-icon" href="assets/img/favicon.png">
 <link rel="stylesheet" href="assets/fonts/pretendardvariable-dynamic-subset.min.css">
 <link rel="stylesheet" href="assets/css/style.css?v=v3f">
-<link rel="stylesheet" href="assets/css/auth.css?v=a5">
+<link rel="stylesheet" href="assets/css/auth.css?v=a6">
 </head>
 <body class="p-auth p-admin" data-auth-page="admin">
 <header class="topnav" id="topnav">
@@ -49,13 +49,14 @@
       <div id="admBody" hidden>
         <div class="stat-grid" id="admStats"></div>
         <div class="adm-tools">
-          <div class="field"><label for="admSearch" class="sr-only">이름 또는 이메일 검색</label><input type="text" id="admSearch" placeholder="이름 또는 이메일 검색" autocomplete="off"></div>
-          <label class="check"><input type="checkbox" id="admMkt"> <span>마케팅 수신 동의 회원만</span></label>
+          <div class="field"><label for="admSearch" class="sr-only">이름, 이메일 또는 휴대전화 번호 검색</label><input type="text" id="admSearch" placeholder="이름, 이메일 또는 휴대전화 번호 검색" autocomplete="off"></div>
+          <label class="check"><input type="checkbox" id="admMkt"> <span>이메일 수신 동의 회원만</span></label>
+          <label class="check"><input type="checkbox" id="admSms"> <span>문자 수신 동의 회원만 <span class="sel">(이메일 인증·가입 마무리 완료)</span></span></label>
           <button class="btn btn-line btn-sm" type="button" id="admCsv">CSV 내려받기</button>
         </div>
         <div class="adm-table-wrap">
           <table class="adm-table">
-            <thead><tr><th scope="col">가입일</th><th scope="col">이름</th><th scope="col">이메일</th><th scope="col">구분</th><th scope="col">학년</th><th scope="col">마케팅 수신</th><th scope="col">가입 방식</th><th scope="col">최근 로그인</th></tr></thead>
+            <thead><tr><th scope="col">가입일</th><th scope="col">이름</th><th scope="col">이메일</th><th scope="col">휴대전화</th><th scope="col">구분</th><th scope="col">학년</th><th scope="col">이메일 수신</th><th scope="col">문자 수신</th><th scope="col">가입 방식</th><th scope="col">최근 로그인</th></tr></thead>
             <tbody id="admRows"></tbody>
           </table>
         </div>
@@ -70,7 +71,7 @@
         </div>
         <div class="adm-table-wrap">
           <table class="adm-table">
-            <thead><tr><th scope="col">대학</th><th scope="col">계열</th><th scope="col">이름</th><th scope="col">이메일</th><th scope="col">구분</th><th scope="col">학년</th><th scope="col">신청일</th></tr></thead>
+            <thead><tr><th scope="col">대학</th><th scope="col">계열</th><th scope="col">이름</th><th scope="col">이메일</th><th scope="col">휴대전화</th><th scope="col">구분</th><th scope="col">학년</th><th scope="col">신청일</th></tr></thead>
             <tbody id="alRows"></tbody>
           </table>
         </div>
@@ -124,6 +125,6 @@
 <script src="assets/js/auth-config.js?v=a5" defer></script>
 <script src="assets/js/site.js?v=v3f" defer></script>
 <script src="assets/vendor/supabase-js-2.117.2.js" defer></script>
-<script src="assets/js/auth.js?v=a5" defer></script>
+<script src="assets/js/auth.js?v=a6" defer></script>
 </body>
 </html>
