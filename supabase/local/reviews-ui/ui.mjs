@@ -430,7 +430,7 @@ try {
   const cell = (id, i) => pg.ev(`const tr = [...document.querySelectorAll('#rvRows tr')].find((t) => t.cells[0].textContent === '${id}'); return tr.cells[${i}].textContent;`);
   ok('12b 숨긴 뒤 작성자가 고친 글: 다시 확인하라는 표시', /숨긴 뒤 작성자가 고침\(\d+월 \d+일\)\. 다시 확인해 주세요/.test(await cell(10, 2)) && /작성자 알림 기록 없음/.test(await cell(10, 2)), await cell(10, 2));
   ok('12b 다른 후기를 숨긴 뒤 같은 회원이 올린 글: 표시, 회원 칸에 그 회원의 후기 수', /이 회원의 다른 후기를 숨긴 뒤에 올리거나 고친 글/.test(await cell(11, 2)) && /이 회원의 후기 2건/.test(await cell(11, 8)), [await cell(11, 2), await cell(11, 8)]);
-  ok('12b 임시 조치: 기한 날짜와 남은 날(5일)', /임시 조치 기한 \d+월 \d+일/.test(await cell(12, 2)) && /임시 조치 기한이 5일 남았습니다/.test(await cell(12, 2)), await cell(12, 2));
+  ok('12b 임시 조치: 기한 날짜와 자동 재게시까지 남은 날(29일 기준 4일)', /임시 조치 기한 \d+월 \d+일 · \d+월 \d+일 이후 자동 재게시/.test(await cell(12, 2)) && /임시 조치 글이 4일 뒤 자동으로 다시 게시됩니다/.test(await cell(12, 2)), await cell(12, 2));
   ok('12b 보통 글에는 표시 없음', (await cell(13, 2)) === '게시 중' && (await cell(14, 2)) === '게시 중');
   ok('12b 건수 줄에 확인할 글 3', (await txt(pg, '#rvCount')).endsWith('· 확인할 글 3)'), await txt(pg, '#rvCount'));
   await set(pg, '#rvState', 'check');

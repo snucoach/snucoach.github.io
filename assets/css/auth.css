@@ -303,7 +303,7 @@ details.acct-item[open] > summary { margin-bottom: 16px; }
 .mrv[hidden], .mrv-form[hidden], .mrv-mine[hidden], .mrv-more .btn[hidden] { display: none; }  /* .auth-form·.btn 은 display 를 지정한다 */
 /* 히어로의 버튼은 목록을 읽은 뒤에 나타난다. 자리를 미리 잡아 두어 나타날 때 아래 내용이 밀리지 않게 한다. */
 .mrv-jump[hidden] { display: inline-flex; visibility: hidden; }
-/* 위쪽 후기 모음(스누코치가 골라 실은 후기)의 수집·게시 기준 안내. 칩 줄 위에 늘 보인다. */
+/* 위쪽 후기 모음(스누코치가 받은 후기를 모두 실은 것)의 수집·게시 기준 안내. 칩 줄 위에 늘 보인다. */
 .rv-about { margin: 0 0 14px; padding: 13px 16px; border-radius: 12px; background: #fff; border: 1px solid var(--line-solid, #E3E8F5);
   font-size: 13.5px; line-height: 1.7; color: var(--text-sub); }
 .rv-about b { margin-right: 6px; color: var(--text); }

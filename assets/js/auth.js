@@ -351,6 +351,7 @@
   // ─────────────────────────────────────────────────────────
   // 로그인
   async function pageLogin() {
+    if (!/reviews\.html/.test(nextUrl())) tryDo(() => sessionStorage.removeItem(RETURN_KEY)); // 후기 화면에서 온 로그인이 아니면 돌아오기 표시를 지운다
     const form = $("#loginForm");
     const out = $("#authMsg");
     const rememberBox = $("#loginRemember");
@@ -626,7 +627,7 @@
     // 가입 마무리 전이면 마무리를 끝낸 뒤 가입 완료 안내(수신 동의 처리 결과 포함)와 함께 「후기 쓰러 가기」 버튼을 보여 준다.
     const back = tryDo(() => Number(sessionStorage.getItem(RETURN_KEY)), 0);
     tryDo(() => sessionStorage.removeItem(RETURN_KEY));
-    const fromReviews = !!back && Date.now() - back < 30 * 60 * 1000;
+    const fromReviews = !!back && Date.now() - back < 30 * 60 * 1000 && !alerts.getPending().length; // 보류해 둔 입시 알림이 있으면 이 화면에서 먼저 저장한다
     if (isComplete(profile) && !notice && fromReviews) {
       location.replace("reviews.html#member-reviews");
       return;
@@ -1108,7 +1109,8 @@
     const edited = (r) => Date.parse(r.updated_at) !== Date.parse(r.created_at);
     const dayCount = (iso) => Math.max(1, Math.floor((Date.now() - Date.parse(iso)) / DAY) + 1);
     const tempUntil = (r) => Date.parse(r.hidden_at) + TEMP_DAYS * DAY; // 임시 조치 기한
-    const tempLeft = (r) => Math.ceil((tempUntil(r) - Date.now()) / DAY);
+    const tempAuto = (r) => Date.parse(r.hidden_at) + TEMP_AUTO_DAYS * DAY; // 이 시각이 지나면 다음 정리 작업이 다시 게시한다
+    const tempLeft = (r) => Math.ceil((tempAuto(r) - Date.now()) / DAY);
     const rpcErr = (error) => (error.code === "RV004" ? "후기를 찾을 수 없습니다. 작성자가 지웠을 수 있습니다."
       : error.code === "RV008" || /본인 계정으로 쓴 후기/.test(error.message || "") ? "본인 계정으로 쓴 후기는 직접 처리할 수 없습니다."
         : error.code === "42501" ? "관리자만 할 수 있습니다. 관리자로 지정한 계정으로 로그인했는지 확인해 주세요."
@@ -1131,7 +1133,7 @@
         const f = [];
         if (r.hidden_at) {
           if (Date.parse(r.updated_at) > Date.parse(r.hidden_at)) f.push(`숨긴 뒤 작성자가 고침(${mdDate(r.updated_at)}). 다시 확인해 주세요`);
-          if (r.hidden_reason === HIDE_TEMP && tempLeft(r) <= 7) f.push(tempLeft(r) > 1 ? `임시 조치 기한이 ${tempLeft(r)}일 남았습니다` : "임시 조치 기한이 다 됐습니다. 곧 자동으로 다시 게시됩니다");
+          if (r.hidden_reason === HIDE_TEMP && tempLeft(r) <= 7) f.push(tempLeft(r) > 1 ? `임시 조치 글이 ${tempLeft(r)}일 뒤 자동으로 다시 게시됩니다` : "임시 조치 글이 곧 자동으로 다시 게시됩니다");
           if (!r.notified_at) f.push("작성자 알림 기록 없음");
         } else if (r.email && firstHide.has(r.email) && Date.parse(r.updated_at) > firstHide.get(r.email)) {
           f.push("이 회원의 다른 후기를 숨긴 뒤에 올리거나 고친 글");
@@ -1319,7 +1321,7 @@
         lines.push(`숨김 · ${r.hidden_reason}`);
         if (r.hidden_note) lines.push(r.hidden_note);
         lines.push(`${mdDate(r.hidden_at)}부터 ${dayCount(r.hidden_at)}일째`);
-        if (r.hidden_reason === HIDE_TEMP) lines.push(`임시 조치 기한 ${mdDate(new Date(tempUntil(r)).toISOString())}`);
+        if (r.hidden_reason === HIDE_TEMP) lines.push(`임시 조치 기한 ${mdDate(new Date(tempUntil(r)).toISOString())} · ${mdDate(new Date(tempAuto(r)).toISOString())} 이후 자동 재게시`);
         if (r.notified_at) lines.push(`작성자 알림 ${mdDate(r.notified_at)} 기록`);
       } else {
         lines.push("게시 중");
@@ -1572,7 +1574,8 @@
   const HIDE_REASONS = ["욕설·인신공격", "광고·스팸", "개인정보 노출", "허위 사실·권리 침해", "법령 위반", "임시 조치(권리 침해 신고)"];
   const HIDE_NOTE_REQUIRED = ["법령 위반", "임시 조치(권리 침해 신고)"]; // 메모(구체 사유)가 필수인 사유
   const HIDE_TEMP = "임시 조치(권리 침해 신고)";
-  const TEMP_DAYS = 30; // 임시 조치 기간(약관 제10조 제8항). DB 의 정리 작업은 29일이 지나면 자동으로 다시 게시한다
+  const TEMP_DAYS = 30; // 임시 조치 기간(약관 제10조 제8항)
+  const TEMP_AUTO_DAYS = 29; // DB 의 정리 작업은 숨긴 지 29일이 지나면 자동으로 다시 게시한다(reviews.sql 의 purge_review_records)
   const RETURN_KEY = "snucoach-return"; // 후기 화면에서 로그인하러 온 표시(같은 탭에서만, 30분). reviews.js 가 적는다
   // 서버가 직접 정한 코드(RV…)는 메시지로도 판정한다(실제 API 가 코드를 그대로 돌려주는지 미리 확인하지 못했다)
   const reviewErrText = (e) => {
