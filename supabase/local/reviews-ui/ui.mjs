@@ -60,7 +60,7 @@ try {
   // ── 1. 비로그인, 후기 23건 ─────────────────────────────
   await open(pg, '/reviews.html', { reviews: seed(23, (i) => (i === 20 ? { verified: true, program: '학습코칭' } : i === 22 ? { updated_at: '2026-10-02T09:00:00Z' } : {})) });
   await settle(pg);
-  ok('1 구역과 히어로 버튼이 보임', (await vis(pg, '#member-reviews')) && (await vis(pg, '#mrvJump')) && (await pg.ev(`return document.getElementById('mrvJump').getAttribute('href')`)) === '#member-reviews');
+  ok('1 구역과 칩 줄의 「후기 쓰기」가 보임(히어로에는 버튼 없음)', !(await pg.ev(`return !!document.querySelector('.hero-reviews #mrvJump')`)) && (await pg.ev(`return !!document.querySelector('.rv-toolbar #mrvJump')`)) && (await txt(pg, '#mrvJump')) === '후기 쓰기' && (await vis(pg, '#member-reviews')) && (await vis(pg, '#mrvJump')) && (await pg.ev(`return document.getElementById('mrvJump').getAttribute('href')`)) === '#member-reviews');
   ok('1 첫 화면 10건, 최신순, 전체 23건', (await count(pg, '#mrvList > li')) === 10 && (await txt(pg, '#mrvTotal')) === '23건' && (await pg.ev(`return document.querySelector('#mrvList > li').id`)) === 'mrv-23', [await count(pg, '#mrvList > li'), await txt(pg, '#mrvTotal')]);
   ok('1 카드: 별점(글자 대체)·프로그램·가린 이름·날짜·수정됨', await pg.ev(`const li = document.getElementById('mrv-23'); const s = li.querySelector('.mrv-stars'); return s.getAttribute('role') === 'img' && s.getAttribute('aria-label') === '별점 5점 만점에 3점' && s.querySelectorAll('svg.on').length === 3 && s.querySelectorAll('svg').length === 5 && li.querySelector('.badge').textContent === '무료 자료·이벤트' && li.querySelector('.mrv-author').textContent === '박**' && li.querySelector('time').textContent === '2026년 10월 1일' && li.querySelector('.mrv-meta').textContent.endsWith('· 수정됨');`), await txt(pg, '#mrv-23'));
   ok('1 별점이 색만으로 구분되지 않음: 보이는 점수 글자(3점), 꺼진 별에도 윤곽선', await pg.ev(`const li = document.getElementById('mrv-23'); const sc = li.querySelector('.mrv-score'); const off = li.querySelector('.mrv-stars svg:not(.on)'); const cs = getComputedStyle(off); return sc.textContent === '3점' && sc.getAttribute('aria-hidden') === 'true' && sc.getBoundingClientRect().width > 0 && cs.stroke !== 'none' && parseFloat(cs.strokeWidth) >= 1;`));
@@ -93,18 +93,18 @@ try {
   // ── 2. 비로그인, 0건 ───────────────────────────────────
   await open(pg, '/reviews.html', { reviews: [] });
   await settle(pg);
-  ok('2 0건: 빈 상태 문구, 건수 0건, 더 보기 없음', (await vis(pg, '#mrvEmpty')) && (await txt(pg, '#mrvEmpty')) === '아직 회원 후기가 없습니다. 첫 후기를 남겨 주세요.' && (await txt(pg, '#mrvTotal')) === '0건' && (await vis(pg, '#mrvMore')) === false);
+  ok('2 0건: 빈 상태 문구, 건수는 적지 않음, 더 보기 없음', (await vis(pg, '#mrvEmpty')) && (await txt(pg, '#mrvEmpty')) === '아직 회원 후기가 없습니다. 첫 후기를 남겨 주세요.' && (await txt(pg, '#mrvTotal')) === '' && (await vis(pg, '#mrvMore')) === false);
   clean(pg, '2');
 
   // ── 3. 표 없음(DB 설정 전) · 설정 비어 있음 ─────────────
   await open(pg, '/reviews.html', { mode: 'missing' });
   await sleep(500);
-  ok('3 DB 설정 전(404 PGRST205): 구역·히어로 버튼 숨긴 채', (await vis(pg, '#member-reviews')) === false && (await vis(pg, '#mrvJump')) === false);
+  ok('3 DB 설정 전(404 PGRST205): 구역·「후기 쓰기」 숨긴 채', (await vis(pg, '#member-reviews')) === false && (await vis(pg, '#mrvJump')) === false);
   ok('3 큐레이션 후기는 그대로(카드 134장)', (await count(pg, '.rv-card')) === 134);
   const heroH0 = await pg.ev(`return document.querySelector('.hero-reviews').getBoundingClientRect().height`);
   await open(pg, '/reviews.html', { reviews: seed(3) });
   await settle(pg);
-  ok('3 히어로의 버튼 자리를 미리 잡아 둠: 버튼이 나타나도 히어로 높이가 같음', Math.abs((await pg.ev(`return document.querySelector('.hero-reviews').getBoundingClientRect().height`)) - heroH0) < 1 && (await vis(pg, '#mrvJump')) === true, [heroH0, await pg.ev(`return document.querySelector('.hero-reviews').getBoundingClientRect().height`)]);
+  ok('3 「후기 쓰기」가 나타나도 히어로 높이가 같음', Math.abs((await pg.ev(`return document.querySelector('.hero-reviews').getBoundingClientRect().height`)) - heroH0) < 1 && (await vis(pg, '#mrvJump')) === true, [heroH0, await pg.ev(`return document.querySelector('.hero-reviews').getBoundingClientRect().height`)]);
   clean(pg, '3');
   await open(pg, '/reviews.html', { emptyConfig: true, reviews: seed(3) });
   await sleep(500);
@@ -175,6 +175,10 @@ try {
   await open(pg, '/reviews.html', { reviews: seed(12) }, U1);
   await settle(pg); await pg.waitFor(`document.getElementById('mrvOpen')`);
   ok('6 쓸 수 있는 회원: 「후기 쓰기」 버튼(aria-expanded=false)', (await txt(pg, '#mrvOpen')) === '후기 쓰기' && (await pg.ev(`return document.getElementById('mrvOpen').getAttribute('aria-expanded')`)) === 'false');
+  await click(pg, '#mrvJump'); await sleep(300);
+  ok('6 칩 줄의 「후기 쓰기」: 구역으로 내려가 폼을 엶(로그인 화면으로 가지 않음)', (await vis(pg, '#mrvForm')) && (await pg.ev(`return location.pathname`)) === '/reviews.html' && (await pg.ev(`return Math.abs(document.getElementById('member-reviews').getBoundingClientRect().top) < innerHeight`)));
+  await click(pg, '#mrvCancel'); await sleep(200);
+  ok('6 취소하면 폼이 닫힘', (await vis(pg, '#mrvForm')) === false);
   await click(pg, '#mrvOpen');
   ok('6 폼이 열리고 제목으로 초점, 표시 이름 미리 보기 김**', (await vis(pg, '#mrvForm')) && (await active(pg)) === 'mrvFormTitle' && (await txt(pg, '#mrvAuthorPreview')) === '김**' && (await pg.ev(`return document.getElementById('mrvOpen').getAttribute('aria-expanded')`)) === 'true', [await active(pg), await txt(pg, '#mrvAuthorPreview')]);
   ok('6 폼 안내: 즉시 공개·개인정보 금지·숨김 기준·삭제·수집 안내 5줄, 약관 동의 문구', (await count(pg, '#mrvNotice li')) === 5 && /다른 사람의 이름·연락처·학교 같은 개인정보, 본인의 연락처, 허위 사실은 적지 말아 주세요\(숨김 처리될 수 있습니다\)\. 스누코치 소속 코치의 성명만 적는 것은 괜찮습니다/.test(await txt(pg, '#mrvNotice')) && /대가를 받고 쓰는 후기는 그 사실을 후기에 밝혀 주세요/.test(await txt(pg, '#mrvNotice')) && /숨김 처리된 후기를 지우면 14일 동안 새 후기를 올릴 수 없습니다/.test(await txt(pg, '#mrvNotice')) && /이용약관 제10조\(회원 후기\)에 동의한 것으로 봅니다/.test(await txt(pg, '.mrv-agree')));

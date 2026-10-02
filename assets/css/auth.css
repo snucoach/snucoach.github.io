@@ -301,8 +301,15 @@ details.acct-item[open] > summary { margin-bottom: 16px; }
    회원 후기를 거르는 칩처럼 보인다. 이 위치에서는 칩 줄이 상단 메뉴 밑으로 밀려 들어간다. */
 .mrv { padding: 0 14px 96px; margin-top: -48px; }
 .mrv[hidden], .mrv-form[hidden], .mrv-mine[hidden], .mrv-more .btn[hidden] { display: none; }  /* .auth-form·.btn 은 display 를 지정한다 */
-/* 히어로의 버튼은 목록을 읽은 뒤에 나타난다. 자리를 미리 잡아 두어 나타날 때 아래 내용이 밀리지 않게 한다. */
-.mrv-jump[hidden] { display: inline-flex; visibility: hidden; }
+/* 후기 모음 칩 줄 오른쪽의 「후기 쓰기」. 칩 줄은 남은 폭 안에서 가로로 민다. 목록을 읽은 뒤에 나타난다(DB 설정 전에는 숨김). */
+.rv-toolbar { display: flex; align-items: center; gap: 8px; }
+.rv-toolbar .chip-row { flex: 1 1 auto; min-width: 0; }
+.rv-write { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 6px; margin-right: 16px; padding: 8px 15px 8px 13px; border-radius: 999px;
+  background: var(--blue); color: #fff; font-size: 13.5px; font-weight: 700; letter-spacing: -0.01em; text-decoration: none; white-space: nowrap;
+  transition: transform .15s ease, box-shadow .15s ease; }
+.rv-write:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(45,75,200,.32); }
+.rv-write:focus-visible { outline: 2px solid var(--navy); outline-offset: 2px; }
+.rv-write[hidden] { display: none; }
 /* 위쪽 후기 모음(스누코치가 받은 후기를 모두 실은 것)의 수집·게시 기준 안내. 칩 줄 위에 늘 보인다. */
 .rv-about { margin: 0 0 14px; padding: 13px 16px; border-radius: 12px; background: #fff; border: 1px solid var(--line-solid, #E3E8F5);
   font-size: 13.5px; line-height: 1.7; color: var(--text-sub); }
@@ -386,7 +393,6 @@ details.acct-item[open] > summary { margin-bottom: 16px; }
 .mrv-more { margin-top: 16px; text-align: center; }
 .mrv-more-msg { margin: 0 0 10px; font-size: 14px; font-weight: 700; color: #8C1D18; }
 .mrv-more-msg:empty { display: none; }
-.mrv-jump { margin-top: 18px; }
 
 /* ── 관리자: 회원 후기 ── */
 .adm-rules { margin: 0 0 4px; padding: 14px 16px 14px 32px; border-radius: 12px; background: var(--sky-2); font-size: 13.5px; line-height: 1.7; color: var(--text-sub); }

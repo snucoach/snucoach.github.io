@@ -203,7 +203,7 @@
     });
   }
   function setTotal(total) {
-    els.total.textContent = total == null ? "" : `${num(total)}건`;
+    els.total.textContent = total ? `${num(total)}건` : ""; // 0건이면 건수를 적지 않는다(아래 빈 상태 문구가 알린다)
   }
 
   async function loadFirst() {
@@ -609,6 +609,20 @@
     tryDo(() => sessionStorage.removeItem(RETURN_KEY)); // 이 화면으로 바로 돌아왔으면 남은 표시를 지운다
     wireForm();
     els.more.addEventListener("click", loadMore);
+    // 칩 줄의 「후기 쓰기」: 로그인 전이면 바로 로그인으로, 쓸 수 있는 상태면 구역으로 내려가 폼을 연다. 그 밖에는 구역으로만 내려간다(안내가 거기 있다)
+    els.jump.addEventListener("click", (e) => {
+      if (state === "signed-out") {
+        e.preventDefault();
+        tryDo(() => sessionStorage.setItem(RETURN_KEY, String(Date.now())));
+        location.href = LOGIN_URL;
+        return;
+      }
+      const open = state === "ok" ? document.getElementById("mrvOpen") : null;
+      if (!open) return;
+      e.preventDefault();
+      sec.scrollIntoView({ behavior: "instant", block: "start" });
+      openForm(null, open);
+    });
     let failed = false;
     try {
       await loadFirst();

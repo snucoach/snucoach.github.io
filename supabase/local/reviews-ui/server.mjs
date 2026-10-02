@@ -3,7 +3,7 @@
 //  - 저장소 파일은 그대로 내려 주고, auth-config.js(주소를 이 서버로)와 Supabase 라이브러리(가짜, 아래 fakeSupabase)만 바꿔 준다.
 //  - /rest/v1/reviews_public · /rest/v1/rpc/review_hidden_stats : 후기 페이지가 fetch 로 직접 읽는 공개 조회
 //  - /__fake/op : 가짜 라이브러리가 보내는 회원·관리자 요청(DB 트리거·RLS 규칙을 흉내 낸다)
-//  - /old/… : "브라우저에 남은 옛 화면"(HTML 만 origin/main 것)
+//  - /old/… : "브라우저에 남은 옛 화면"(HTML 만 회원 후기 배포 직전 커밋 411bd11 것)
 import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -253,7 +253,7 @@ http.createServer(async (req, res) => {
   const rel = p.replace(/^\/+/, '');
   if (rel.includes('..')) return send(400, 'bad');
   try {
-    if (old && rel.endsWith('.html')) return send(200, execFileSync('git', ['-C', ROOT, 'show', `origin/main:${rel}`]), TYPES['.html']);
+    if (old && rel.endsWith('.html')) return send(200, execFileSync('git', ['-C', ROOT, 'show', `411bd11:${rel}`]), TYPES['.html']);
     const f = path.join(ROOT, rel);
     return send(200, fs.readFileSync(f), TYPES[path.extname(f)] || 'application/octet-stream');
   } catch (e) { return send(404, 'not found'); }
