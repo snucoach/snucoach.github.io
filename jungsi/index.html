@@ -230,6 +230,13 @@ select.subjpick:focus{border-color:var(--navy);outline:none;box-shadow:0 0 0 3px
 .urow .settarget:hover{border-color:var(--navy)}
 .urow .settarget[aria-pressed="true"]{background:var(--hl);color:var(--ink);border-color:#E9CF3F}
 .urow.picked{border-color:#E9CF3F;box-shadow:0 0 0 2px var(--hl),var(--shadow-m)}
+/* 맨 위 대학의 '☆ 목표'를 눌러 보라는 손 표시(목표를 한 번 누르면 사라짐) */
+.urow .side.hinted{position:relative}
+.urow .side.hinted .settarget{animation:tgpulse 1.5s ease-in-out infinite}
+.taphint{position:absolute;right:0;bottom:-18px;font-size:30px;line-height:1;pointer-events:none;z-index:2;transform-origin:50% 12%;filter:drop-shadow(0 2px 3px rgba(8,8,60,.28));animation:tgtap 1.5s ease-in-out infinite}
+/* 오른쪽 아래에서 비스듬히 올라와 버튼을 누르는 움직임 */
+@keyframes tgtap{0%,100%{transform:translate(10px,11px) rotate(-34deg) scale(1)}38%,56%{transform:translate(0,0) rotate(-34deg) scale(.88)}}
+@keyframes tgpulse{0%,30%,100%{box-shadow:0 0 0 0 rgba(255,231,113,0)}47%{box-shadow:0 0 0 5px rgba(255,231,113,.8)}}
 .band .subh{margin-top:14px;font-size:12.5px;font-weight:800;letter-spacing:.02em;color:var(--sub)}
 .band .subh+.ulist{margin-top:8px}
 .bempty{margin-top:12px;border-radius:14px;padding:14px 16px;background:var(--sky-2);border:1.5px dashed var(--line-2);font-size:13px;color:var(--sub)}
@@ -509,6 +516,6 @@ body.has-tbar .toast{bottom:calc(96px + env(safe-area-inset-bottom))}
 <script src="../assets/js/auth-config.js?v=a5" defer></script>
 <script src="../assets/js/site.js?v=v3f" defer></script>
 <script src="picks.js?v=20261001c"></script>
-<script src="app.js?v=20261001e"></script>
+<script src="app.js?v=20261002c"></script>
 </body>
 </html>

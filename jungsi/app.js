@@ -341,7 +341,27 @@
     const anyRef = BANDS.some((b) => pk[b.key].some((r) => r.pct));
     const legend = `<p class="plegend">${goal ? "목표 점수" : "지금 성적"} 기준입니다.${anyRef ? ` <span class="ref">참고</span> 표시는 ${REF_TIP}입니다.` : ""}<span class="ahint">☆ 목표로 고른 대학 중 인서울 주요 대학은 입시 정보 알림을 받을 수 있습니다.</span></p>`;
     $("#picks").innerHTML = legend + BANDS.map((b) => bandHtml(b, pk[b.key], goal, pk.counts[b.key])).join("");
+    showTapHint();
     renderPlan(pk);
+  }
+  // 맨 위 대학의 '☆ 목표' 버튼을 눌러 보라는 손 표시. 목표를 한 번 누르면 이 탭에서는 다시 띄우지 않는다
+  const HINT_KEY = "jungsi_tap_hint_done";
+  function hintDone() { try { return sessionStorage.getItem(HINT_KEY) === "1"; } catch (_) { return !!state.hintDone; } }
+  function showTapHint() {
+    if (state.hintDone || hintDone() || state.targets.size) return;
+    // 상향·소신 구간의 맨 위 대학 하나씩. 둘 다 비어 있으면 목록의 첫 대학
+    let btns = ["up", "mid"].map((k) => $(`#picks .band.${k} .urow .settarget`)).filter(Boolean);
+    if (!btns.length) btns = [$("#picks .urow .settarget")].filter(Boolean);
+    for (const btn of btns) {
+      const side = btn.closest(".side"); if (!side) continue;
+      side.classList.add("hinted");
+      side.insertAdjacentHTML("beforeend", '<span class="taphint" aria-hidden="true">👆🏻</span>'); // 손등이 보이는 손
+    }
+  }
+  function hideTapHint() {
+    state.hintDone = true; try { sessionStorage.setItem(HINT_KEY, "1"); } catch (_) {}
+    document.querySelectorAll("#picks .taphint").forEach((x) => x.remove());
+    document.querySelectorAll("#picks .side.hinted").forEach((x) => x.classList.remove("hinted"));
   }
 
   // ── 목표 대학 고르기 → 무료 상담(로그인 없음). 고른 목표는 '목표: 대학 계열, …' 문구로 복사해 상담 신청서에 붙여 넣게 함 ──
@@ -537,6 +557,7 @@
       clampDeltas(); refresh();
     } else if (b.id === "go") { saveLocalState(); run(); }
     else if (b.matches(".settarget")) {
+      hideTapHint();
       const u = b.dataset.u, band = b.dataset.band, row = findRow(band, u); if (!row) return;
       const k = tkey(u, band), on = !state.targets.has(k);
       if (on) state.targets.set(k, targetOf(row, band)); else state.targets.delete(k);
