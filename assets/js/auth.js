@@ -20,7 +20,6 @@
   const PHONE_EMPTY = "휴대전화 번호를 입력해 주세요.";
   const PHONE_INVALID = "휴대전화 번호를 정확히 입력해 주세요. (예: 010-1234-5678)";
   const PHONE_NEEDED = "휴대전화 번호를 입력하면 켤 수 있습니다.";
-  const MINOR_NOTE = "만 14세 미만 학생은 보호자가 ‘학부모’로 가입해 주세요.";
   const phoneProblem = (v) => {
     const d = normalizePhone(v);
     return !d ? PHONE_EMPTY : PHONE_RE.test(d) ? "" : PHONE_INVALID;
@@ -250,7 +249,6 @@
       syncLabel();
       typeSet.classList.remove("is-invalid");
       $(`#${prefix}TypeErr`, form).textContent = "";
-      if (gradeErrEl.textContent === MINOR_NOTE) setErr(grade, gradeErrEl, "");
     }));
     // 칸을 벗어날 때 형식이 맞으면 010-1234-5678 꼴로 보여 준다(입력 중에는 건드리지 않는다)
     if (phone) phone.addEventListener("blur", () => { if (!phoneProblem(phone.value)) phone.value = fmtPhone(phone.value); });
@@ -292,9 +290,7 @@
         typeSet.classList.toggle("is-invalid", !!typeErr);
         $(`#${prefix}TypeErr`, form).textContent = typeErr;
         if (typeErr) first = first || radios[0];
-        // 가입·가입 마무리: 학생 본인이 초등·중1 이면 만 14세 미만이다(보호자가 학부모로 가입)
-        const minor = prefix !== "pf" && v.member_type === "학생" && (v.grade === "초등" || v.grade === "중1");
-        const gradeErr = !GRADES.includes(v.grade) ? "학년을 골라 주세요." : minor ? MINOR_NOTE : "";
+        const gradeErr = !GRADES.includes(v.grade) ? "학년을 골라 주세요." : "";
         if (!setErr(grade, gradeErrEl, gradeErr)) first = first || grade;
         return first;
       },
