@@ -158,7 +158,7 @@ try {
   await page.click('#signupForm button[type="submit"]');
   await page.waitForSelector('#signupDone:not([hidden])');
   check('가입 후 인증 메일 안내 화면', (await text(page, '#doneEmail')) === A);
-  check('가입 후 수신 동의 처리 결과 안내(이메일·문자)', (await text(page, '#doneConsent')).includes('광고성 정보(이메일·문자) 수신 동의를 처리했습니다'));
+  check('가입 후 수신 동의 처리 결과 안내(이메일·문자)', (await text(page, '#doneConsent')).includes('마케팅 정보(이메일·문자) 수신 동의를 처리했습니다'));
   check('DB: 번호는 숫자만, 문자 동의 기록, 가입 정보에는 사본 없음', sql(`select p.phone||','||p.marketing_sms_opt_in::text||','||((u.raw_user_meta_data ? 'phone')::text) from public.profiles p join auth.users u on u.id=p.id where u.email='${A}'`) === '01012345678,true,false');
   await page.screenshot({ path: `${SHOTS}signup-done.png` });
   const m1 = await lastMail(A, { after: t0 });
@@ -224,11 +224,11 @@ try {
   // ── 6. 마케팅 수신 ──────────────────────────────────────
   check('가입 때 마케팅 동의(전체 동의) 반영: 이메일·문자 둘 다 켜짐', await page.isChecked('#mktToggle') && await page.isChecked('#mktSmsToggle'));
   await page.uncheck('#mktSmsToggle', { force: true });
-  await page.waitForFunction(() => document.querySelector('#mktMsg').textContent.includes('(문자) 수신 거부를 처리'));
+  await page.waitForFunction(() => document.querySelector('#mktMsg').textContent.includes('(문자) 수신 동의 철회를 처리'));
   check('문자만 끄면 이메일 동의는 유지', sql(`select marketing_opt_in::text||','||marketing_sms_opt_in::text from public.profiles p join auth.users u on u.id=p.id where u.email='${A}'`) === 'true,false' && await page.isChecked('#mktToggle'));
   await page.uncheck('#mktToggle', { force: true });
-  await page.waitForFunction(() => document.querySelector('#mktMsg').textContent.includes('(이메일) 수신 거부를 처리'));
-  check('수신 거부 처리 결과 안내', (await text(page, '#mktMsg')).includes('수신 거부를 처리'));
+  await page.waitForFunction(() => document.querySelector('#mktMsg').textContent.includes('(이메일) 수신 동의 철회를 처리'));
+  check('수신 동의 철회 처리 결과 안내', (await text(page, '#mktMsg')).includes('수신 동의 철회를 처리'));
   check('DB: 마케팅 철회 기록', sql(`select (not marketing_opt_in) and marketing_opt_in_at > now() - interval '1 minute' from public.profiles p join auth.users u on u.id=p.id where u.email='${A}'`) === 't');
   await page.fill('#pfPhone', '010-1234');
   await page.click('#profileForm button[type="submit"]');
@@ -503,7 +503,7 @@ try {
     await kp.fill('#admSearch', '');
     await kp.check('#admMkt');
     const mktRows = await kp.locator('#admRows tr').count();
-    check('관리자: 마케팅 동의 필터', mktRows === Math.max(1, Number(sql(`select count(*) from public.profiles where marketing_opt_in`))), mktRows);
+    check('관리자: 이메일 수신 동의 필터(이메일 인증·가입 마무리를 끝낸 회원만)', mktRows === Math.max(1, Number(sql(`select count(*) from public.profiles p join auth.users u on u.id=p.id where p.marketing_opt_in and u.email_confirmed_at is not null and p.name is not null and p.member_type is not null and p.grade is not null and p.terms_agreed_at is not null`))), mktRows);
     await kp.uncheck('#admMkt');
     await kp.check('#admSms');
     const smsRows = await kp.locator('#admRows tr').count();
@@ -516,7 +516,7 @@ try {
     await kp.screenshot({ path: `${SHOTS}admin.png`, fullPage: true });
     const [dl] = await Promise.all([kp.waitForEvent('download'), kp.click('#admCsv')]);
     const csv = readFileSync(await dl.path(), 'utf8');
-    check('CSV: 엑셀용 BOM + 헤더', csv.charCodeAt(0) === 0xFEFF && csv.includes('"가입일시","이름","이메일","휴대전화"') && csv.includes('"문자 수신 동의"') && csv.includes('"011-234-5678"'));
+    check('CSV: 엑셀용 BOM + 헤더', csv.charCodeAt(0) === 0xFEFF && csv.includes('"가입일시","이름","이메일","휴대전화"') && csv.includes('"문자 수신 동의","문자 발송 대상","문자 동의·철회 일시"') && csv.includes('"011-234-5678"'));
     check('CSV: 수식 주입 무력화', csv.includes(`"'=HYPERLINK(""x"")"`), csv.split('\r\n').find((l) => l.includes('HYPERLINK')));
     check('관리자 화면: 이름은 글자로만 표시(HTML 해석 안 함)', (await kp.locator('#admRows a').count()) === 0);
     await kp.waitForSelector('#admAlerts:not([hidden])');
@@ -526,7 +526,7 @@ try {
     check('관리자: 대학별 필터', (await text(kp, '#alCount')).startsWith(`${sql(`select count(*) from public.target_alerts where univ='서울대'`)}건`));
     const [dl2] = await Promise.all([kp.waitForEvent('download'), kp.click('#alCsv')]);
     const csv2 = readFileSync(await dl2.path(), 'utf8');
-    check('관리자: 알림 CSV', csv2.charCodeAt(0) === 0xFEFF && csv2.includes('"대학","계열","이름","이메일","휴대전화"') && csv2.includes(A));
+    check('관리자: 알림 CSV', csv2.charCodeAt(0) === 0xFEFF && csv2.includes('"대학","계열","이름","이메일","휴대전화","보내는 방법"') && csv2.includes(A));
     await kctx.close();
   }
 

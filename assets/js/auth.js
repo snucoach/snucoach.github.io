@@ -138,8 +138,8 @@
   }
   // 서버(DB CHECK)가 번호 형식을 거절한 경우
   const isPhoneFormatErr = (e) => !!e && e.code === "23514" && /profiles_phone_format/.test(e.message || "");
-  // 광고성 정보 수신 동의·거부 처리 결과(전송자 · 처리 일자 · 내용)
-  const mktResult = (iso, channel, agreed) => `스누코치는 ${fmtDate(iso)}에 회원님의 광고성 정보(${channel}) 수신 ${agreed ? "동의" : "거부"}를 처리했습니다.`;
+  // 마케팅 정보(광고성 정보) 수신 동의·철회 처리 결과(전송자 · 처리 일자 · 내용)
+  const mktResult = (iso, channel, agreed) => `스누코치는 ${fmtDate(iso)}에 회원님의 마케팅 정보(${channel}) 수신 ${agreed ? "동의를" : "동의 철회를"} 처리했습니다.`;
   const optInNote = (p) => { // 가입 완료 안내에 덧붙인다(동의한 채널만)
     const ch = [p.marketing_opt_in && "이메일", p.marketing_sms_opt_in && "문자"].filter(Boolean);
     return ch.length ? " " + mktResult(p.marketing_opt_in ? p.marketing_opt_in_at : p.marketing_sms_opt_in_at, ch.join("·"), true) : "";
@@ -260,13 +260,17 @@
         radios.forEach((r) => { r.checked = r.value === p.member_type; });
         grade.value = GRADES.includes(p.grade) ? p.grade : "";
         syncLabel();
-        if (phone) {
-          // DB 설정 전이면 받지 않는다. 내 정보(pf)는 번호가 아직 없으면 숨긴다:
-          // 기존 회원의 첫 입력은 수집 안내가 있는 카드(#phoneCard)에서만 받는다.
-          phoneOn = hasCol(p, "phone") && !(prefix === "pf" && !p.phone);
-          phone.closest(".field").hidden = !phoneOn;
-          phone.value = phoneOn ? fmtPhone(p.phone) : "";
-        }
+        this.syncPhone(p);
+      },
+      // 번호 칸만 프로필 행에 맞춘다(이름·구분·학년 칸에 입력해 둔 값은 건드리지 않는다)
+      syncPhone(p) {
+        if (!phone) return;
+        // DB 설정 전이면 받지 않는다. 내 정보(pf)는 번호가 아직 없으면 숨긴다:
+        // 기존 회원의 첫 입력은 수집 안내가 있는 카드(#phoneCard)에서만 받는다.
+        phoneOn = hasCol(p, "phone") && !(prefix === "pf" && !p.phone);
+        phone.closest(".field").hidden = !phoneOn;
+        phone.value = phoneOn ? fmtPhone(p.phone) : "";
+        setErr(phone, phoneErr, "");
       },
       read() {
         const v = {
@@ -692,7 +696,10 @@
     const phoneCard = $("#phoneCard");
     const painters = [];
     const apply = (p) => {
+      const phoneChanged = (p.phone || null) !== (profile.phone || null) || hasCol(p, "phone") !== hasCol(profile, "phone");
       profile = p;
+      // 서버의 번호가 바뀐 경우(카드에서 입력, 다른 곳에서 삭제)에만 회원 정보의 번호 칸을 맞춘다
+      if (phoneChanged) prof.syncPhone(p);
       if (acctPhone) {
         const on = hasCol(p, "phone");
         acctPhone.textContent = p.phone ? fmtPhone(p.phone) : "입력 전";
@@ -713,8 +720,11 @@
       msg(pout, "");
       const bad = prof.validate();
       if (bad) { focusEl(bad); return; }
+      const row = prof.read();
+      // 번호를 바꾸지 않았으면 보내지 않는다(이 화면을 열어 둔 사이 다른 곳에서 지운 번호를 되살리지 않는다)
+      if (hasCol(row, "phone") && row.phone === (profile.phone || "")) delete row.phone;
       await busy($('button[type="submit"]', pform), "저장하는 중…", async () => {
-        const { data, error } = await sb().from("profiles").update(prof.read()).eq("id", user.id).select().maybeSingle();
+        const { data, error } = await sb().from("profiles").update(row).eq("id", user.id).select().maybeSingle();
         if (isPhoneFormatErr(error) && prof.phoneError(PHONE_INVALID)) return;
         if (error || !data) { msg(pout, error ? errText(error) : "저장하지 못했습니다. 다시 로그인해 주세요."); return; }
         apply(data);
@@ -723,7 +733,7 @@
       });
     });
 
-    // 광고성 정보 수신 동의(이메일·문자 따로) — 바꿀 때마다 처리 결과(일자·내용)를 바로 알린다
+    // 마케팅 정보 수신 동의(이메일·문자 따로) — 바꿀 때마다 처리 결과(일자·내용)를 바로 알린다
     const mout = $("#mktMsg");
     const wireSwitch = (toggle, logEl, col, atCol, label, hintEl) => {
       if (!toggle) return;
@@ -732,9 +742,11 @@
         toggle.checked = !!p[col];
         toggle.disabled = locked;
         show(hintEl, locked);
+        // 숨긴 안내가 화면 낭독기에 계속 읽히지 않도록, 잠겨 있을 때만 설명으로 연결한다
+        if (hintEl) { if (locked) toggle.setAttribute("aria-describedby", hintEl.id); else toggle.removeAttribute("aria-describedby"); }
         if (logEl) {
           logEl.textContent = p[atCol]
-            ? `${fmtDate(p[atCol])} 수신 ${p[col] ? "동의" : "거부"} 처리됨`
+            ? `${fmtDate(p[atCol])} 수신 ${p[col] ? "동의" : "동의 철회"} 처리됨`
             : locked ? "" : "아직 수신에 동의하지 않았습니다.";
         }
       });
@@ -793,7 +805,10 @@
       } else {
         show(note, false);
         const saved = await alerts.flushPending();
+        const left = alerts.getPending().map((x) => x && x.univ).filter((u) => ALERT_UNIVS.includes(u));
         if (saved.length) msg(aout, `${saved.join("·")} 입시 정보 알림을 신청했습니다.`, "ok");
+        // 저장하지 못해 보류가 남은 경우: 조용히 넘어가지 않고 알린다(보류는 남겨 두어 다음에 다시 신청한다)
+        else if (left.length) msg(aout, `고른 대학(${left.join("·")})의 알림을 신청하지 못했습니다. 잠시 뒤 이 페이지를 새로고침하면 다시 신청합니다.`);
       }
       await drawAlerts();
     };
@@ -818,8 +833,7 @@
           const { data, error } = await sb().from("profiles").update(row).eq("id", user.id).select().maybeSingle();
           if (isPhoneFormatErr(error)) { setErr(tel, telErr, PHONE_INVALID); focusEl(tel); return; }
           if (error || !data) { msg(pmsg, error ? errText(error) : "저장하지 못했습니다. 다시 로그인해 주세요."); return; }
-          apply(data); // 카드가 사라지고 번호 표시·문자 스위치가 풀린다
-          prof.fill(data); // 회원 정보에 번호 칸이 나타난다
+          apply(data); // 카드가 사라지고 번호 표시·문자 스위치가 풀리며, 회원 정보에 번호 칸이 나타난다(다른 칸의 입력은 그대로 둔다)
           msg(out, "휴대전화 번호를 저장했습니다." + (row.marketing_sms_opt_in && data.marketing_sms_opt_in
             ? " " + mktResult(data.marketing_sms_opt_in_at, "문자", true) : ""), "ok");
           out.setAttribute("tabindex", "-1"); // 카드가 사라지므로 초점을 안내문으로 옮긴다
@@ -919,8 +933,13 @@
     // 휴대전화용 DB 설정 전이면 목록에 phone 열이 없다 → 새 칸은 '-' 로 두고 안내한다
     const phoneReady = !rows.length || hasCol(rows[0], "phone");
     if (!phoneReady) msg(out, "휴대전화 번호용 데이터베이스 설정(20261002000000_phone.sql)이 아직 적용되지 않았습니다.", "info");
-    // 문자 발송 대상: 문자 수신에 동의했고 이메일 인증과 가입 마무리를 끝낸 회원(인증 전 계정은 남의 번호일 수 있다)
+    // 발송 대상: 그 채널 수신에 동의했고 이메일 인증과 가입 마무리를 끝낸 회원.
+    // 번호는 인증하지 않고 받으므로, 메일 인증 전 계정의 동의는 본인 것인지 확인되지 않았다(남의 번호·이메일일 수 있다).
+    const status = (r) => (!r.email_confirmed ? "메일 인증 전" : !r.profile_completed ? "가입 마무리 전" : "");
+    const emailTarget = (r) => !!r.marketing_opt_in && r.email_confirmed && r.profile_completed;
     const smsTarget = (r) => !!r.marketing_sms_opt_in && !!r.phone && r.email_confirmed && r.profile_completed;
+    // 표·CSV 의 수신 동의 칸: 발송 대상이 아닌 동의는 「동의(메일 인증 전)」처럼 구분해 적는다
+    const optCell = (on, target, r, at) => (!on ? "" : target ? "동의" : `동의(${status(r) || "휴대전화 번호 없음"})`) + (on && at ? ` (${at})` : "");
     const count = (fn) => rows.filter(fn).length;
     const stats = [
       ["전체 회원", rows.length],
@@ -928,8 +947,8 @@
       ["학부모", count((r) => r.member_type === "학부모")],
       ["기타", count((r) => r.member_type === "기타")],
       ["가입 마무리 전", count((r) => !r.profile_completed || !r.email_confirmed)],
-      ["전화번호 미입력", phoneReady ? count((r) => r.profile_completed && !r.phone) : "-"],
-      ["이메일 수신 동의", count((r) => r.marketing_opt_in)],
+      ["휴대전화 번호 미입력", phoneReady ? count((r) => r.profile_completed && !r.phone) : "-"],
+      ["이메일 수신 동의", count(emailTarget)],
       ["문자 수신 동의", phoneReady ? count(smsTarget) : "-"],
     ];
     $("#admStats").replaceChildren(...stats.map(([label, n]) => {
@@ -948,38 +967,30 @@
     const onlySms = $("#admSms"); // 브라우저에 남은 옛 화면에는 없다
     const body = $("#admRows");
     const provider = (r) => PROVIDER_NAMES[r.provider] || r.provider;
-    const status = (r) => (!r.email_confirmed ? "메일 인증 전" : !r.profile_completed ? "가입 마무리 전" : "");
+    // 표의 칸(제목, 값). 제목 줄도 여기서 그린다: 브라우저에 남은 옛 화면(칸 수가 다른 제목 줄)에서도 제목과 값이 어긋나지 않는다.
+    const cols = [
+      ["가입일", (r) => fmtDate(r.created_at)],
+      ["이름", (r) => [r.name, status(r) && `(${status(r)})`].filter(Boolean).join(" ")],
+      ["이메일", (r) => r.email],
+      ["휴대전화", (r) => (r.phone ? fmtPhone(r.phone) : "")],
+      ["구분", (r) => r.member_type],
+      ["학년", (r) => r.grade],
+      ["이메일 수신", (r) => optCell(r.marketing_opt_in, emailTarget(r), r, fmtDate(r.marketing_opt_in_at))],
+      ["문자 수신", (r) => optCell(r.marketing_sms_opt_in, smsTarget(r), r, fmtDate(r.marketing_sms_opt_in_at))],
+      ["가입 방식", provider],
+      ["최근 로그인", (r) => fmtDateTime(r.last_sign_in_at)],
+    ];
+    drawHead(body, cols);
     let shown = rows;
     function render() {
       const qv = search.value.trim().toLowerCase();
       // 검색어가 숫자·하이픈·공백·+ 뿐이면 휴대전화 번호로 찾는다(숫자만 비교)
       const qd = /^[\d\s+()-]+$/.test(qv) ? normalizePhone(qv) : "";
-      shown = rows.filter((r) => (!onlyMkt.checked || r.marketing_opt_in)
+      shown = rows.filter((r) => (!onlyMkt.checked || emailTarget(r))
         && (!onlySms || !onlySms.checked || smsTarget(r))
         && (!qv || (r.name || "").toLowerCase().includes(qv) || (r.email || "").toLowerCase().includes(qv)
           || (!!qd && (r.phone || "").includes(qd))));
-      body.replaceChildren(...shown.map((r) => {
-        const tr = document.createElement("tr");
-        [fmtDate(r.created_at), r.name || status(r) || "-", r.email || "-", r.phone ? fmtPhone(r.phone) : "-", r.member_type || "-", r.grade || "-",
-          r.marketing_opt_in ? `동의 (${fmtDate(r.marketing_opt_in_at)})` : "-",
-          r.marketing_sms_opt_in ? `동의 (${fmtDate(r.marketing_sms_opt_in_at)})` : "-", provider(r), fmtDateTime(r.last_sign_in_at)]
-          .forEach((v, i) => {
-            const td = document.createElement("td");
-            td.textContent = v;
-            if ((i === 1 && !r.name) || v === "-") td.className = "muted";
-            tr.append(td);
-          });
-        return tr;
-      }));
-      if (!shown.length) {
-        const tr = document.createElement("tr");
-        const td = document.createElement("td");
-        td.colSpan = 10;
-        td.className = "adm-empty";
-        td.textContent = rows.length ? "조건에 맞는 회원이 없습니다." : "아직 회원이 없습니다.";
-        tr.append(td);
-        body.append(tr);
-      }
+      drawRows(body, cols, shown, rows.length ? "조건에 맞는 회원이 없습니다." : "아직 회원이 없습니다.");
       $("#admCount").textContent = `${shown.length.toLocaleString("ko-KR")}명 표시 중 (전체 ${rows.length.toLocaleString("ko-KR")}명)`;
     }
     search.addEventListener("input", render);
@@ -987,14 +998,16 @@
     if (onlySms) onlySms.addEventListener("change", render);
     render();
 
-    // CSV 는 화면 필터를 따른다. 휴대전화는 010-1234-5678 꼴(숫자만 내보내면 엑셀에서 앞자리 0 이 사라진다)
+    // CSV 는 화면 필터를 따른다. 휴대전화는 010-1234-5678 꼴(숫자만 내보내면 엑셀에서 앞자리 0 이 사라진다).
+    // 발송 대상 칸: 필터 없이 내려받은 파일에서도 보낼 수 있는 회원(동의 + 이메일 인증 + 가입 마무리)만 「대상」으로 적힌다.
     $("#admCsv").addEventListener("click", () => downloadCsv("snucoach-members",
-      ["가입일시", "이름", "이메일", "휴대전화", "회원 구분", "학년", "이메일 수신 동의", "이메일 동의·거부 일시", "문자 수신 동의", "문자 동의·거부 일시",
+      ["가입일시", "이름", "이메일", "휴대전화", "회원 구분", "학년",
+        "이메일 수신 동의", "이메일 발송 대상", "이메일 동의·철회 일시", "문자 수신 동의", "문자 발송 대상", "문자 동의·철회 일시",
         "가입 방식", "이메일 인증", "가입 마무리", "최근 로그인"],
       shown.map((r) => [
         fmtDateTime(r.created_at), r.name, r.email, r.phone ? fmtPhone(r.phone) : "", r.member_type, r.grade,
-        r.marketing_opt_in ? "동의" : "미동의", r.marketing_opt_in_at ? fmtDateTime(r.marketing_opt_in_at) : "",
-        r.marketing_sms_opt_in ? "동의" : "미동의", r.marketing_sms_opt_in_at ? fmtDateTime(r.marketing_sms_opt_in_at) : "",
+        optCell(r.marketing_opt_in, emailTarget(r), r) || "미동의", emailTarget(r) ? "대상" : "제외", r.marketing_opt_in_at ? fmtDateTime(r.marketing_opt_in_at) : "",
+        optCell(r.marketing_sms_opt_in, smsTarget(r), r) || "미동의", smsTarget(r) ? "대상" : "제외", r.marketing_sms_opt_in_at ? fmtDateTime(r.marketing_sms_opt_in_at) : "",
         provider(r), r.email_confirmed ? "완료" : "전",
         r.profile_completed ? "완료" : "전", r.last_sign_in_at ? fmtDateTime(r.last_sign_in_at) : "",
       ])));
@@ -1025,37 +1038,67 @@
       sel.append(o);
     });
     const body = $("#alRows");
+    // 문자로 보내도 되는 신청인지(sms_ok): 번호를 받은 뒤에 「이메일이나 문자로」 화면에서 신청한 알림만 해당한다.
+    // 번호를 받기 전에 신청한 알림(개정 전 신청분 포함)은 이메일로만 보낸다. 휴대전화용 DB 설정 전이면 열이 없다 → '-'.
+    const smsWay = (r) => (!hasCol(r, "sms_ok") ? "" : r.sms_ok ? "이메일·문자" : "이메일만");
+    const cols = [
+      ["대학", (r) => r.univ],
+      ["계열", (r) => r.track],
+      ["이름", (r) => r.name],
+      ["이메일", (r) => r.email],
+      ["휴대전화", (r) => (r.phone ? fmtPhone(r.phone) : "")],
+      ["보내는 방법", smsWay],
+      ["구분", (r) => r.member_type],
+      ["학년", (r) => r.grade],
+      ["신청일", (r) => fmtDate(r.created_at)],
+    ];
+    drawHead(body, cols);
     let shown = rows;
     function render() {
       shown = rows.filter((r) => !sel.value || r.univ === sel.value);
-      body.replaceChildren(...shown.map((r) => {
-        const tr = document.createElement("tr");
-        [r.univ, r.track || "-", r.name || "-", r.email || "-", r.phone ? fmtPhone(r.phone) : "-", r.member_type || "-", r.grade || "-", fmtDate(r.created_at)]
-          .forEach((v) => {
-            const td = document.createElement("td");
-            td.textContent = v;
-            if (v === "-") td.className = "muted";
-            tr.append(td);
-          });
-        return tr;
-      }));
-      if (!shown.length) {
-        const tr = document.createElement("tr");
-        const td = document.createElement("td");
-        td.colSpan = 8;
-        td.className = "adm-empty";
-        td.textContent = "아직 알림 신청이 없습니다.";
-        tr.append(td);
-        body.append(tr);
-      }
+      drawRows(body, cols, shown, "아직 알림 신청이 없습니다.");
       const people = new Set(rows.map((r) => r.email)).size;
       $("#alCount").textContent = `${shown.length.toLocaleString("ko-KR")}건 표시 중 (전체 ${rows.length.toLocaleString("ko-KR")}건 · ${people.toLocaleString("ko-KR")}명)`;
     }
     sel.addEventListener("change", render);
     render();
     $("#alCsv").addEventListener("click", () => downloadCsv("snucoach-target-alerts",
-      ["대학", "계열", "이름", "이메일", "휴대전화", "회원 구분", "학년", "신청일시"],
-      shown.map((r) => [r.univ, r.track, r.name, r.email, r.phone ? fmtPhone(r.phone) : "", r.member_type, r.grade, fmtDateTime(r.created_at)])));
+      ["대학", "계열", "이름", "이메일", "휴대전화", "보내는 방법", "회원 구분", "학년", "신청일시"],
+      shown.map((r) => [r.univ, r.track, r.name, r.email, r.phone ? fmtPhone(r.phone) : "", smsWay(r), r.member_type, r.grade, fmtDateTime(r.created_at)])));
+  }
+
+  // 관리자 표: 제목 줄과 본문을 같은 칸 정의([제목, 값])로 그린다. 빈 값은 '-'(흐리게).
+  function drawHead(tbody, cols) {
+    const head = tbody.closest("table").tHead;
+    if (!head || !head.rows[0]) return;
+    head.rows[0].replaceChildren(...cols.map(([label]) => {
+      const th = document.createElement("th");
+      th.scope = "col";
+      th.textContent = label;
+      return th;
+    }));
+  }
+  function drawRows(tbody, cols, list, emptyText) {
+    tbody.replaceChildren(...list.map((r) => {
+      const tr = document.createElement("tr");
+      cols.forEach(([, value]) => {
+        const td = document.createElement("td");
+        const v = value(r);
+        td.textContent = v || "-";
+        if (!v) td.className = "muted";
+        tr.append(td);
+      });
+      return tr;
+    }));
+    if (!list.length) {
+      const tr = document.createElement("tr");
+      const td = document.createElement("td");
+      td.colSpan = cols.length;
+      td.className = "adm-empty";
+      td.textContent = emptyText;
+      tr.append(td);
+      tbody.append(tr);
+    }
   }
 
   // CSV: 엑셀 수식으로 해석될 수 있는 값(=, +, -, @ 로 시작)은 앞에 ' 를 붙여 무력화한다

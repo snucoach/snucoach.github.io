@@ -3,7 +3,8 @@
 --
 -- 사용법: 20261001000000_members.sql, 20261001010000_target_alerts.sql 을 먼저 실행한 뒤,
 --         이 파일 전체를 SQL Editor 에 붙여 넣고 Run. 여러 번 실행해도 같은 결과가 된다.
---         사이트 배포보다 먼저 실행한다(옛 사이트는 추가된 열을 모르는 채로 그대로 동작한다).
+--         반드시 사이트 배포보다 먼저 실행한다(옛 사이트는 추가된 열을 모르는 채로 그대로 동작한다).
+--         사이트를 먼저 배포하면 그 사이 가입한 회원의 문자 수신 동의가 기록되지 않는다(README 2-1).
 --
 -- 바꾸는 것
 --   1) profiles 에 phone · phone_agreed_at · marketing_sms_opt_in · marketing_sms_opt_in_at 추가
@@ -12,7 +13,9 @@
 --   3) 수정 트리거: 번호는 숫자만 남기고, 동의 시각은 서버 시각으로만 기록
 --   4) 회원이 고칠 수 있는 칸에 phone · marketing_sms_opt_in 추가
 --   5) 이 파일을 처음 실행할 때만: 사이트가 먼저 배포된 사이에 가입한 회원의 번호를 프로필로 옮긴다
---   6) 관리자 목록 두 개에 휴대전화 번호(회원 목록에는 문자 수신 동의도) 추가
+--      (다시 실행할 때는 옮기지 않고, 아직 옮겨지지 않은 번호는 지우지도 않는다 → README 2-1 의 확인 조회)
+--   6) 관리자 목록 두 개에 휴대전화 번호 추가
+--      (회원 목록에는 문자 수신 동의, 알림 목록에는 문자로 보내도 되는 신청인지(sms_ok)도)
 -- ============================================================
 begin;
 
@@ -172,10 +175,13 @@ grant update (phone, marketing_sms_opt_in) on table public.profiles to authentic
 
 -- ── 5) 사이트가 먼저 배포된 사이에 가입한 회원 구제 + 가입 정보의 번호 사본 정리 ──
 do $move$
+declare
+  v_first boolean := current_setting('snucoach.phone_first_run', true) = '1';
+  v_left  integer := 0;
 begin
   -- (처음 실행할 때만) 가입 정보에만 남아 있는 번호를 프로필로 옮긴다.
   -- 문자 수신 동의는 옮기지 않는다(마이페이지에서 다시 켠다). 동의 시각(phone_agreed_at)은 이 파일을 실행한 시각으로 남는다.
-  if current_setting('snucoach.phone_first_run', true) = '1' then
+  if v_first then
     update public.profiles p
     set phone = d.ph
     from (
@@ -190,15 +196,34 @@ begin
       and d.ph ~ '^(010[0-9]{8}|01[16789][0-9]{7,8})$';
   end if;
 
-  -- (실행할 때마다) 가입 정보에 남은 phone · marketing_sms 사본을 지운다. 번호의 기준은 profiles.phone 하나다.
+  -- 가입 정보에 남은 phone · marketing_sms 사본을 지운다. 번호의 기준은 profiles.phone 하나다.
+  --   처음 실행: 모두 지운다(옮길 수 있는 번호는 바로 위에서 옮겼다).
+  --   다시 실행: 프로필로 옮길 수 있는데 아직 옮겨지지 않은 번호(프로필의 phone 이 비어 있고, 필수 동의가 있고, 형식이 맞는 것)는
+  --             지우지 않는다. 옛 가입 트리거가 잠시 돌아온 사이에 가입한 회원의 번호일 수 있어서, 지우면 번호를 잃는다.
+  --             삭제 요청으로 지운 번호가 되살아나지 않도록 옮기지도 않는다. 건수만 알린다(README 2-1 에서 확인·처리).
   begin
-    update auth.users
-    set raw_user_meta_data = raw_user_meta_data - 'phone' - 'marketing_sms'
-    where jsonb_typeof(raw_user_meta_data) = 'object'
-      and (raw_user_meta_data ? 'phone' or raw_user_meta_data ? 'marketing_sms');
+    update auth.users u
+    set raw_user_meta_data = u.raw_user_meta_data - 'phone' - 'marketing_sms'
+    where jsonb_typeof(u.raw_user_meta_data) = 'object'
+      and (u.raw_user_meta_data ? 'phone' or u.raw_user_meta_data ? 'marketing_sms')
+      and (v_first or not exists (
+        select 1 from public.profiles p
+        where p.id = u.id
+          and p.phone is null
+          and p.privacy_agreed_at is not null
+          and regexp_replace(regexp_replace(coalesce(u.raw_user_meta_data ->> 'phone', ''), '[^0-9]', '', 'g'), '^820?(1[016789])', '0\1')
+              ~ '^(010[0-9]{8}|01[16789][0-9]{7,8})$'
+      ));
   exception when insufficient_privilege then
     raise notice '가입 정보(auth.users)의 phone 사본을 지우지 못했습니다(권한). README 의 삭제 절차를 따라 주세요.';
   end;
+
+  select count(*) into v_left
+  from auth.users u
+  where jsonb_typeof(u.raw_user_meta_data) = 'object' and u.raw_user_meta_data ? 'phone';
+  if v_left > 0 then
+    raise notice '가입 정보(auth.users)에 휴대전화 번호 사본이 %건 남아 있습니다. README 2-1 의 「SQL ① 실행 뒤 확인」을 따라 주세요.', v_left;
+  end if;
 end $move$;
 
 -- ── 6) 관리자 목록 ────────────────────────────────────────
@@ -270,6 +295,7 @@ returns table (
   email       text,
   name        text,
   phone       text,
+  sms_ok      boolean,
   member_type text,
   grade       text,
   created_at  timestamptz
@@ -284,7 +310,11 @@ begin
     raise exception '관리자만 볼 수 있습니다.' using errcode = '42501';
   end if;
   return query
-    select a.univ, a.track, u.email::text, p.name, p.phone, p.member_type, p.grade, a.created_at
+    select a.univ, a.track, u.email::text, p.name, p.phone,
+      -- 문자로 보내도 되는 신청인지: 번호를 받은 뒤에(= 「이메일이나 문자로 보내 드립니다」 화면에서) 신청한 알림만 true.
+      -- 번호를 받기 전에 신청한 알림(2026년 10월 개정 전 신청분 포함)은 「이메일로 보내 드립니다」 화면에서 신청했으므로 이메일로만 보낸다.
+      coalesce(p.phone is not null and p.phone_agreed_at is not null and a.created_at >= p.phone_agreed_at, false),
+      p.member_type, p.grade, a.created_at
     from public.target_alerts a
     join auth.users u on u.id = a.user_id
     left join public.profiles p on p.id = a.user_id

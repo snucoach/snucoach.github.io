@@ -253,6 +253,10 @@ sql(`delete from auth.audit_log_entries where payload->>'test' = 'new-${stamp}'`
   r = await call('/rest/v1/rpc/admin_list_target_alerts', { method: 'POST', token: tokA, body: {} }); // A 는 위에서 관리자로 지정됨
   check('관리자는 알림 신청 목록 조회', r.status === 200 && r.json.some((x) => x.email === mail('e') && x.univ === '연세대' && x.track === '자연'), r);
   check('알림 신청 목록에 휴대전화 번호 포함', r.status === 200 && r.json.some((x) => x.email === mail('e') && x.phone === '01012345678'), r);
+  check('번호를 받은 뒤 신청한 알림은 문자로 보낼 수 있음(sms_ok)', r.status === 200 && r.json.filter((x) => x.email === mail('e')).every((x) => x.sms_ok === true), r);
+  sql(`update public.target_alerts set created_at = now() - interval '30 days' where user_id='${e.json.id}' and univ='연세대'`);
+  r = await call('/rest/v1/rpc/admin_list_target_alerts', { method: 'POST', token: tokA, body: {} });
+  check('번호를 받기 전에 신청한 알림은 이메일만(sms_ok=false)', r.status === 200 && r.json.some((x) => x.email === mail('e') && x.univ === '연세대' && x.sms_ok === false), r);
   r = await call('/rest/v1/target_alerts?univ=eq.고려대', { method: 'DELETE', token: tokE, headers: rep });
   check('본인 알림 해제', r.status === 200 && r.json.length === 1, r);
   sql(`delete from auth.users where email='${mail('e')}'`);

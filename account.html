@@ -107,7 +107,7 @@
                 </div></details>
               </li>
               <li>
-                <label class="check"><input type="checkbox" data-agree="marketing"> <span><span class="sel">[선택]</span> 마케팅·광고성 정보 수신 동의(이메일·문자)</span></label>
+                <label class="check"><input type="checkbox" data-agree="marketing"> <span><span class="sel">[선택]</span> 마케팅 정보 수신 동의(이메일·문자)</span></label>
                 <details><summary>내용 보기</summary><div class="consent-detail">
                   <table>
                     <tr><th scope="row">목적</th><td><b>학습 자료, 이벤트, 코칭 프로그램 안내 등 광고성 정보를 이메일·문자로 발송</b></td></tr>
@@ -128,31 +128,6 @@
     </section>
 
     <div id="acct" hidden>
-      <section class="auth-card phone-card" id="phoneCard" aria-labelledby="phoneCardTitle" hidden>
-        <h2 id="phoneCardTitle">휴대전화 번호를 입력해 주세요</h2>
-        <p class="card-sub">회원 정보에 휴대전화 번호가 추가되었습니다. 입시 정보 알림을 신청하려면 번호가 필요합니다.</p>
-        <form class="auth-form" id="phoneForm" method="post" action="#" novalidate>
-          <div class="field">
-            <label for="phTel">휴대전화 번호</label>
-            <input type="tel" id="phTel" name="phone" inputmode="tel" autocomplete="tel-national" maxlength="20" placeholder="010-1234-5678" required aria-describedby="phTelHint phTelErr">
-            <p class="field-hint" id="phTelHint">회원 본인이 쓰는 번호를 입력해 주세요. 숫자만 입력해도 됩니다. 인증 문자는 보내지 않습니다.</p><p class="field-err" id="phTelErr"></p>
-          </div>
-          <div class="consent-detail">
-            <table>
-              <tr><th scope="row">목적</th><td>회원 식별, 공지 전달과 문의 응대, 회원이 신청한 입시 정보 알림 발송과 회원이 신청한 상담에 관한 연락</td></tr>
-              <tr><th scope="row">항목</th><td>휴대전화 번호</td></tr>
-              <tr><th scope="row">보유 기간</th><td><b>회원 탈퇴 시까지</b> (탈퇴하면 바로 삭제)</td></tr>
-            </table>
-            <p>동의를 거부할 수 있으나, 거부하면 입시 정보 알림을 신청할 수 없습니다. 자세한 내용은 <a href="privacy.html" target="_blank" rel="noopener">개인정보처리방침</a>을 확인해 주세요.</p>
-          </div>
-          <div id="phSmsRow">
-            <label class="check"><input type="checkbox" id="phSms" aria-describedby="phSmsHint"> <span><span class="sel">[선택]</span> 광고성 정보 문자 수신 동의 <span class="sel">(학습 자료·이벤트·코칭 프로그램 안내)</span></span></label>
-            <p class="field-hint" id="phSmsHint" style="margin:4px 0 0 30px">체크하면 휴대전화 번호로 광고성 정보를 받는 데 동의합니다. 동의 철회 또는 탈퇴 시까지 이용하며, 동의하지 않아도 이용에 제한이 없습니다.</p>
-          </div>
-          <div class="auth-msg" id="phoneMsg" role="alert" hidden></div>
-          <button class="btn btn-primary auth-btn" type="submit">동의하고 저장</button>
-        </form>
-      </section>
       <section class="auth-card acct-profile">
         <div class="acct-head">
           <span class="acct-avatar" id="acctAvatar" aria-hidden="true"></span>
@@ -168,6 +143,33 @@
           <dt>가입 방식</dt><dd id="acctProvider"></dd>
           <dt>가입일</dt><dd id="acctJoined"></dd>
         </dl>
+      </section>
+
+      <section class="auth-card phone-card" id="phoneCard" aria-labelledby="phoneCardTitle" hidden>
+        <h2 id="phoneCardTitle">휴대전화 번호를 입력해 주세요</h2>
+        <p class="card-sub">회원 정보에 휴대전화 번호가 추가되었습니다. 입시 정보 알림을 신청하려면 번호가 필요합니다. 신청한 입시 정보 알림은 이메일이나 문자로 보내 드립니다.</p>
+        <form class="auth-form" id="phoneForm" method="post" action="#" novalidate>
+          <div class="field">
+            <label for="phTel">휴대전화 번호</label>
+            <input type="tel" id="phTel" name="phone" inputmode="tel" autocomplete="tel-national" maxlength="20" placeholder="010-1234-5678" required aria-describedby="phTelHint phTelErr">
+            <p class="field-hint" id="phTelHint">회원 본인이 쓰는 번호를 입력해 주세요. 숫자만 입력해도 됩니다. 인증 문자는 보내지 않습니다.</p><p class="field-err" id="phTelErr"></p>
+          </div>
+          <div class="consent-detail">
+            <p class="consent-cap"><b>휴대전화 번호 수집·이용 동의</b></p>
+            <table>
+              <tr><th scope="row">목적</th><td>회원 식별, 공지 전달과 문의 응대, 회원이 신청한 입시 정보 알림 발송과 회원이 신청한 상담에 관한 연락</td></tr>
+              <tr><th scope="row">항목</th><td>휴대전화 번호</td></tr>
+              <tr><th scope="row">보유 기간</th><td><b>회원 탈퇴 시까지</b> (탈퇴하면 바로 삭제)</td></tr>
+            </table>
+            <p>동의를 거부할 수 있으나, 거부하면 입시 정보 알림을 신청할 수 없습니다. 자세한 내용은 <a href="privacy.html" target="_blank" rel="noopener">개인정보처리방침</a>을 확인해 주세요.</p>
+          </div>
+          <div id="phSmsRow">
+            <label class="check"><input type="checkbox" id="phSms" aria-describedby="phSmsHint"> <span><span class="sel">[선택]</span> 마케팅 정보 문자 수신 동의 <span class="sel">(학습 자료·이벤트·코칭 프로그램 안내 등 광고성 정보)</span></span></label>
+            <p class="field-hint" id="phSmsHint" style="margin:4px 0 0 30px">체크하면 휴대전화 번호로 광고성 정보를 받는 데 동의합니다. 동의 철회 또는 탈퇴 시까지 이용하며, 동의하지 않아도 이용에 제한이 없습니다.</p>
+          </div>
+          <div class="auth-msg" id="phoneMsg" role="alert" hidden></div>
+          <button class="btn btn-primary auth-btn" type="submit">동의하고 저장</button>
+        </form>
       </section>
 
       <section class="auth-card" aria-labelledby="infoTitle">
@@ -214,7 +216,7 @@
       </section>
 
       <section class="auth-card" aria-labelledby="mktTitle">
-        <h2 id="mktTitle">마케팅·광고성 정보 수신</h2>
+        <h2 id="mktTitle">마케팅 정보 수신</h2>
         <p class="card-sub">학습 자료·이벤트·코칭 프로그램 안내 등 광고성 정보를 받을 방법을 고릅니다. 켜면 그 방법으로 광고성 정보를 받는 데 동의합니다. 동의 철회 또는 탈퇴 시까지 이용하며, 동의하지 않아도 이용에 제한이 없습니다.</p>
         <div class="switch-list">
           <div class="switch-row">
@@ -223,7 +225,7 @@
           </div>
           <div class="switch-row" id="mktSmsRow" hidden>
             <div><b id="mktSmsLabel">문자</b><p class="consent-log" id="mktSmsLog"></p><p class="switch-hint" id="mktSmsHint" hidden>휴대전화 번호를 입력하면 켤 수 있습니다.</p></div>
-            <label class="switch"><input type="checkbox" id="mktSmsToggle" aria-labelledby="mktTitle mktSmsLabel" aria-describedby="mktSmsHint"><span aria-hidden="true"></span></label>
+            <label class="switch"><input type="checkbox" id="mktSmsToggle" aria-labelledby="mktTitle mktSmsLabel"><span aria-hidden="true"></span></label>
           </div>
         </div>
         <div class="auth-msg" id="mktMsg" role="status" hidden style="margin:12px 0 0"></div>

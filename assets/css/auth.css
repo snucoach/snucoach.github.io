@@ -281,10 +281,11 @@ details.acct-item[open] > summary { margin-bottom: 16px; }
 .adm-h2 { margin: 0 0 16px; font-size: 19px; font-weight: 800; letter-spacing: -0.02em; color: var(--ink); }
 .adm-tools select { min-width: 180px; }
 
-/* ── 휴대전화 번호 · 광고성 정보 수신(이메일·문자) ── */
+/* ── 휴대전화 번호 · 마케팅 정보 수신(이메일·문자) ── */
 .phone-card { border: 1.5px solid var(--navy); }
-.phone-card[hidden] + .auth-card { margin-top: 0; }
 .phone-card .consent-detail { margin-top: 0; }
+.consent-detail .consent-cap { margin: 0 0 6px; color: var(--text); }
+.adm-tools .adm-hint { flex: 1 1 100%; margin: 0; font-size: 13px; line-height: 1.6; color: var(--text-faint); }
 .switch-list { display: grid; }
 .switch-list .switch-row { padding: 16px 0; border-top: 1px solid var(--line); }
 .switch-list .switch-row:last-child { padding-bottom: 0; }

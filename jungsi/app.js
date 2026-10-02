@@ -430,6 +430,9 @@
   let alertList = [];        // 창에 띄운 신청 목록(저장 함수들이 같이 쓴다)
   let alertFromPending = false; // 로그인하고 돌아와 자동으로 연 창인지(닫으면 보류를 지워 다시 뜨지 않게 한다)
   const telErr = (text) => { const t = $("#adlgTel"), e = $("#adlgTelErr"); if (!t || !e) return; t.setAttribute("aria-invalid", text ? "true" : "false"); e.textContent = text || ""; };
+  // 창 안의 실패 안내(role="alert"). 창 밖 토스트는 모달이 열려 있는 동안 화면 낭독기에 전달되지 않는다. 옛 화면에는 없어서 토스트로 대신한다.
+  const dlgFail = (text) => { const e = $("#adlgFail"); if (e) e.textContent = text || ""; else if (text) toast(text, 6000); };
+  const scopeBox = (on) => { const e = $("#adlgScopeBox"); if (e) e.hidden = !on; };
   // opt.list: 보류해 둔 신청 목록으로 열 때 / opt.mode: "phone"(번호 입력) · "onboarding"(가입 마무리 안내)
   function openAlert(opt) {
     const o = opt || {};
@@ -444,6 +447,7 @@
     $("#adlgScope").textContent = ALERT_UNIVS.join(" · ");
     const act = $("#adlgAct"), login = storedLogin(), need = $("#adlgNeed");
     if ($("#adlgPhone")) { $("#adlgPhone").hidden = true; $("#adlgTel").value = ""; telErr(""); } // 열 때마다 번호 입력 상태를 지운다
+    dlgFail(""); scopeBox(true);
     need.textContent = NEED_TXT;
     need.hidden = !ok.length || login || !authOn();
     if (!authOn()) act.innerHTML = `<p class="adlg-out">알림 기능을 준비하고 있습니다.</p>`;
@@ -460,12 +464,13 @@
   // 휴대전화 번호가 없는 회원: 창 안에서 수집 안내와 함께 번호를 받는다
   function phoneStep() {
     $("#adlgPhone").hidden = false; $("#adlgNeed").hidden = true;
+    dlgFail(""); scopeBox(false); // 작은 화면에서 신청 버튼이 창 아래로 밀리지 않게 대상 대학 목록은 접는다
     $("#adlgAct").innerHTML = `<button type="button" class="pri" data-alert="phone-save">동의하고 ${alertList.length}곳 알림 신청하기</button>`;
     $("#adlgTel").focus();
   }
   const toAccount = (a, list) => { a.setPending(list); location.href = "../account.html"; }; // 마이페이지에서 가입 마무리·번호 입력 뒤 자동 신청
   async function saveAlerts(btn) {
-    const list = alertList.length ? alertList : alertPicks(); btn.disabled = true; btn.textContent = "신청하는 중…";
+    const list = alertList.length ? alertList : alertPicks(); btn.disabled = true; btn.textContent = "신청하는 중…"; dlgFail("");
     try {
       const a = await loadAuth();
       if (!(await a.signedIn())) { a.setPending(list); location.href = `../login.html?next=${encodeURIComponent("/jungsi/")}`; return; }
@@ -481,7 +486,7 @@
       a.clearPending();
       $("#alertDlg").close();
       toast(`${list.map((x) => x.univ).join("·")} 입시 정보 알림을 신청했습니다. 마이페이지에서 바꿀 수 있습니다.`, 6000);
-    } catch (_) { btn.disabled = false; btn.textContent = "다시 시도하기"; toast("신청하지 못했습니다. 잠시 뒤 다시 시도해 주세요."); }
+    } catch (_) { btn.disabled = false; btn.textContent = "다시 시도하기"; dlgFail("신청하지 못했습니다. 잠시 뒤 다시 시도해 주세요."); }
   }
   // 번호를 저장한 뒤 알림을 신청한다
   async function savePhoneAndAlerts(btn) {
@@ -491,20 +496,21 @@
       const bad = a.phone.problem(tel.value);
       telErr(bad);
       if (bad) { tel.focus(); return; }
-      btn.disabled = true; btn.textContent = "신청하는 중…";
+      btn.disabled = true; btn.textContent = "신청하는 중…"; dlgFail("");
       const r = await a.savePhone(tel.value);
       if (r.error) { btn.disabled = false; btn.textContent = label; telErr(r.error.message); tel.focus(); return; }
       const { error } = await a.save(list);
       if (error) { // 번호는 저장됐고 알림만 실패: 번호 칸을 닫고 다시 시도하게 한다
-        $("#adlgPhone").hidden = true;
+        $("#adlgPhone").hidden = true; scopeBox(true);
         $("#adlgAct").innerHTML = `<button type="button" class="pri" data-alert="save">다시 시도하기</button>`;
-        toast("휴대전화 번호는 저장했습니다. 알림 신청을 다시 시도해 주세요.", 6000);
+        dlgFail("휴대전화 번호는 저장했습니다. 알림 신청을 다시 시도해 주세요.");
+        $("#adlgAct .pri").focus(); // 누르던 버튼이 바뀌었으므로 초점을 새 버튼으로 옮긴다
         return;
       }
       a.clearPending();
       $("#alertDlg").close();
       toast(`휴대전화 번호를 저장하고 ${list.map((x) => x.univ).join("·")} 입시 정보 알림을 신청했습니다. 마이페이지에서 바꿀 수 있습니다.`, 6000);
-    } catch (_) { btn.disabled = false; btn.textContent = label; toast("신청하지 못했습니다. 잠시 뒤 다시 시도해 주세요."); }
+    } catch (_) { btn.disabled = false; btn.textContent = label; dlgFail("신청하지 못했습니다. 잠시 뒤 다시 시도해 주세요."); }
   }
   // 로그인 전에 신청해 둔 알림이 있고 지금 로그인돼 있으면(로그인하고 돌아온 경우) 바로 저장.
   // 휴대전화 번호가 없으면 저장하지 않고 창을 번호 입력 상태로 연다. 가입 마무리 전이면 마이페이지로 안내한다.

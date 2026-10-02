@@ -345,7 +345,7 @@ body.has-tbar .toast{bottom:calc(96px + env(safe-area-inset-bottom))}
 .adlg-scope{margin:0 0 14px;padding:12px 14px;border-radius:12px;background:#F5F7FD;font-size:12.5px;line-height:1.7;color:#646C8E}
 .adlg-scope b{color:#16183C}
 .adlg-need{margin:0 0 14px;font-size:14px;line-height:1.6;color:#16183C;font-weight:600}
-.adlg-act{display:grid;gap:8px}
+.adlg-act{display:grid;gap:8px;position:sticky;bottom:-22px;margin:0 -24px -22px;padding:10px 24px 22px;background:#fff}
 .adlg-act a,.adlg-act button{display:flex;align-items:center;justify-content:center;min-height:50px;border-radius:12px;font:inherit;font-size:15.5px;font-weight:800;text-decoration:none;cursor:pointer;border:0}
 .adlg-act .pri{background:#0F0F70;color:#fff}
 .adlg-act .pri:hover{background:#1A1A86}
@@ -353,7 +353,7 @@ body.has-tbar .toast{bottom:calc(96px + env(safe-area-inset-bottom))}
 .adlg-act button:disabled{opacity:.55;cursor:default}
 /* 알림 신청 창: 휴대전화 번호 입력(번호가 없는 회원에게만 보임) */
 .adlg-phone{margin:0 0 14px;display:grid;gap:7px}
-.adlg-phone[hidden]{display:none}
+.adlg-phone[hidden],.adlg-scope[hidden]{display:none}
 .adlg-phone label{font-size:14px;font-weight:700;color:#16183C}
 .adlg-phone input{width:100%;height:50px;padding:0 14px;font:inherit;font-size:16px;color:#16183C;background:#fff;border:1px solid #CDD4EA;border-radius:12px;-webkit-appearance:none;appearance:none}
 .adlg-phone input:focus{outline:none;border-color:#0F0F70;box-shadow:0 0 0 3px rgba(45,75,200,.16)}
@@ -362,6 +362,8 @@ body.has-tbar .toast{bottom:calc(96px + env(safe-area-inset-bottom))}
 .adlg-hint a{color:#2D4BC8;font-weight:700}
 .adlg-err{margin:0;font-size:13px;line-height:1.6;color:#B3261E;font-weight:600}
 .adlg-err:empty{display:none}
+.adlg-fail{margin:0 0 12px}
+.adlg-cap{margin:6px 0 0;font-size:13px;font-weight:700;color:#16183C}
 .adlg-notice{width:100%;border-collapse:collapse;margin:4px 0 0;font-size:12.5px;line-height:1.65;color:#4A5070;background:#F5F7FD;border-radius:10px}
 .adlg-notice th,.adlg-notice td{text-align:left;vertical-align:top;padding:7px 10px}
 .adlg-notice th{width:68px;white-space:nowrap;color:#16183C;font-weight:700}
@@ -479,12 +481,13 @@ body.has-tbar .toast{bottom:calc(96px + env(safe-area-inset-bottom))}
     <p class="adlg-sub">고른 목표 대학의 모집요강 발표, 원서 접수, 입시 결과 같은 입시 소식을 이메일이나 문자로 보내 드립니다.</p>
     <ul class="adlg-list" id="adlgList"></ul>
     <p class="adlg-out" id="adlgOut" hidden></p>
-    <p class="adlg-scope">알림 대상은 <b>인서울 주요 대학 18곳</b>입니다.<br><span id="adlgScope"></span></p>
+    <p class="adlg-scope" id="adlgScopeBox">알림 대상은 <b>인서울 주요 대학 18곳</b>입니다.<br><span id="adlgScope"></span></p>
     <div class="adlg-phone" id="adlgPhone" hidden>
       <label for="adlgTel">휴대전화 번호</label>
       <input type="tel" id="adlgTel" inputmode="tel" autocomplete="tel-national" maxlength="20" placeholder="010-1234-5678" aria-required="true" aria-describedby="adlgTelHint adlgTelErr">
       <p class="adlg-hint" id="adlgTelHint">알림을 신청하려면 휴대전화 번호가 필요합니다. 회원 본인이 쓰는 번호를 입력해 주세요. 인증 문자는 보내지 않습니다.</p>
       <p class="adlg-err" id="adlgTelErr" role="alert"></p>
+      <p class="adlg-cap">휴대전화 번호 수집·이용 동의</p>
       <table class="adlg-notice">
         <tr><th scope="row">목적</th><td>회원 식별, 공지 전달과 문의 응대, 회원이 신청한 입시 정보 알림 발송과 회원이 신청한 상담에 관한 연락</td></tr>
         <tr><th scope="row">항목</th><td>휴대전화 번호</td></tr>
@@ -492,6 +495,7 @@ body.has-tbar .toast{bottom:calc(96px + env(safe-area-inset-bottom))}
       </table>
       <p class="adlg-hint">동의를 거부할 수 있으나, 거부하면 입시 정보 알림을 신청할 수 없습니다. <a href="../privacy.html" target="_blank" rel="noopener">개인정보처리방침</a></p>
     </div>
+    <p class="adlg-err adlg-fail" id="adlgFail" role="alert"></p>
     <p class="adlg-need" id="adlgNeed" hidden>알림은 스누코치 회원에게 보내 드립니다. 가입하거나 로그인하면 고른 대학이 신청됩니다. 휴대전화 번호가 없는 회원은 번호를 먼저 입력합니다.</p>
     <div class="adlg-act" id="adlgAct"></div>
   </dialog>
