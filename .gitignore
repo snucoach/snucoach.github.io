@@ -6,3 +6,5 @@ supabase/local/node_modules/
 # 작업용 문서(공개 사이트에 올리지 않는다)
 supabase/PHONE_SPEC.md
 supabase/PHONE_CHANGELOG.md
+supabase/REVIEWS_SPEC.md
+supabase/REVIEWS_CHANGELOG.md
