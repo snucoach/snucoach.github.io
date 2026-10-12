@@ -12,7 +12,36 @@
     if (bar) bar.style.width = (max > 0 ? (h.scrollTop / max) * 100 : 0) + '%';
     if (top) top.classList.toggle('visible', h.scrollTop > 420);
     if (nav) nav.classList.toggle('scrolled', h.scrollTop > 8);
+    onDir();
   }
+
+  // ── 모바일 최적화 (CSS 는 style.css 맨 끝 v3m 블록, 640px 이하에서만 보인다) ──
+  // 내려가는 동안에는 탭 줄만 남기고, 28px 넘게 되올리면 로고 줄을 다시 보여 준다.
+  var root = document.documentElement;
+  var small = window.matchMedia('(max-width: 640px)').matches;
+  var lastY = window.pageYOffset || 0, dirAcc = 0, peek = false;
+  function setPeek(on) { peek = on; root.classList.toggle('nav-peek', on); }
+  function onDir() {
+    var y = window.pageYOffset || root.scrollTop || 0;
+    var d = y - lastY; lastY = y;
+    if (!d) return;
+    if ((d > 0) !== (dirAcc > 0)) dirAcc = 0;
+    dirAcc += d;
+    if (!peek && dirAcc < -28) setPeek(true);
+    else if (peek && dirAcc > 10) setPeek(false);
+  }
+  // 키보드로 머리말 안에 들어오면 접힌 로고 줄을 편다
+  if (nav) nav.addEventListener('focusin', function () { if (!peek) setPeek(true); });
+  // 히어로의 버튼 줄이 화면에 있는 동안에는 아래 고정 버튼을 숨긴다(같은 버튼이 두 번 보이지 않게)
+  var heroCta = document.querySelector('.hero-cta-row');
+  if (heroCta && 'IntersectionObserver' in window) {
+    new IntersectionObserver(function (entries) {
+      root.classList.toggle('dock-on', !entries[0].isIntersecting);
+    }, { rootMargin: '-64px 0px 0px 0px', threshold: 0 }).observe(heroCta);
+  } else {
+    root.classList.add('dock-on');
+  }
+
   document.addEventListener('scroll', onScroll, { passive: true });
   onScroll();
   if (top) top.addEventListener('click', function () {
@@ -121,7 +150,7 @@
   // ── 스태거 컨테이너: 자식 리빌에 자동 지연 부여 ──
   document.querySelectorAll('[data-rv-stagger]').forEach(function (c) {
     var kids = c.querySelectorAll(':scope > [data-rv]');
-    kids.forEach(function (el, i) { el.style.transitionDelay = (i * 0.1) + 's'; });
+    kids.forEach(function (el, i) { el.style.transitionDelay = (i * (small ? 0.06 : 0.1)) + 's'; });
   });
 
   // ── 스크롤 리빌 ──
@@ -130,7 +159,7 @@
       entries.forEach(function (en) {
         if (en.isIntersecting) { en.target.classList.add('rv-in'); io.unobserve(en.target); }
       });
-    }, { rootMargin: '0px 0px -6% 0px', threshold: 0 });
+    }, { rootMargin: small ? '0px 0px 8% 0px' : '0px 0px -6% 0px', threshold: 0 }); // 휴대폰: 화면에 들어오기 직전에 미리 띄운다
     document.querySelectorAll('[data-rv]').forEach(function (el) { io.observe(el); });
   } else {
     document.querySelectorAll('[data-rv]').forEach(function (el) { el.classList.add('rv-in'); });

@@ -2280,3 +2280,83 @@ body { color: var(--text); }
 .footer-legal a { color: rgba(235,240,250,.62); font-size: 13px; text-decoration: none; }
 .footer-legal a:hover { color: #fff; text-decoration: underline; }
 .footer-legal a b { color: rgba(235,240,250,.86); font-weight: 750; }
+
+/* ============================================================
+   v3m — 모바일 최적화 (2026-10, 브랜치 home-boost)
+   - 휴대폰 폭(640px 이하)에서만 달라진다. 맨 아래 「공통」 두 묶음만 모든 폭에 적용된다.
+   - 디자인(v3 색·글꼴·사진·이모지)은 그대로 두고 화면 쓰임새만 고친다.
+   - 원복 = 이 블록 삭제 + site.js 의 「모바일 최적화」 구역 삭제
+   ============================================================ */
+@media (max-width: 640px) {
+  /* ① 머리말: 로고 줄은 스크롤과 함께 올라가고 탭 줄(46px)만 붙는다. 되올리면 로고 줄이 다시 내려온다(site.js → html.nav-peek) */
+  :root { --tabs-h: 46px; }
+  .topnav { top: calc(-1 * var(--nav-h)); transition: top .28s var(--ease-out), border-color .3s ease, box-shadow .3s ease; }
+  html.nav-peek .topnav { top: 0; }
+  .rv-toolbar, .col-toolbar { top: var(--tabs-h); transition: top .28s var(--ease-out); }
+  html.nav-peek .rv-toolbar, html.nav-peek .col-toolbar { top: calc(var(--nav-h) + var(--tabs-h)); }
+  .topnav-inner { padding-left: max(14px, env(safe-area-inset-left)); padding-right: max(14px, env(safe-area-inset-right)); }
+
+  /* ② 아래 고정 버튼: 히어로의 버튼 줄이 보이는 동안에는 숨기고, 지나가면 올라온다(site.js → html.dock-on).
+        :has 를 모르는 브라우저와 스크립트가 꺼진 화면에서는 지금처럼 늘 보인다 */
+  .action-dock { transition: transform .34s var(--ease-out), opacity .22s ease; left: max(12px, env(safe-area-inset-left)); right: max(12px, env(safe-area-inset-right)); }
+  html.js body:has(.hero-cta-row) .action-dock { transform: translateY(calc(100% + 28px)); opacity: 0; pointer-events: none; }
+  html.js.dock-on body:has(.hero-cta-row) .action-dock { transform: none; opacity: 1; pointer-events: auto; }
+
+  /* ③ 홈 히어로: 위아래 여백을 줄여 첫 화면에 대표 사진이 들어오게 */
+  .hero-home .hero-inner { padding: 34px 18px 40px; }
+  .hero-home .hero-cta-row { margin-top: 24px; gap: 10px; }
+  .hero-home .hero-note { margin-top: 12px; }
+  .hero-home .hero-rep { margin-top: 26px; }
+
+  /* ④ 글자: 11~12px 대 작은 글씨를 12px 이상으로, 긴 글은 15px 이상으로 */
+  .ps-fine, .tc-cat, .rv-cat, .rv-key, .post-cat, .badge-free, .plan-badge { font-size: 12px; }
+  .acc-student { font-size: 11.5px; }
+  .rec-label { font-size: 13px; }
+  .feat-sub { font-size: 13.5px; }
+  .ct-sub { font-size: 15px; }
+  .fc-mission p { font-size: 15.5px; line-height: 1.8; }
+  .goto-top { font-size: 11px; letter-spacing: .02em; }
+  .drawer-links .nav-badge { font-size: 11px; }
+  .hero-title, .feat-title, .fc-title, .tc-title, .feat-card h3 { text-wrap: balance; }
+  .hero-sub, .ct-sub, .fc-mission p { text-wrap: pretty; }
+  .col-search input { font-size: 16px; } /* 16px 미만이면 아이폰이 입력할 때 화면을 확대한다 */
+
+  /* ⑤ 누르는 곳: 44px 안팎으로 */
+  .nav-logo { min-height: 44px; padding-right: 10px; }
+  .nav-auth, .nav-toggle { width: 44px; height: 44px; }
+  .ctab { min-width: 48px; }
+  .drawer-close { width: 44px; height: 44px; }
+  .feat-more { display: inline-flex; align-items: center; min-height: 44px; margin-top: 20px; }
+  .feat-sub a { display: inline-block; padding: 10px 2px; }
+  .footer-logo { display: inline-flex; align-items: center; min-height: 44px; }
+  .footer-col { gap: 0; }
+  .footer-col .ft-h { margin-bottom: 6px; }
+  .footer-col a { display: flex; align-items: center; min-height: 38px; font-size: 14px; }
+  .footer-legal { gap: 0 18px; }
+  .footer-legal a { display: inline-flex; align-items: center; min-height: 40px; }
+
+  /* ⑥ 등장 효과: 휴대폰에서는 짧고 얕게(빠르게 넘길 때 빈 화면이 보이지 않도록 site.js 가 조금 일찍 띄운다) */
+  [data-rv] { transform: translateY(10px); transition-duration: .5s; }
+  [data-rv="pop"] { transform: translateY(8px); transition-duration: .45s; }
+}
+
+@media (max-width: 520px) {
+  /* ⑦ 특징 4종: 두 칸 카드(제목이 2~3줄로 꺾임) → 한 줄에 하나씩, 이모지 왼쪽·제목 오른쪽 */
+  .feat-grid { grid-template-columns: 1fr; gap: 10px; }
+  .feat-card { display: grid; grid-template-columns: 48px 1fr; align-items: center; column-gap: 14px; padding: 13px 16px; text-align: left; }
+  .feat-card::before { top: 50%; left: 16px; width: 48px; height: 48px; transform: translateY(-50%); }
+  .feat-emoji { display: flex; align-items: center; justify-content: center; width: 48px; height: 48px; margin: 0; font-size: 26px; }
+  .feat-card h3 { font-size: 16px; line-height: 1.4; }
+  .feat-card:hover { transform: none; }
+
+  /* ⑧ 푸터: SNS 세 줄을 한 줄로 */
+  .footer-col:last-child { flex: 1 1 100%; flex-direction: row; flex-wrap: wrap; column-gap: 20px; }
+  .footer-col:last-child .ft-h { flex: 0 0 100%; }
+}
+
+/* 공통 ① 눌렀을 때 표시를 브랜드 색으로 */
+a, button { -webkit-tap-highlight-color: rgba(15, 15, 112, .10); }
+/* 공통 ② 푸터의 작은 글씨 대비(사업자 정보·저작권 줄이 배경에 묻혀 있었다) */
+.footer-col .ft-h, .footer-info .biz { color: rgba(235, 240, 250, .62); }
+.footer-tagline { color: rgba(235, 240, 250, .64); }
+.footer-copy { color: rgba(235, 240, 250, .56); }
