@@ -155,6 +155,14 @@ select.subjpick:focus{border-color:var(--navy);outline:none;box-shadow:0 0 0 3px
 .stepper button:hover:not(:disabled){background:#E0E6F7}
 .stepper button:active{transform:scale(.95)}
 .stepper .d{min-width:40px;text-align:center;font-weight:800;font-size:16px;color:var(--navy);font-variant-numeric:tabular-nums}
+/* 좁은 화면: 과목명·stepper를 윗줄, 점수 글을 아랫줄 전체 폭으로(가운데 칸이 80px까지 줄어 글이 접히던 문제) */
+@media (max-width:520px){
+  .goal{grid-template-columns:minmax(0,1fr) auto;row-gap:4px}
+  .goal .name{grid-column:1;grid-row:1}
+  .goal .stepper{grid-column:2;grid-row:1}
+  .goal .from{grid-column:1/-1;grid-row:2}
+  .nextg{white-space:nowrap}
+}
 .presets{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
 .presets button{font-size:13px;font-weight:700;border:1px solid var(--line-2);border-radius:10px;padding:0 12px;min-height:38px;background:#fff;color:var(--sub);transition:border-color .15s,color .15s}
 .presets button:hover{border-color:var(--navy);color:var(--navy)}
